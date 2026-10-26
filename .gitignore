@@ -3,3 +3,4 @@ build
 .docusaurus
 .snippets-*
 static/verified.json
+.builder-*

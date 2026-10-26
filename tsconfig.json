@@ -2,6 +2,7 @@
   "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
     "strict": true,
+    "allowImportingTsExtensions": true,
     "types": [
       "node",
       "@docusaurus/module-type-aliases",

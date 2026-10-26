@@ -256,4 +256,4 @@ A root component that mounts `AppProvider`, waits on `BootGate`, reads the user 
 
 ## Next step
 
-Continue with the reference for the other client subpaths.
+Continue with the [agent-react reference](./agent-react.md).

@@ -81,6 +81,9 @@ importers:
       vite:
         specifier: ^8.3.5
         version: 8.3.5(@types/node@26.6.5)(jiti@1.21.7)(terser@5.51.2)
+      zod:
+        specifier: 3.25.76
+        version: 3.25.76
 
 packages:
 

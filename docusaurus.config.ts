@@ -31,7 +31,10 @@ const config: Config = {
   themeConfig: {
     navbar: {
       title: 'Vector Apps docs',
-      items: [{ type: 'html', position: 'right', value: `<span class="sdk-version">@vectoragents/vs-apps ${sdkVersion}</span>` }],
+      items: [
+        { to: '/builder', label: 'Definition builder', position: 'left' },
+        { type: 'html', position: 'right', value: `<span class="sdk-version">@vectoragents/vs-apps ${sdkVersion}</span>` },
+      ],
     },
     prism: { theme: themes.github, darkTheme: themes.dracula },
   },
