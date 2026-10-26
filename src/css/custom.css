@@ -47,3 +47,40 @@
 .builder-warning {
   color: var(--ifm-color-warning-darkest);
 }
+
+.tracks {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.5rem;
+}
+
+.track {
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: var(--ifm-global-radius);
+  padding: 1rem 1.25rem;
+}
+
+.track h2 {
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+.track ol {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.track-count,
+.tracks-version {
+  font-size: 0.85rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

@@ -32,4 +32,4 @@ Each file passes `defineApp` as pasted. Change `key`, page paths and slot keys t
 
 ## Next step
 
-Return to the [page template](/) and replace the placeholder definition with one of these.
+Copy one of these into your project as `src/app.definition.ts`, or load it in the [builder](/builder).
