@@ -139,6 +139,8 @@ export const definition = defineApp({
 | `resources.connectors[].provider` | required | One of `REST`, `GRAPHQL`, `MCP`, `GOOGLE`, `CLICKUP`, `EXA`, `FIRECRAWL`, `INSTANTLY`, `UNIPILE`, `APOLLO`, `META`. |
 | `resources.connectors[].required` | required | Boolean. |
 | `resources.connectors[].eventHandlers` | optional | At least one handler when set. Any handler makes `eventsUrl` required in the manifest. |
+| `resources.connectors[].eventHandlers[].key` | required | Lower kebab-case handler key. Unique within the connector slot. |
+| `resources.connectors[].eventHandlers[].label` | required | Non-empty string. |
 
 ## How it reflects in Space
 
