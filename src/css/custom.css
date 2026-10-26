@@ -2,3 +2,48 @@
   font-family: var(--ifm-font-family-monospace);
   font-size: 0.85rem;
 }
+
+.builder-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 2rem;
+}
+
+@media (max-width: 996px) {
+  .builder-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.builder-output {
+  position: sticky;
+  top: 4.5rem;
+  align-self: start;
+  max-height: calc(100vh - 5rem);
+  overflow: auto;
+}
+
+.builder-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.builder-field p,
+.builder-hint {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.builder fieldset {
+  margin-bottom: 1rem;
+}
+
+.builder-error {
+  color: var(--ifm-color-danger-dark);
+}
+
+.builder-warning {
+  color: var(--ifm-color-warning-darkest);
+}
