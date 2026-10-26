@@ -24,10 +24,16 @@ export function checkSnippets({
   const work = mkdtempSync(join(root, '.snippets-'));
   try {
     const origins = new Map();
-    for (const file of docFiles(docsDir)) {
+    for (const [fileIndex, file] of docFiles(docsDir).entries()) {
       let index = 0;
+      const titled = new Set();
       for (const [, lang, meta, body] of readFileSync(file, 'utf8').matchAll(fence)) {
-        const name = `snippet-${origins.size}.${lang}`;
+        // The first block with a title lands at that path, so relative imports between a page's blocks resolve.
+        const title = /title="([^"]+)"/.exec(meta)?.[1];
+        const placed = title && !titled.has(title);
+        if (placed) titled.add(title);
+        const name = placed ? `page-${fileIndex}/${title}` : `snippet-${origins.size}.${lang}`;
+        mkdirSync(dirname(join(work, name)), { recursive: true });
         // `export {}` keeps import-less snippets from sharing one global scope.
         const code = fileMeta(meta) ? readEmbedded(baseDir, fileMeta(meta)) : body;
         writeFileSync(join(work, name), `${code}\nexport {};\n`);
@@ -49,7 +55,7 @@ export function checkSnippets({
           emitDecoratorMetadata: true,
           types: ['node'],
         },
-        include: ['*.ts', '*.tsx'],
+        include: ['**/*.ts', '**/*.tsx'],
       }),
     );
     let output = '';
