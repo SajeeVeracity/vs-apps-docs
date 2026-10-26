@@ -2,9 +2,10 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fileMeta, readEmbedded } from '../src/plugins/embed-file.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const fence = /^```(ts|tsx)\b[^\n]*\n([\s\S]*?)^```/gm;
+const fence = /^```(ts|tsx)\b([^\n]*)\n([\s\S]*?)^```/gm;
 
 function docFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -17,6 +18,7 @@ function docFiles(dir) {
 /** Typechecks every ts/tsx fence under `docsDir`; writes `stampFile` only when all pass. */
 export function checkSnippets({
   docsDir = join(root, 'docs'),
+  baseDir = root,
   stampFile = join(root, 'static', 'verified.json'),
 } = {}) {
   const work = mkdtempSync(join(root, '.snippets-'));
@@ -24,9 +26,10 @@ export function checkSnippets({
     const origins = new Map();
     for (const file of docFiles(docsDir)) {
       let index = 0;
-      for (const [, lang, code] of readFileSync(file, 'utf8').matchAll(fence)) {
+      for (const [, lang, meta, body] of readFileSync(file, 'utf8').matchAll(fence)) {
         const name = `snippet-${origins.size}.${lang}`;
         // `export {}` keeps import-less snippets from sharing one global scope.
+        const code = fileMeta(meta) ? readEmbedded(baseDir, fileMeta(meta)) : body;
         writeFileSync(join(work, name), `${code}\nexport {};\n`);
         origins.set(name, `${relative(docsDir, file)} block ${++index}`);
       }

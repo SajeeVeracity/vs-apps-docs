@@ -72,4 +72,11 @@ export const resourceFieldRules: FieldRule[] = [
     required: false,
     rule: 'At least one handler when set. Any handler makes eventsUrl required in the manifest.',
   },
+  {
+    path: 'resources.connectors[].eventHandlers[].key',
+    required: true,
+    rule: 'Lower kebab-case handler key. Unique within the connector slot.',
+    pattern: kebab,
+  },
+  { path: 'resources.connectors[].eventHandlers[].label', required: true, rule: 'Non-empty string.' },
 ];

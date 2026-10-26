@@ -19,6 +19,10 @@ const place = {
     ...base,
     resources: { connectors: [{ key: v, provider: 'REST', required: false }] },
   }),
+  'resources.connectors[].eventHandlers[].key': (v) => ({
+    ...base,
+    resources: { connectors: [{ key: 'crm', provider: 'REST', required: false, eventHandlers: [{ key: v, label: 'H' }] }] },
+  }),
   'resources.models[].key': (v) => ({
     ...base,
     resources: { models: [{ key: v, modality: 'chat', providers: ['ANTHROPIC'], required: false }] },
@@ -30,6 +34,7 @@ const samples = {
   'pages[].key': ['home', 'my-page', 'Home', '1home', 'my_page'],
   'capabilities[].key': ['demo:view', 'a:b:c', 'demo', 'Demo:view', 'demo:', 'demo_x:view'],
   'resources.connectors[].key': ['crm', 'my-crm', 'Crm', 'my_crm'],
+  'resources.connectors[].eventHandlers[].key': ['inbound', 'in-bound', 'Inbound', 'in_bound'],
   'resources.models[].key': ['chat', 'fast-chat', 'Chat', 'fast_chat'],
 };
 
