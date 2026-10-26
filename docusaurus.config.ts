@@ -1,5 +1,6 @@
 import { themes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
+import embedFile from './src/plugins/embed-file.mjs';
 import pkg from './package.json' with { type: 'json' };
 
 const sdkVersion = pkg.dependencies['@vectoragents/vs-apps'];
@@ -15,7 +16,7 @@ const config: Config = {
     [
       'classic',
       {
-        docs: { routeBasePath: '/', sidebarPath: './sidebars.ts' },
+        docs: { routeBasePath: '/', sidebarPath: './sidebars.ts', beforeDefaultRemarkPlugins: [embedFile] },
         blog: false,
         theme: { customCss: './src/css/custom.css' },
       },
