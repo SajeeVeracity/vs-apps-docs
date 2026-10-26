@@ -2,7 +2,7 @@
 title: Glossary
 ---
 
-Each term has one name in these docs. Pages link a term at first use. Each entry gives the definition, the code symbol or field it maps to, and who owns it. Where the SDK and Space name a thing differently, both names appear. SDK means `@vectoragents/vs-apps` 0.2.4.
+Each term has one name in these docs. Pages link a term at first use. Each entry gives the definition, the code symbol or field it maps to, and who owns it.. SDK means `@vectoragents/vs-apps` 0.2.4.
 
 ## Terms
 
