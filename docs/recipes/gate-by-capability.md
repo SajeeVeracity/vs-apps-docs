@@ -6,11 +6,11 @@ Hide a [page](../glossary.md#page) from members who lack a [capability](../gloss
 
 ## Goal
 
-End with one capability enforced twice: `RequireCapability` hides the leads page in the browser, and the server guard answers `403` to a token without it.
+End with one capability enforced twice: `RequireCapability` hides the leads page in the browser, and the server answers `403` to a token without it.
 
 ## Prerequisites
 
-- The app from the [quickstart](../quickstart.md), with `AppProvider` and `BootGate` mounted.
+- The app from the [quickstart](../quickstart.md): its `node:http` server, and a client with `AppProvider` and `BootGate` mounted.
 - A member who holds the capability and one who does not. A space manager [grants](../glossary.md#grant) capabilities in [Space](../glossary.md#space).
 - Background: [`RequireCapability` on the client](../reference/react.md#requirecapability).
 
@@ -55,28 +55,51 @@ This check shapes the UI only. A member can still call the endpoint directly.
 
 ### 3. Enforce the capability on the server
 
-The platform module from the quickstart verifies the token. `RequireCapability` from `@vectoragents/vs-apps/nest` then refuses a token without `lead:manage`.
+Extend the auth module of the `node:http` server from the [quickstart](../quickstart.md). `verifyAppUserToken` returns the verified claims. `assertCapability` throws `AppAuthError` with status `403` when the claims lack `lead:manage`. The file below is the quickstart module plus `requireLeadManager`.
 
-```ts title="src/server/leads.controller.ts"
-import { Controller, Get } from '@nestjs/common';
-import type { UserTokenClaims } from '@vectoragents/vs-apps';
-import { CurrentUser, RequireCapability } from '@vectoragents/vs-apps/nest';
+```ts title="src/server/auth.ts"
+import type { IncomingMessage } from 'node:http';
+import {
+  assertCapability,
+  createSpaceTokenVerifier,
+  extractBearer,
+  verifyAppUserToken,
+  verifyProvisioningToken,
+} from '@vectoragents/vs-apps/server';
 
-@Controller('leads')
-export class LeadsController {
-  @Get()
-  @RequireCapability('lead:manage')
-  list(@CurrentUser() user: UserTokenClaims) {
-    return { spaceId: user.spaceId, leads: [] };
-  }
+const verifier = createSpaceTokenVerifier({ jwksUrl: process.env.SPACE_JWKS_URL ?? '' });
+
+export async function requireHelloUser(req: IncomingMessage) {
+  const claims = await verifyAppUserToken(verifier, extractBearer(req.headers));
+  assertCapability(claims, 'hello:view');
+  return claims;
+}
+
+export async function requireLeadManager(req: IncomingMessage) {
+  const claims = await verifyAppUserToken(verifier, extractBearer(req.headers));
+  assertCapability(claims, 'lead:manage');
+  return claims;
+}
+
+export function requireProvisioning(req: IncomingMessage) {
+  return verifyProvisioningToken(verifier, extractBearer(req.headers));
 }
 ```
 
-Add `LeadsController` to the `controllers` array of the module from the quickstart.
+Then route `GET /api/leads` in `src/server/main.ts`. Import `requireLeadManager` from `./auth` and add this block before the `404` response:
+
+```text
+if (pathname === '/api/leads') {
+  const claims = await requireLeadManager(req);
+  return send(res, 200, { spaceId: claims.spaceId, leads: [] });
+}
+```
+
+The existing `catch` block turns the `403` into the response. `requireLeadManager` takes a plain Node request object, so the same checks work from any other HTTP layer. For the decorator form, see the [framework adapter page](./nest-adapter.md).
 
 ### 4. Check both gates
 
-Open the app in a Space as a member without `lead:manage`. The page shows the fallback text. Grant the capability, reload, and the page shows the heading.
+Open the app in a Space as a member without `lead:manage`. The page shows the fallback text. Grant the capability, reload, and the page shows the heading. Call `GET /api/leads` with the token of the member who lacks the capability. The server answers `403` with `Missing capability: lead:manage`.
 
 ## Result
 
