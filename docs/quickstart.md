@@ -163,7 +163,7 @@ export function requireProvisioning(req: IncomingMessage) {
 
 The server answers five requests. `GET /api/client-config` tells the client which parent origin and key set to trust. `GET /api/manifest/hello-app` serves the manifest to Space, which sends a provisioning token. `GET /api/hello` returns the claims of a verified user token.
 
-`POST /api/provision` and `POST /api/deprovision` are called by Space when a space manager adds or removes the app in step 4. Space sends the provisioning token and, on provision, a `serviceSecret` for server-to-server calls. This app makes no such calls, so the routes only verify the token and ignore the secret. Without these routes, adding the app fails with a `404`.
+`POST /api/provision` and `POST /api/deprovision` are called by Space when a space manager adds or removes the app in step 4. The routes verify the provisioning token and ignore the `serviceSecret` that Space sends, because this app makes no server-to-server calls. Without these routes, adding the app fails with a `404`.
 
 A failed check throws `AppAuthError`, which carries the HTTP status.
 
