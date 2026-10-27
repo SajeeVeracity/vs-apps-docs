@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const docs = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs');
-const recipeNames = ['gate-by-capability', 'read-app-context', 'list-members', 'expose-agent-actions', 'add-page-and-capability'];
+const recipeNames = ['gate-by-capability', 'read-app-context', 'list-members', 'expose-agent-actions', 'add-page-and-capability', 'nest-adapter'];
 const pagesIn = (dir) =>
   readdirSync(join(docs, dir))
     .filter((name) => name.endsWith('.md'))
@@ -55,7 +55,8 @@ test('never uses the csr-agents page and uses SDR examples', () => {
   for (const { name, text } of all) {
     assert.doesNotMatch(text, /csr-agents|csr:agents|csr\.agents/i, name);
   }
-  assert.ok(recipes.every((r) => /sdr|lead|icp/i.test(r.text)));
+  // nest-adapter maps the quickstart's hello-app, which has no SDR example.
+  assert.ok(recipes.filter((r) => r.name !== 'nest-adapter').every((r) => /sdr|lead|icp/i.test(r.text)));
 });
 
 test('follows the writing standard', () => {
