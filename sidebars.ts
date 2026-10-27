@@ -32,6 +32,7 @@ const sidebars: SidebarsConfig = {
         'recipes/gate-by-capability',
         'recipes/list-members',
         'recipes/expose-agent-actions',
+        'recipes/nest-adapter',
       ],
     },
     {

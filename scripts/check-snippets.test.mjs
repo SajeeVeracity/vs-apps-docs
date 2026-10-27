@@ -31,3 +31,27 @@ test('fails a snippet that does not typecheck and writes no stamp', () => {
   assert.equal(result.ok, false);
   assert.throws(() => readFileSync(stamp));
 });
+
+const decorated = `${fence}ts title="a.ts"
+import { Get } from '@nestjs/common';
+export class X {
+  @Get()
+  list() {}
+}
+${fence}
+`;
+
+test('fails a decorator snippet on a page that is not the Nest page', () => {
+  const { docs, stamp } = docsDir(decorated);
+  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+  assert.equal(result.ok, false);
+  assert.match(result.output, /page\.md block 1/);
+});
+
+test('passes a decorator snippet on the Nest page', () => {
+  const { docs, stamp } = docsDir('');
+  mkdirSync(join(docs, 'recipes'));
+  writeFileSync(join(docs, 'recipes', 'nest-adapter.md'), decorated);
+  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+  assert.equal(result.ok, true, result.output);
+});
