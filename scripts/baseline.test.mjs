@@ -11,12 +11,6 @@ const banned = [
 const nestPage = 'recipes/nest-adapter.md';
 const nestTerms = new Set(['/\\bNest(JS)?\\b/', '/@nestjs\\//', '/@Injectable/', '/@Controller/', '/experimentalDecorators/']);
 
-// Pages not yet on the baseline. Each entry names the ticket that removes it.
-const exempt = {
-  'recipes/expose-agent-actions.md': 'ticket 06',
-  'app-definition.md': 'ticket 06',
-};
-
 function bannedIn(body, allowed = new Set()) {
   return banned.filter((re) => re.test(body)).map(String).filter((term) => !allowed.has(term));
 }
@@ -28,16 +22,8 @@ const pages = readdirSync(docs, { recursive: true })
 
 test('published pages name no stack outside the baseline', () => {
   for (const page of pages) {
-    if (page in exempt) continue;
     const allowed = page === nestPage ? nestTerms : undefined;
     assert.deepEqual(bannedIn(readFileSync(new URL(page, docs), 'utf8'), allowed), [], page);
-  }
-});
-
-test('every exempt page exists and still needs its exemption', () => {
-  for (const page of Object.keys(exempt)) {
-    assert.ok(pages.includes(page), `${page} is not a published page`);
-    assert.notDeepEqual(bannedIn(readFileSync(new URL(page, docs), 'utf8')), [], `${page}: remove the exemption (${exempt[page]})`);
   }
 });
 

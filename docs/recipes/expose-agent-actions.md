@@ -11,7 +11,7 @@ End with the action `sdr-leads.open_lead_list` available to the agent while the 
 ## Prerequisites
 
 - The app from the [quickstart](../quickstart.md). `AppProvider` already mounts the action registry.
-- `zod` installed for the params schema: `pnpm add zod`.
+- `zod` installed for the params schema: `npm install zod`.
 - Background: [`defineAgentPage`](../reference/root.md#defineagentpage), and [`useAgentAction`](../reference/agent-react.md#useagentaction).
 
 ## Steps

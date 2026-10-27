@@ -32,7 +32,7 @@ One definition is used in ten places. The manifest is the largest use, not the o
 2. **Generate and serve the manifest.** `buildManifests` turns each definition into a manifest at boot. The server serves it each time Space reads the manifest.
 3. **List agent-callable routes.** Routes the server marks as agent-callable are listed in the manifest at boot.
 4. **Merge the [agent catalog](./glossary.md#agent-catalog).** At boot, the build-time agent catalog is merged into the manifest, joined on page keys.
-5. **Keep the server's app registry.** The registry is the server's list of app definitions. The server holds each definition beside its Nest module, mounts the module and serves the definition's manifest.
+5. **Keep the server's app registry.** The registry is the server's list of app definitions. The server holds each definition beside its server module, mounts the module and serves the definition's manifest.
 6. **Check the token.** Controllers compare the `appKey` in a Space token with the definition `key` before they answer.
 7. **Register connector event handlers.** At boot, the server registers every event handler that a [connector slot](./glossary.md#connector-slot) declares in the definition. This keeps the manifest and the handlers the same.
 8. **Look up a model slot.** Code asks Space for a model by [model slot](./glossary.md#model-slot) key. The SDK refuses a slot that the manifest does not declare, and a slot that no one set.
