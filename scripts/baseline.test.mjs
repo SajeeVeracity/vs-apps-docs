@@ -13,7 +13,6 @@ const nestTerms = new Set(['/\\bNest(JS)?\\b/', '/@nestjs\\//', '/@Injectable/',
 
 // Pages not yet on the baseline. Each entry names the ticket that removes it.
 const exempt = {
-  'recipes/gate-by-capability.md': 'ticket 04',
   'reference/harness.md': 'ticket 05',
   'recipes/expose-agent-actions.md': 'ticket 06',
   'app-definition.md': 'ticket 06',
