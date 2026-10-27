@@ -1,6 +1,6 @@
 # Docs language checklist
 
-Reader: a working TypeScript developer who knows React and NestJS and has not used Space.
+Reader: a working TypeScript developer who knows TypeScript, Node and React and has not used Space.
 Coverage: prose, tables, headings, code comments. Not identifiers or string values in code.
 Precedence: rules here win over any reference.
 
@@ -29,7 +29,7 @@ Precedence: rules here win over any reference.
 ### Terms
 
 - **T1 Vector and SDK terms.** Define at first use, or link to the glossary at first use. This includes role words such as "staff" and "space manager". Link at the first use in the page, not at the first use in a section.
-- **T2 Standard terms.** Standard web, TypeScript and NestJS terms need no definition.
+- **T2 Standard terms.** Standard web, TypeScript, Node and React terms need no definition.
 - **T3 Informal words.** A word used with a private meaning ("pull", "boot ping", "ungated", "surface") is a Vector term: apply T1, or replace it with a plain phrase.
 
 ### Abbreviations
