@@ -30,7 +30,7 @@ Two model slots and two connector slots. Each connector declares `eventHandlers`
 
 Each file passes `defineApp` as pasted. Change `key`, page paths and slot keys to match your app.
 
-Copy one into your project as `src/app.definition.ts`, or load it in the [builder](/builder).
+Copy one into your project as `src/app.definition.ts`, or load it in the [definition builder](/builder).
 
 ## Next steps
 

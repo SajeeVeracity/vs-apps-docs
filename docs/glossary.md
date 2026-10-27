@@ -14,7 +14,7 @@ The reader these docs are written for first: a developer new to Vector who build
 
 ### app
 
-A product a builder ships into Spaces: a React client, a server and one app definition.
+A product an app developer ships into Spaces: a React client, a server and one app definition.
 
 - Maps to: the definition `key`, sent to Space as `appKey`.
 - Owner: SDK. It defines the shape of the definition that identifies the app.
