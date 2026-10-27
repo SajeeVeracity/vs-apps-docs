@@ -229,7 +229,7 @@ A staff member registers the manifest URL. Your server must be reachable at `PUB
 
 This creates the [app registration](./glossary.md#app-registration). Registering applies the first manifest. Then a space manager activates the app in a space and shares it with your user. Sharing at View or Edit gives the user every capability of the app, including `hello:view`.
 
-To activate the app, open **Settings**, then **Space**, then **Context Hub**, then **Resources**. Choose **New**, then **Add App**, and pick **Hello app**. Space calls `POST /api/provision` on your server. If the dialog stays open, check the server log for a failed route. A space admin already appears under **Who can use it** with `hello:view`. To share the app with another user, open the three-dots menu on the app row in **Resources** and choose **Access**.
+To activate the app, open **Settings**, then **Space**, then **Context Hub**, then **Resources**. Choose **Add resource**, then **App**, and pick **Hello app**. Space calls `POST /api/provision` on your server. If the dialog stays open, check the server log for a failed route. A space admin already appears under **Who can use it** with `hello:view`. To share the app with another user, open the three-dots menu on the app row in **Resources**, choose **Access**, then choose **Add people, roles or groups**.
 
 ### 5. Write the client
 
