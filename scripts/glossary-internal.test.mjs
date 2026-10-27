@@ -14,7 +14,7 @@ test('internal entries have definition, mapping and owner', () => {
   for (const block of blocks) {
     const [name, ...rest] = block.split('\n');
     const body = rest.join('\n');
-    assert.match(body, /^\S.*$/m, `${name}: definition`);
+    assert.match(body, /^[^\s-].*$/m, `${name}: definition`);
     assert.match(body, /^- Maps to: .+/m, `${name}: mapping`);
     assert.match(body, /^- Owner: .+/m, `${name}: owner`);
   }

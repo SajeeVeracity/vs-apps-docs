@@ -23,7 +23,7 @@ test('covers every candidate term', () => {
 
 test('each entry has definition, mapping and owner', () => {
   for (const { name, body } of entries) {
-    assert.match(body, /^\S.*$/m, `${name}: definition`);
+    assert.match(body, /^[^\s-].*$/m, `${name}: definition`);
     assert.match(body, /^- Maps to: .+/m, `${name}: mapping`);
     assert.match(body, /^- Owner: (SDK|Space|SDK and Space)\b/m, `${name}: owner`);
   }
