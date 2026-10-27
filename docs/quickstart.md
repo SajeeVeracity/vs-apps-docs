@@ -14,7 +14,7 @@ End with the `hello-app` page open in a Space, showing the user and space taken 
 - A GitHub token with `read:packages` access to `@vectoragents/vs-apps` on GitHub Packages.
 - A Space where you can register an app (staff) and activate it and share it (space manager). Your user also needs View access to the app, or admin rights.
 - Your user belongs to a space that has a published agent. Without one, Space shows "No spaces yet".
-- If your organization has a license, the license must allow the app. Space does not list an app that the license leaves out. Staff change the license in the admin portal. A Space with no license needs nothing here.
+- If your organization has a license, the license must allow the app. Space does not list an app that the license leaves out. Staff change the license in the admin portal.
 - The Space server can reach your app server over HTTP. A Space that is not on your machine needs a public URL for the server, for example from a tunnel.
 
 ## Set your values
@@ -161,7 +161,11 @@ export function requireProvisioning(req: IncomingMessage) {
 }
 ```
 
-The server answers five requests. `GET /api/client-config` tells the client which parent origin and key set to trust. `GET /api/manifest/hello-app` serves the manifest to Space, which sends a provisioning token. `GET /api/hello` returns the claims of a verified user token. `POST /api/provision` and `POST /api/deprovision` are called by Space when a space manager adds or removes the app in step 4. Space sends the provisioning token and, on provision, a `serviceSecret` for server-to-server calls. This app makes no such calls, so the routes only verify the token and ignore the secret. Without these routes, adding the app fails with a `404`. A failed check throws `AppAuthError`, which carries the HTTP status.
+The server answers five requests. `GET /api/client-config` tells the client which parent origin and key set to trust. `GET /api/manifest/hello-app` serves the manifest to Space, which sends a provisioning token. `GET /api/hello` returns the claims of a verified user token.
+
+`POST /api/provision` and `POST /api/deprovision` are called by Space when a space manager adds or removes the app in step 4. Space sends the provisioning token and, on provision, a `serviceSecret` for server-to-server calls. This app makes no such calls, so the routes only verify the token and ignore the secret. Without these routes, adding the app fails with a `404`.
+
+A failed check throws `AppAuthError`, which carries the HTTP status.
 
 ```ts title="src/server/main.ts"
 import { createServer, type ServerResponse } from 'node:http';
@@ -225,11 +229,13 @@ A staff member registers the manifest URL. Your server must be reachable at `PUB
 2. Enter the manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. Choose Continue. Space pulls and validates the manifest and shows `hello-app`, 1 page and 1 capability.
 3. Set the iframe URL to the origin of the client, `http://localhost:` followed by `CLIENT_PORT` in this quickstart. The field starts with the manifest origin, which is the server and not the client.
 4. Switch on **Auto-apply manifest updates** so later definition changes apply without a review. Then choose Register.
-5. Edit the new row and switch on **Enabled**. A new registration is disabled, and Space does not offer a disabled app to any space.
+5. Edit the new row and switch on **Enabled**. A new registration starts disabled.
 
 This creates the [app registration](./glossary.md#app-registration). Registering applies the first manifest. Then a space manager activates the app in a space and shares it with your user. Sharing at View or Edit gives the user every capability of the app, including `hello:view`.
 
-To activate the app, open **Settings**, then **Space**, then **Context Hub**, then **Resources**. Choose **Add resource**, then **App**, and pick **Hello app**. Space calls `POST /api/provision` on your server. If the dialog stays open, check the server log for a failed route. A space admin already appears under **Who can use it** with `hello:view`. To share the app with another user, open the three-dots menu on the app row in **Resources**, choose **Access**, then choose **Add people, roles or groups**.
+To activate the app, open **Settings**, then **Space**, then **Context Hub**, then **Resources**. Choose **Add resource**, then **App**, and pick **Hello app**. Space calls `POST /api/provision` on your server. If the dialog stays open, check the server log for a failed route.
+
+A space admin already appears under **Who can use it** with `hello:view`. To share the app with another user, open the three-dots menu on the app row in **Resources**, choose **Access**, then choose **Add people, roles or groups**.
 
 ### 5. Write the client
 
