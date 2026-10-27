@@ -1,6 +1,4 @@
----
-title: Provenance
----
+# Provenance
 
 What each claim in these docs rests on.
 
@@ -12,4 +10,4 @@ What each claim in these docs rests on.
 
 ## Not yet verified in a real Space
 
-No page has been walked through in a real Space. Quickstart step 4 and step 6, the Space UI labels, and the Space-side behaviour listed in the [app definition](./app-definition.md#how-it-reflects-in-space) page are statements of the Space documentation, not observations. Ticket 07 covers that verification.
+No page has been walked through in a real Space. Quickstart step 4 and step 6, the Space UI labels, and the Space-side behaviour listed in the [app definition](../docs/app-definition.md) page are statements of the Space documentation, not observations. Ticket 07 covers that verification.

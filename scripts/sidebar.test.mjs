@@ -22,10 +22,10 @@ test('every page in the docs folder appears exactly once', () => {
   assert.deepEqual([...listed].sort(), [...pageIds].sort());
 });
 
-test('sections run Get started, Guides, Recipes, Reference, About', () => {
+test('sections run Get started, Guides, Recipes, Reference', () => {
   assert.deepEqual(
     categories.map((category) => category.label),
-    ['Get started', 'Guides', 'Recipes', 'Reference', 'About'],
+    ['Get started', 'Guides', 'Recipes', 'Reference'],
   );
 });
 

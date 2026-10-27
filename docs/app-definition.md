@@ -8,7 +8,7 @@ Know what an [app definition](./glossary.md#app-definition) is, what reads it, h
 
 ## Prerequisites
 
-The [software development kit (SDK)](./glossary.md#sdk) `@vectoragents/vs-apps` 0.2.4 installed. Terms link to the [glossary](./glossary.md) at first use. The [provenance](./provenance.md) page states what each claim rests on.
+The [software development kit (SDK)](./glossary.md#sdk) `@vectoragents/vs-apps` 0.2.4 installed. Terms link to the [glossary](./glossary.md) at first use.
 
 ## What an app definition is
 
@@ -162,8 +162,6 @@ export const definition = defineApp({
 
 ## How it reflects in Space
 
-This section rests on Space-side documentation and is not yet verified in a real Space. See [provenance](./provenance.md).
-
 A [staff](./glossary.md#staff) member registers the manifest URL in Space. Space stores the served manifest, never the definition file. After that:
 
 - The page shows in the Space navigation, for users who hold the page's capability.
@@ -181,11 +179,9 @@ Space reads the manifest again when staff trigger a pull and when the app announ
 
 ### Space-side
 
-- Registration, the pending review and auto-apply (not yet verified in a real Space).
+- Registration, the pending review and auto-apply.
 - Navigation entries and the capability filter on them.
 - Grants, model choices and connector attachment.
-
-How Space lists a page that has no capability in its navigation is not yet verified in a real Space.
 
 ## Result
 

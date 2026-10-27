@@ -51,11 +51,6 @@ const sidebars: SidebarsConfig = {
         'glossary',
       ],
     },
-    {
-      type: 'category',
-      label: 'About',
-      items: ['provenance'],
-    },
   ],
 };
 

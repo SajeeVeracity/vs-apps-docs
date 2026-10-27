@@ -76,9 +76,8 @@ test('links each glossary term at first use only', () => {
   }
 });
 
-test('links the builder and the provenance page', () => {
+test('links the builder', () => {
   assert.match(text, /\]\(\/builder\)/);
-  assert.match(text, /\]\(\.\/provenance\.md\)/);
 });
 
 test('follows the writing standard', () => {

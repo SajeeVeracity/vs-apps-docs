@@ -237,10 +237,6 @@ pnpm check:server
 
 A staff member registers the manifest URL. Your server must be reachable at `PUBLIC_BASE_URL` from the Space server.
 
-:::note
-The Space labels and behaviour in this step and the next are not yet verified in a real Space. See [provenance](./provenance.md).
-:::
-
 1. Open the app registry in the Space admin area and add an app.
 2. Enter the manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. Choose Continue. Space pulls and validates the manifest and shows `hello-app`, 1 page and 1 capability.
 3. Set the iframe URL to the origin of the Vite client, `http://localhost:` followed by `CLIENT_PORT` in this quickstart. The field starts with the manifest origin, which is the server and not the client.

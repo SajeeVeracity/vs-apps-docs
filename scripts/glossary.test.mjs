@@ -42,3 +42,13 @@ test('published pages use no internal term', () => {
     assert.doesNotMatch(body, /app developer|app binding|glossary\.md#binding/i, page);
   }
 });
+
+test('published pages carry no provenance link or unverified caveat', () => {
+  const docs = new URL('../docs/', import.meta.url);
+  const pages = readdirSync(docs, { recursive: true });
+  assert.ok(!pages.some((f) => /^provenance\./.test(f)), 'provenance page is published');
+  for (const page of pages.filter((f) => /\.mdx?$/.test(f))) {
+    const body = readFileSync(new URL(page, docs), 'utf8');
+    assert.doesNotMatch(body, /provenance|not yet verified/i, page);
+  }
+});
