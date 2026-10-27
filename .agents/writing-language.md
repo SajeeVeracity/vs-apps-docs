@@ -18,6 +18,14 @@ Precedence: rules here win over any reference.
 - **L8 One name per thing.** Use the glossary name every time, with the same capitals. Bad: "registry entry" for "app registration".
 - **L9 Spell out the figure.** Give exact numbers and limits, not "a few" or "many".
 
+### Voice
+
+- **V1 Speak to the reader.** Address the reader as "you" and "your". Bad: "The developer adds a page." Good: "You add a page."
+- **V2 Imperative for steps.** A task step is a command. Bad: "The page can be added to the definition." Good: "Add the page to the definition."
+- **V3 Never name the reader by role.** Do not write "app developer", "the developer" or "the user" for the reader. "Your users" means the people who open your app.
+- **V4 Other roles keep their names.** Write "space manager" and "staff" for people in Space. Link them at first use (T1).
+- **V5 No "we" or "our".** The docs state what is true and do not speak as Vector.
+
 ### Terms
 
 - **T1 Vector and SDK terms.** Define at first use, or link to the glossary at first use. This includes role words such as "staff" and "space manager". Link at the first use in the page, not at the first use in a section.
@@ -47,4 +55,4 @@ Precedence: rules here win over any reference.
 ## Not in this checklist
 
 - Contractions. Decision pending.
-- Existing writing standard (hyphens, we/our, current state only). Reported in a separate section.
+- Existing writing standard (hyphens, current state only). Reported in a separate section.

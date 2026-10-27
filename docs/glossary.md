@@ -6,15 +6,9 @@ Each term has one name in these docs. Pages link a term at first use. Each entry
 
 ## Terms
 
-### app developer
-
-The reader these docs are written for first: a developer new to Vector who builds an app from scratch. Pages order concepts so this reader never meets an undefined term.
-
-- Owner: docs.
-
 ### app
 
-A product an app developer ships into Spaces: a React client, a server and one app definition.
+A product you ship into Spaces: a React client, a server and one app definition.
 
 - Maps to: the definition `key`, sent to Space as `appKey`.
 - Owner: SDK. It defines the shape of the definition that identifies the app.
@@ -66,13 +60,6 @@ The administrators of Space itself. They register apps and apply manifest change
 The record staff create in Space by giving it a manifest URL. One registration per app. Space re-pulls the manifest on a pull or the app's boot ping.
 
 - Maps to: no SDK symbol.
-- Owner: Space.
-
-### binding
-
-An app attached to one space. It snapshots the manifest's grantable capabilities, acts and approvals, and holds that space's model, connector and module choices. Re-snapshotted on every pull or apply.
-
-- Maps to: no SDK symbol. The SDK sees the effect through the verified token and `loadAppClientConfig`.
 - Owner: Space.
 
 ### page

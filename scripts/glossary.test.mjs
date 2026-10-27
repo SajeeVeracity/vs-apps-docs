@@ -8,12 +8,13 @@ const entries = text
   .slice(1)
   .map((block) => {
     const [name, ...rest] = block.split('\n');
-    return { name: name.trim(), body: rest.join('\n') };
+    return { name: name.replace(/\s*\{#.*\}\s*$/, '').trim(), body: rest.join('\n') };
   });
 
 const required = [
-  'app', 'app definition', 'manifest', 'Space', 'app registration', 'binding', 'page', 'capability',
-  'grant', 'model slot', 'connector slot', 'agent action', 'agent catalog', 'acts', 'approvals', 'harness',
+  'app', 'app definition', 'manifest', 'Space', 'space', 'space manager', 'staff', 'app registration', 'page',
+  'capability', 'grant', 'model slot', 'connector slot', 'agent action', 'agent catalog', 'acts', 'approvals',
+  'harness', 'SDK', 'MCP',
 ];
 
 test('covers every candidate term', () => {
