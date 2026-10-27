@@ -2,17 +2,25 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
+// `nest` marks the terms that the Nest page may use.
 const banned = [
-  /\bNest(JS)?\b/, /@nestjs\//, /\bVite\b/, /\bExpress\b/, /\bFastify\b/, /\bpnpm\b/, /\byarn\b/,
-  /import\.meta\.env/, /@Injectable/, /@Controller/, /experimentalDecorators/,
+  { re: /\bNest(JS)?\b/, nest: true },
+  { re: /@nestjs\//, nest: true },
+  { re: /\bVite\b/ },
+  { re: /\bExpress\b/ },
+  { re: /\bFastify\b/ },
+  { re: /\bpnpm\b/ },
+  { re: /\byarn\b/ },
+  { re: /import\.meta\.env/ },
+  { re: /@Injectable/, nest: true },
+  { re: /@Controller/, nest: true },
+  { re: /experimentalDecorators/, nest: true },
 ];
 
-// The one page that may name these terms, and no other term.
 const nestPage = 'recipes/nest-adapter.md';
-const nestTerms = new Set(['/\\bNest(JS)?\\b/', '/@nestjs\\//', '/@Injectable/', '/@Controller/', '/experimentalDecorators/']);
 
-function bannedIn(body, allowed = new Set()) {
-  return banned.filter((re) => re.test(body)).map(String).filter((term) => !allowed.has(term));
+function bannedIn(body, nestAllowed = false) {
+  return banned.filter(({ re, nest }) => re.test(body) && !(nestAllowed && nest)).map(({ re }) => String(re));
 }
 
 const docs = new URL('../docs/', import.meta.url);
@@ -22,8 +30,7 @@ const pages = readdirSync(docs, { recursive: true })
 
 test('published pages name no stack outside the baseline', () => {
   for (const page of pages) {
-    const allowed = page === nestPage ? nestTerms : undefined;
-    assert.deepEqual(bannedIn(readFileSync(new URL(page, docs), 'utf8'), allowed), [], page);
+    assert.deepEqual(bannedIn(readFileSync(new URL(page, docs), 'utf8'), page === nestPage), [], page);
   }
 });
 
@@ -33,9 +40,9 @@ test('the Nest page is published and uses Nest terms', () => {
 });
 
 test('the Nest allowance covers Nest terms and no other', () => {
-  assert.deepEqual(bannedIn('uses NestJS and @nestjs/core', nestTerms), []);
-  assert.deepEqual(bannedIn('uses Vite with Nest', nestTerms), ['/\\bVite\\b/']);
-  assert.deepEqual(bannedIn('uses pnpm', nestTerms), ['/\\bpnpm\\b/']);
+  assert.deepEqual(bannedIn('uses NestJS and @nestjs/core', true), []);
+  assert.deepEqual(bannedIn('uses Vite with Nest', true), ['/\\bVite\\b/']);
+  assert.deepEqual(bannedIn('uses pnpm', true), ['/\\bpnpm\\b/']);
 });
 
 test('guard flags each banned term and allows npm', () => {

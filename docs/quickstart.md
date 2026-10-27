@@ -133,7 +133,7 @@ export const manifests = buildManifests([definition], {
 });
 ```
 
-The auth module holds the token verifier and the checks that protected routes run. The verifier reads the Space key set from `SPACE_JWKS_URL`. `extractBearer` reads the `Authorization` header. `verifyAppUserToken` verifies the user token and returns its claims. `assertCapability` refuses a token that lacks `hello:view`.
+The auth module holds the token verifier and the checks that protected routes run. The verifier reads the Space key set from `SPACE_JWKS_URL`. `extractBearer` reads the `Authorization` header. `verifyAppUserToken` verifies the user token and returns its claims. `assertCapability` refuses a token that lacks the capability that `requireCapability` names.
 
 ```ts title="src/server/auth.ts"
 import type { IncomingMessage } from 'node:http';
@@ -147,9 +147,9 @@ import {
 
 const verifier = createSpaceTokenVerifier({ jwksUrl: process.env.SPACE_JWKS_URL ?? '' });
 
-export async function requireHelloUser(req: IncomingMessage) {
+export async function requireCapability(req: IncomingMessage, capability: string) {
   const claims = await verifyAppUserToken(verifier, extractBearer(req.headers));
-  assertCapability(claims, 'hello:view');
+  assertCapability(claims, capability);
   return claims;
 }
 
@@ -163,7 +163,7 @@ The server answers three requests. `GET /api/client-config` tells the client whi
 ```ts title="src/server/main.ts"
 import { createServer, type ServerResponse } from 'node:http';
 import { AppAuthError } from '@vectoragents/vs-apps/server';
-import { requireHelloUser, requireProvisioning } from './auth';
+import { requireCapability, requireProvisioning } from './auth';
 import { manifests } from './manifests';
 
 function send(res: ServerResponse, status: number, body: unknown): void {
@@ -185,7 +185,7 @@ createServer(async (req, res) => {
       return send(res, 200, manifests['hello-app']);
     }
     if (pathname === '/api/hello') {
-      const claims = await requireHelloUser(req);
+      const claims = await requireCapability(req, 'hello:view');
       return send(res, 200, { sub: claims.sub, spaceId: claims.spaceId });
     }
     send(res, 404, { error: 'Not found' });
@@ -326,7 +326,7 @@ Open the Space and choose **Hello app** in the navigation. Its page `Home` loads
 
 ## Debugging aside: the dev harness
 
-`VectorAppsHarness` from `@vectoragents/vs-apps/harness` stands in for Space on your machine, so a page can run before any registration. It needs the dev routes on your server and a second HTML page that mounts the harness. The [harness reference](./reference/harness.md) gives the routes. Use it to debug a page. It is not part of this quickstart path, and the [harness](./glossary.md#harness) entry in the glossary lists what it does not cover.
+`VectorAppsHarness` from `@vectoragents/vs-apps/harness` stands in for Space on your machine, so a page can run before any registration. It needs the dev routes on your server and a second HTML page that mounts the harness. The [harness reference](./reference/harness.md) gives the routes. Use it to debug a page. The quickstart runs without it. The [harness](./glossary.md#harness) entry in the glossary lists what it does not cover.
 
 ## Result
 

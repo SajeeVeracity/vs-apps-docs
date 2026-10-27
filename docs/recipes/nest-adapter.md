@@ -2,7 +2,7 @@
 title: Use the NestJS adapter
 ---
 
-Map each step of the plain-server [quickstart](../quickstart.md) to the SDK's NestJS adapter. The quickstart does not need this page. Read it only if your server is a NestJS server.
+Map each step of the plain-server [quickstart](../quickstart.md) to the SDK's NestJS adapter. Optional: the quickstart runs without it. This page is for NestJS servers.
 
 The adapter is the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary.md#sdk). It wraps the same primitives as `/server` in a module, a guard and decorators.
 
@@ -45,11 +45,11 @@ NestJS needs the decorator options. Add them to the compiler options of the quic
 }
 ```
 
-Point the `dev:server` script at `src/server/main.ts` as before. It needs no other change.
+Point the `dev:server` script at `src/server/main.ts` as before.
 
 ### 2. Serve the manifest
 
-The manifest builder is the same as in the quickstart. `AppPlatformModule` serves the result, so you write no manifest route.
+The manifest builder is the same as in the quickstart. `AppPlatformModule` serves the result.
 
 ```ts title="src/app.definition.ts"
 import { defineApp } from '@vectoragents/vs-apps';
@@ -73,7 +73,7 @@ export const manifests = buildManifests([definition], {
 });
 ```
 
-The module calls a credential store when Space provisions the app. The plain quickstart has no store. This one keeps the secrets in memory, so a restart loses them. Use a database for anything beyond a first run.
+The module calls a credential store when Space provisions the app. The store below keeps the secrets in memory, so a restart loses them. Use a database for anything beyond a first run.
 
 ```ts title="src/server/credential-store.ts"
 import { Injectable } from '@nestjs/common';
@@ -99,7 +99,7 @@ export class MemoryCredentialStore implements AppCredentialStore {
 
 ### 3. Verify tokens and gate by capability
 
-In the quickstart, `requireHelloUser` calls `verifyAppUserToken` and then `assertCapability`. In NestJS, the platform module installs a global guard that verifies every user token against `SPACE_JWKS_URL`. The `RequireCapability` decorator then replaces `assertCapability`, and `CurrentUser` hands the controller the verified claims.
+In the quickstart, `requireCapability` calls `verifyAppUserToken` and then `assertCapability`. In NestJS, the platform module installs a global guard. The guard verifies every user token against `SPACE_JWKS_URL`. The `RequireCapability` decorator replaces `assertCapability`. `CurrentUser` hands the controller the verified claims.
 
 ```ts title="src/server/hello.controller.ts"
 import { Controller, Get } from '@nestjs/common';

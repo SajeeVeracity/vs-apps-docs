@@ -18,17 +18,23 @@ End with one capability enforced twice: `RequireCapability` hides the leads page
 
 ### 1. Declare the capability and the page
 
-A page names its capability in `capability`. `defineApp` does not check that the name exists in `capabilities`, so keep the two keys identical.
+A page names its capability in `capability`. `defineApp` does not check that the name exists in `capabilities`, so keep the two keys identical. The definition below is the quickstart definition plus the leads page, so the quickstart server serves it unchanged.
 
 ```ts title="src/app.definition.ts"
 import { defineApp } from '@vectoragents/vs-apps';
 
 export const definition = defineApp({
-  key: 'sdr',
-  name: 'SDR',
+  key: 'hello-app',
+  name: 'Hello app',
   version: '0.1.0',
-  pages: [{ key: 'sdr-leads', label: 'Leads', path: '/leads', capability: 'lead:manage' }],
-  capabilities: [{ key: 'lead:manage', label: 'Manage Leads', effect: 'write' }],
+  pages: [
+    { key: 'home', label: 'Home', path: '/', capability: 'hello:view' },
+    { key: 'leads', label: 'Leads', path: '/leads', capability: 'lead:manage' },
+  ],
+  capabilities: [
+    { key: 'hello:view', label: 'View hello', effect: 'read' },
+    { key: 'lead:manage', label: 'Manage Leads', effect: 'write' },
+  ],
 });
 ```
 
@@ -55,47 +61,17 @@ This check shapes the UI only. A member can still call the endpoint directly.
 
 ### 3. Enforce the capability on the server
 
-Extend the auth module of the `node:http` server from the [quickstart](../quickstart.md). `verifyAppUserToken` returns the verified claims. `assertCapability` throws `AppAuthError` with status `403` when the claims lack `lead:manage`. The file below is the quickstart module plus `requireLeadManager`.
+`requireCapability` in the auth module of the [quickstart](../quickstart.md) verifies the user token. It throws `AppAuthError` with status `403` when the claims lack the named capability. The leads handler receives the verified claims.
 
-```ts title="src/server/auth.ts"
-import type { IncomingMessage } from 'node:http';
-import {
-  assertCapability,
-  createSpaceTokenVerifier,
-  extractBearer,
-  verifyAppUserToken,
-  verifyProvisioningToken,
-} from '@vectoragents/vs-apps/server';
+```ts title="src/server/leads.ts"
+import type { UserTokenClaims } from '@vectoragents/vs-apps';
 
-const verifier = createSpaceTokenVerifier({ jwksUrl: process.env.SPACE_JWKS_URL ?? '' });
-
-export async function requireHelloUser(req: IncomingMessage) {
-  const claims = await verifyAppUserToken(verifier, extractBearer(req.headers));
-  assertCapability(claims, 'hello:view');
-  return claims;
-}
-
-export async function requireLeadManager(req: IncomingMessage) {
-  const claims = await verifyAppUserToken(verifier, extractBearer(req.headers));
-  assertCapability(claims, 'lead:manage');
-  return claims;
-}
-
-export function requireProvisioning(req: IncomingMessage) {
-  return verifyProvisioningToken(verifier, extractBearer(req.headers));
+export function listLeads(claims: UserTokenClaims) {
+  return { spaceId: claims.spaceId, leads: [] };
 }
 ```
 
-Then route `GET /api/leads` in `src/server/main.ts`. Import `requireLeadManager` from `./auth` and add this block before the `404` response:
-
-```text
-if (pathname === '/api/leads') {
-  const claims = await requireLeadManager(req);
-  return send(res, 200, { spaceId: claims.spaceId, leads: [] });
-}
-```
-
-The existing `catch` block turns the `403` into the response. `requireLeadManager` takes a plain Node request object, so the same checks work from any other HTTP layer. For the decorator form, see the [framework adapter page](./nest-adapter.md).
+In `src/server/main.ts`, import `listLeads` and add this line before the `404` response: `if (pathname === '/api/leads') return send(res, 200, listLeads(await requireCapability(req, 'lead:manage')));`. The existing `catch` block turns the `403` into the response. For the decorator form, see the [framework adapter page](./nest-adapter.md).
 
 ### 4. Check both gates
 

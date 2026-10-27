@@ -51,7 +51,7 @@ Load it from `harness.html`, a sibling of `index.html` whose script tag points a
 
 ## Dev routes
 
-The harness calls two routes on the same origin as the page, under `/api`. Your bundler forwards `/api` to the app server, as in the [quickstart](../quickstart.md). The app server serves both routes only when `VA_DEV_ISSUER=true`.
+The app server serves three routes on the same origin as the page, under `/api`. Your bundler forwards `/api` to the app server, as in the [quickstart](../quickstart.md), only when `VA_DEV_ISSUER=true`. The harness calls the first two. The third publishes the key set that verifies the dev tokens.
 
 ### `GET /api/__dev/manifests`
 
@@ -92,9 +92,13 @@ A valid request returns status `200` and a JSON body:
 
 An invalid request returns status `400`. The harness shows the response text in its dev panel.
 
+### `GET /api/__dev/jwks.json`
+
+Returns status `200` and the public key set of the dev issuer, the value of `devIssuer.jwks()` in the example below. The set verifies the tokens that `POST /api/__dev/token` signs.
+
 ### Example
 
-`createDevIssuer` signs tokens and verifies them, so one object serves both. The handler also serves the issuer's public key set at `GET /api/__dev/jwks.json`. Call `handleDevRoute` first in your request handler. It returns `true` when it answered the request. It returns `false` for every other request, and always when `VA_DEV_ISSUER` is not `true`.
+`createDevIssuer` signs tokens and verifies them, so one object serves both. Call `handleDevRoute` first in your request handler. It returns `true` when it answered the request. It returns `false` for every other request, and always when `VA_DEV_ISSUER` is not `true`.
 
 ```ts title="src/server/dev-routes.ts"
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -141,6 +145,8 @@ export async function handleDevRoute(
 ```
 
 Two more changes make the app accept the tokens. Pass `devIssuer` to `verifyAppUserToken` in place of the Space verifier. Return `/api/__dev/jwks.json` as `spaceJwksUrl` from `GET /api/client-config`.
+
+In the quickstart `src/server/main.ts`, add `import { handleDevRoute } from './dev-routes';`. Then add `if (await handleDevRoute(req, res, manifests)) return;` as the first line of the `try` block.
 
 ## Result
 

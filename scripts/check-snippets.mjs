@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { fileMeta, readEmbedded } from '../src/plugins/embed-file.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-// Published paths of the pages whose snippets get the decorator compiler options.
-const decoratorPages = ['recipes/nest-adapter.md'];
+const nestPage = 'recipes/nest-adapter.md';
+const nestDir = 'nest';
 const fence = /^```(ts|tsx)\b([^\n]*)\n([\s\S]*?)^```/gm;
 
 function docFiles(dir) {
@@ -34,8 +34,7 @@ export function checkSnippets({
         const title = /title="([^"]+)"/.exec(meta)?.[1];
         const placed = title && !titled.has(title);
         if (placed) titled.add(title);
-        const decorated = decoratorPages.includes(relative(docsDir, file).replaceAll('\\', '/'));
-        const dir = decorated ? 'nest/' : '';
+        const dir = relative(docsDir, file).replaceAll('\\', '/') === nestPage ? `${nestDir}/` : '';
         const name = dir + (placed ? `page-${fileIndex}/${title}` : `snippet-${origins.size}.${lang}`);
         mkdirSync(dirname(join(work, name)), { recursive: true });
         // `export {}` keeps import-less snippets from sharing one global scope.
@@ -58,24 +57,25 @@ export function checkSnippets({
           types: ['node'],
         },
         include: ['**/*.ts', '**/*.tsx'],
-        exclude: ['nest'],
+        exclude: [nestDir],
       }),
     );
-    mkdirSync(join(work, 'nest'), { recursive: true });
+    mkdirSync(join(work, nestDir), { recursive: true });
     writeFileSync(
-      join(work, 'nest', 'tsconfig.json'),
+      join(work, nestDir, 'tsconfig.json'),
       JSON.stringify({
         extends: '../tsconfig.json',
         compilerOptions: { experimentalDecorators: true, emitDecoratorMetadata: true },
         include: ['**/*.ts', '**/*.tsx'],
+        // Overrides the parent's exclude of this folder.
         exclude: [],
       }),
     );
     let output = '';
-    const names = [...origins.keys()];
+    const nestCount = [...origins.keys()].filter((name) => name.startsWith(`${nestDir}/`)).length;
     const projects = [
-      ...(names.some((name) => !name.startsWith('nest/')) ? [work] : []),
-      ...(names.some((name) => name.startsWith('nest/')) ? [join(work, 'nest')] : []),
+      ...(nestCount < origins.size ? [work] : []),
+      ...(nestCount > 0 ? [join(work, nestDir)] : []),
     ];
     for (const project of projects) {
       try {

@@ -55,7 +55,7 @@ test('never uses the csr-agents page and uses SDR examples', () => {
   for (const { name, text } of all) {
     assert.doesNotMatch(text, /csr-agents|csr:agents|csr\.agents/i, name);
   }
-  // nest-adapter maps the quickstart's hello-app, which has no SDR example.
+  // nest-adapter mirrors the quickstart hello-app, which has no SDR example.
   assert.ok(recipes.filter((r) => r.name !== 'nest-adapter').every((r) => /sdr|lead|icp/i.test(r.text)));
 });
 

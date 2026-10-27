@@ -13,7 +13,7 @@ test('states the languages in the first lines', () => {
 });
 
 test('prerequisites state the baseline versions once and allow another package manager', () => {
-  const prerequisites = sections[1];
+  const prerequisites = sections.find((s) => s.startsWith('Prerequisites'));
   assert.match(prerequisites, /Node\.js 20\.6/);
   assert.match(prerequisites, /React 18/);
   assert.match(prerequisites, /TypeScript 5/);

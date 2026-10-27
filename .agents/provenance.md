@@ -11,12 +11,9 @@ What each claim in these docs rests on.
 ## SDK gaps
 
 - The SDK declares no `engines` field. The Node 20.6+ minimum in the docs rests on the `--env-file` flag, not on an official number.
-- The SDK has no framework-free dev routes. The harness dev routes (`/api/__dev/manifests`, `/api/__dev/token`) exist only as a Nest controller, so the harness page carries a hand-written `node:http` handler. Replace it with the SDK handler when the SDK ships framework-free dev routes.
+- The SDK has no framework-free dev routes. The harness dev routes (`/api/__dev/manifests`, `/api/__dev/token`) exist only as a Nest controller, so the harness page carries a hand-written `node:http` handler. The SDK handler replaces it once the SDK ships framework-free dev routes.
 - The dev route shapes rest on the compiled dev controller (`nest/platform/controllers/dev-issuer.controller.js`), `server/dev-issuer.js` and the harness component, all in the installed 0.2.4 dist.
 
 ## Not yet verified in a real Space
 
-The `node:http` quickstart has not run in a real Space.
-
-
-No page has been walked through in a real Space. Quickstart step 4 and step 6, the Space UI labels, and the Space-side behaviour listed in the [app definition](../docs/app-definition.md) page are statements of the Space documentation, not observations. Ticket 07 covers that verification.
+No page has been walked through in a real Space, including the `node:http` quickstart. Quickstart step 4 and step 6, the Space UI labels, and the Space-side behaviour listed in the [app definition](../docs/app-definition.md) page are statements of the Space documentation, not observations.

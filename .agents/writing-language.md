@@ -1,6 +1,6 @@
 # Docs language checklist
 
-Reader: a working TypeScript developer who knows TypeScript, Node and React and has not used Space.
+Reader: a working developer who knows TypeScript, Node and React and has not used Space.
 Coverage: prose, tables, headings, code comments. Not identifiers or string values in code.
 Precedence: rules here win over any reference.
 
