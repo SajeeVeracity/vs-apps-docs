@@ -28,7 +28,7 @@ export function checkSnippets({
       let index = 0;
       const titled = new Set();
       for (const [, lang, meta, body] of readFileSync(file, 'utf8').matchAll(fence)) {
-        // The first block with a title lands at that path, so relative imports between a page's blocks resolve.
+        // A titled block is written at its title path so relative imports between a page's blocks resolve.
         const title = /title="([^"]+)"/.exec(meta)?.[1];
         const placed = title && !titled.has(title);
         if (placed) titled.add(title);

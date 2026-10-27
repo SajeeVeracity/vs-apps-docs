@@ -2,7 +2,7 @@
 title: List and pick members
 ---
 
-Show the owners of SDR leads by name and let a user pick a member. The data comes from the space directory.
+Show the owners of SDR leads by name and let a user pick a member. The data comes from the [space](../glossary.md#space) directory.
 
 ## Goal
 
@@ -108,7 +108,7 @@ export function TeamGroups() {
 
 ## Result
 
-Owner ids render as names, a search box returns members for a picker, and the groups of the [space](../glossary.md#space) list in a component.
+Owner ids render as names, a search box returns members for a picker, and the groups of the space list in a component.
 
 ## Next step
 

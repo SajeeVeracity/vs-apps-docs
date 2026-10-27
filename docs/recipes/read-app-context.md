@@ -2,16 +2,16 @@
 title: Read the user and capabilities
 ---
 
-Show who is signed in, branch on a capability and refresh the token. The example is the header of the SDR app.
+Show who is signed in, branch on a [capability](../glossary.md#capability) and refresh the token. The example is the header of the SDR app.
 
 ## Goal
 
-End with a header component that reads the verified user, the space and the capabilities from `useApp`.
+End with a header component that reads the verified user, the [space](../glossary.md#space) and the capabilities from `useApp`.
 
 ## Prerequisites
 
 - The app from the [quickstart](../quickstart.md), with `AppProvider` and `BootGate` mounted.
-- Background: [`useApp`](../reference/react.md#useapp) and the [capability](../glossary.md#capability) term.
+- Background: [`useApp`](../reference/react.md#useapp).
 
 ## Steps
 

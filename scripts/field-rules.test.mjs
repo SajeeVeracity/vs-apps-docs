@@ -14,6 +14,7 @@ const base = {
 const place = {
   key: (v) => ({ ...base, key: v }),
   'pages[].key': (v) => ({ ...base, pages: [{ key: v, label: 'Home', path: '/' }] }),
+  'pages[].capability': (v) => ({ ...base, pages: [{ key: 'home', label: 'Home', path: '/', capability: v }] }),
   'capabilities[].key': (v) => ({ ...base, capabilities: [{ key: v, label: 'View', effect: 'read' }] }),
   'resources.connectors[].key': (v) => ({
     ...base,
@@ -32,6 +33,7 @@ const place = {
 const samples = {
   key: ['demo-app', 'ab', 'a', 'Demo', '1demo', 'demo_app'],
   'pages[].key': ['home', 'my-page', 'Home', '1home', 'my_page'],
+  'pages[].capability': ['demo:view', 'a:b:c', 'demo', 'Demo:view', 'demo:', 'demo_x:view'],
   'capabilities[].key': ['demo:view', 'a:b:c', 'demo', 'Demo:view', 'demo:', 'demo_x:view'],
   'resources.connectors[].key': ['crm', 'my-crm', 'Crm', 'my_crm'],
   'resources.connectors[].eventHandlers[].key': ['inbound', 'in-bound', 'Inbound', 'in_bound'],

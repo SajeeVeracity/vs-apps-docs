@@ -2,7 +2,7 @@
 title: Expose agent actions on a page
 ---
 
-Let the Space agent open a Lead List on the SDR leads page. The recipe declares the page and the action with `defineAgentPage`, then binds a handler with `useAgentAction`.
+Let the [Space](../glossary.md#space) agent open a Lead List on the SDR leads [page](../glossary.md#page). The recipe declares the page and the [agent action](../glossary.md#agent-action) with `defineAgentPage`, then binds a handler with `useAgentAction`.
 
 ## Goal
 
@@ -12,13 +12,13 @@ End with the action `sdr-leads.open_lead_list` available to the agent while the 
 
 - The app from the [quickstart](../quickstart.md). `AppProvider` already mounts the action registry.
 - `zod` installed for the params schema: `pnpm add zod`.
-- Background: [`defineAgentPage`](../reference/root.md#defineagentpage), [`useAgentAction`](../reference/agent-react.md#useagentaction) and the [agent action](../glossary.md#agent-action) term.
+- Background: [`defineAgentPage`](../reference/root.md#defineagentpage), and [`useAgentAction`](../reference/agent-react.md#useagentaction).
 
 ## Steps
 
 ### 1. Declare the page and the action
 
-Keep the declarations in one module. The [agent catalog](../glossary.md#agent-catalog) extractor and the component import the same handle. The `description` fields are the only guidance the agent has, so write them for the agent.
+Keep the declarations in one module. The [agent catalog](../glossary.md#agent-catalog) and the component import the same handle. The `description` fields are the only guidance the agent has, so write them for the agent.
 
 ```ts title="src/actions.ts"
 import { defineAgentPage } from '@vectoragents/vs-apps';

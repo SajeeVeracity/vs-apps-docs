@@ -2,7 +2,7 @@
 title: Root reference
 ---
 
-Reference for `@vectoragents/vs-apps` 0.2.4, the package root. The root holds the [app definition](../glossary.md#app-definition) and the schemas shared by client and server. A client imports two symbols from it: `defineAgentPage` and `appPages`. `defineApp` is covered in the [app definition guide](../index.md).
+Reference for `@vectoragents/vs-apps` 0.2.4, the package root. The root holds the [app definition](../glossary.md#app-definition) and the schemas shared by client and server. A client imports two symbols from it: `defineAgentPage` and `appPages`. `defineApp` is covered in the [app definition guide](../app-definition.md).
 
 Every symbol below follows one layout: signature, behaviour, example. Each example is a complete file and is typechecked against the installed package.
 
@@ -49,7 +49,7 @@ interface AgentActionInput<S extends z.ZodTypeAny = z.ZodTypeAny> {
 
 ### Behaviour
 
-- Registers the page and each action in a module-level collector at import time. The agent catalog extractor imports the app modules and reads the collector.
+- Registers the page and each action in a module-level collector at import time.
 - `page.action(...)` roots an action on the page. `action.child(...)` declares an action that is available only while its parent is mounted.
 - Throws on a duplicate `pageId`, a duplicate action id, or an `id` that is not a snake_case local name.
 - Declaring an action does not make it callable. A component must bind it with `useAgentAction` from [`/agent-react`](./agent-react.md).

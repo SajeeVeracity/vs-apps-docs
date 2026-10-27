@@ -40,11 +40,18 @@ test('shell blocks have no prompt and one command per line', () => {
 
 test('secrets and ids are UPPER_CASE placeholders defined once up front', () => {
   const setBlock = sections[2];
-  for (const name of ['GITHUB_PACKAGES_TOKEN', 'SPACE_BASE_URL', 'SPACE_JWKS_URL', 'ALLOWED_PARENT_ORIGIN', 'PUBLIC_BASE_URL']) {
-    assert.match(setBlock, new RegExp(`export ${name}=`));
-    assert.equal((text.match(new RegExp(`export ${name}=`, 'g')) ?? []).length, 1, name);
+  assert.equal((text.match(/export GITHUB_PACKAGES_TOKEN=/g) ?? []).length, 1);
+  assert.match(setBlock, /export GITHUB_PACKAGES_TOKEN=/);
+  for (const name of ['SPACE_BASE_URL', 'SPACE_JWKS_URL', 'ALLOWED_PARENT_ORIGIN', 'PUBLIC_BASE_URL', 'SERVER_PORT', 'CLIENT_PORT']) {
+    assert.match(setBlock, new RegExp(`^${name}=`, 'm'));
+    assert.equal((text.match(new RegExp(`^${name}=`, 'gm')) ?? []).length, 1, name);
+    assert.doesNotMatch(text, new RegExp(`export ${name}=`));
   }
   assert.doesNotMatch(text, /_authToken=[A-Za-z0-9_]{20,}/);
+});
+
+test('no inline localhost literal with a fixed port', () => {
+  assert.doesNotMatch(text, /localhost:\d+/);
 });
 
 test('shows one page and one capability as a gating demonstration, not a minimum', () => {

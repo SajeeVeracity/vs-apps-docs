@@ -2,7 +2,7 @@
 title: Agent action trees
 ---
 
-Advanced configuration of agent actions: child actions that exist only while a parent is mounted, and testing a page without Space.
+Advanced configuration of [agent actions](../glossary.md#agent-action): child actions that exist only while a parent is mounted, and testing a page without [Space](../glossary.md#space).
 
 ## Goal
 

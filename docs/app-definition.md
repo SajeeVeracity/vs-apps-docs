@@ -8,7 +8,7 @@ Know what an [app definition](./glossary.md#app-definition) is, what reads it, h
 
 ## Prerequisites
 
-`@vectoragents/vs-apps` 0.2.4 installed. Terms link to the [glossary](./glossary.md) at first use.
+`@vectoragents/vs-apps` 0.2.4 installed. Terms link to the [glossary](./glossary.md) at first use. The [provenance](./provenance.md) page states what each claim rests on.
 
 ## What an app definition is
 
@@ -44,6 +44,8 @@ Uses 1 to 9 happen in your app. Use 10 happens in Space and is covered in [How i
 ## How to write one
 
 ### Minimal example
+
+To fill in a definition from a form instead, use the [definition builder](/builder).
 
 One [page](./glossary.md#page) gated by one [capability](./glossary.md#capability).
 
@@ -86,7 +88,6 @@ export const definition = defineApp({
 | `capabilities[].label` | required | Non-empty string. |
 | `capabilities[].description` | optional | String. |
 | `capabilities[].effect` | required | `"read"` or `"write"`. |
-| `resources` | optional | Object. Unknown keys are rejected. |
 
 :::warning
 `defineApp` does not check `pages[].capability` against `capabilities`. A typo such as `hello:veiw` passes import and fails only when a user holds no matching capability. Copy the key from the `capabilities` entry.
@@ -128,21 +129,33 @@ export const definition = defineApp({
 
 | Field | Required | Rule |
 | --- | --- | --- |
+| `resources` | optional | Object. Unknown keys are rejected. |
 | `resources.modules[]` | optional | Module requirements. Each needs `key` and `required`. |
 | `resources.models[]` | optional | Model slots. |
+| `resources.connectors[]` | optional | Connector slots. A slot takes one connector. |
+| `resources.modules[].key` | required | Non-empty string. Unique within modules. |
+| `resources.modules[].required` | required | Boolean. |
 | `resources.models[].key` | required | Lower kebab-case slot key. |
 | `resources.models[].modality` | required | `"chat"`, `"vision"`, `"embed"` or `"rerank"`. |
 | `resources.models[].providers` | required | At least one of `ANTHROPIC`, `AZURE_OPENAI`, `COHERE`, `AZURE_DOCUMENT_INTELLIGENCE`. |
+| `resources.models[].label` | optional | Display label. Falls back to the slot key. |
+| `resources.models[].description` | optional | String. |
+| `resources.models[].capabilities` | optional | Each one of `toolCalling`, `structuredOutput`, `reasoningOutput`, `promptCaching`, `streaming`. |
 | `resources.models[].required` | required | Boolean. |
-| `resources.connectors[]` | optional | Connector slots. A slot takes one connector. |
 | `resources.connectors[].key` | required | Lower kebab-case slot key. |
 | `resources.connectors[].provider` | required | One of `REST`, `GRAPHQL`, `MCP`, `GOOGLE`, `CLICKUP`, `EXA`, `FIRECRAWL`, `INSTANTLY`, `UNIPILE`, `APOLLO`, `META`. |
+| `resources.connectors[].label` | optional | Display label. Falls back to the slot key. |
 | `resources.connectors[].required` | required | Boolean. |
 | `resources.connectors[].eventHandlers` | optional | At least one handler when set. Any handler makes `eventsUrl` required in the manifest. |
 | `resources.connectors[].eventHandlers[].key` | required | Lower kebab-case handler key. Unique within the connector slot. |
 | `resources.connectors[].eventHandlers[].label` | required | Non-empty string. |
+| `resources.connectors[].eventHandlers[].description` | optional | String. |
+| `resources.connectors[].eventHandlers[].defaultEventTypes` | optional | At least one lower-case slug when set. A type is the default of one handler only. |
+| `resources.connectors[].eventHandlers[].singleEventType` | optional | Boolean. When `true`, `defaultEventTypes` holds at most one type. |
 
 ## How it reflects in Space
+
+This section rests on Space-side documentation and is not yet verified in a real Space. See [provenance](./provenance.md).
 
 A staff member registers the manifest URL in Space. Space stores the served manifest, never the definition file. After that:
 
@@ -161,11 +174,11 @@ Re-pulls happen on a Space pull and on the app's boot ping.
 
 ### Space-side
 
-- Registration, the pending review and auto-apply.
+- Registration, the pending review and auto-apply (not yet verified in a real Space).
 - Nav entries and the capability filter on them.
 - Grants, model choices and connector attachment.
 
-How Space lists an ungated page in its nav is unverified here.
+How Space lists an ungated page in its nav is not yet verified in a real Space.
 
 ## Result
 

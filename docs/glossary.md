@@ -2,7 +2,7 @@
 title: Glossary
 ---
 
-Each term has one name in these docs. Pages link a term at first use. Each entry gives the definition, the code symbol or field it maps to, and who owns it.. SDK means `@vectoragents/vs-apps` 0.2.4.
+Each term has one name in these docs. Pages link a term at first use. Each entry gives the definition, the code symbol or field it maps to, and who owns it. SDK means `@vectoragents/vs-apps` 0.2.4.
 
 ## Terms
 
@@ -11,7 +11,7 @@ Each term has one name in these docs. Pages link a term at first use. Each entry
 A product a builder ships into Spaces: a React client, a server and one app definition.
 
 - Maps to: the definition `key`, sent to Space as `appKey`.
-- Owner: SDK and Space. The SDK defines the shape. Space lists and gates it.
+- Owner: SDK. It defines the shape of the definition that identifies the app.
 
 ### app definition
 
@@ -94,7 +94,7 @@ An operation a page registers so the Space agent can call it while the page is o
 
 The build-time list of page descriptions and agent actions. The server merges it into the manifest at boot. Space ingests it per app.
 
-- Maps to: `defineAgentPage`, `extractAgentCatalog`, the `vs-apps catalog extract` command and the `agent-catalog.json` file.
+- Maps to: `defineAgentPage` and the `agent-catalog.json` file.
 - Owner: SDK builds it. Space ingests it.
 
 ### acts

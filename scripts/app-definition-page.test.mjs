@@ -38,12 +38,14 @@ test('contrasts definition and manifest and says Space never sees the definition
   assert.match(text, /Space never sees the definition/);
 });
 
-test('field table agrees with field-rules on required versus optional', () => {
-  for (const rule of [...coreFieldRules, ...resourceFieldRules]) {
-    const row = text.split('\n').find((l) => l.startsWith(`| \`${rule.path}\` |`));
-    assert.ok(row, `row for ${rule.path}`);
-    assert.match(row, new RegExp(`\\| ${rule.required ? 'required' : 'optional'} \\|`), rule.path);
+test('field rows equal the field-rules table, with no extra rows', () => {
+  const rules = [...coreFieldRules, ...resourceFieldRules];
+  for (const rule of rules) {
+    const row = `| \`${rule.path}\` | ${rule.required ? 'required' : 'optional'} | ${rule.rule} |`;
+    assert.ok(text.split('\n').includes(row), `row for ${rule.path}`);
   }
+  const documented = [...text.matchAll(/^\| `((?:resources|pages|capabilities|key|name|version|defaultPageKey)[^`]*)` \|/gm)].map((m) => m[1]);
+  assert.deepEqual(documented.sort(), rules.map((r) => r.path).sort());
 });
 
 test('states the empty capabilities and ungated page rules and the typo warning', () => {
@@ -72,6 +74,11 @@ test('links each glossary term at first use only', () => {
     const links = text.split(`](./glossary.md#${slug})`).length - 1;
     assert.equal(links, 1, `${term} linked ${links} times`);
   }
+});
+
+test('links the builder and the provenance page', () => {
+  assert.match(text, /\]\(\/builder\)/);
+  assert.match(text, /\]\(\.\/provenance\.md\)/);
 });
 
 test('follows the writing standard', () => {

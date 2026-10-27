@@ -2,7 +2,7 @@
 title: Filter navigation by capability
 ---
 
-Advanced configuration of the app navigation: build your own page list from the definition and show only the pages a member may open.
+Advanced configuration of the app navigation: build your own [page](../glossary.md#page) list from the definition and show only the pages a member may open.
 
 ## Goal
 
@@ -11,7 +11,7 @@ End with a navigation component that lists the pages of the SDR definition that 
 ## Prerequisites
 
 - The definition from [add a page and a capability](../recipes/add-page-and-capability.md).
-- Background: [`appPages`](../reference/root.md#apppages), the [quickstart](../quickstart.md) and the [page](../glossary.md#page) term.
+- Background: [`appPages`](../reference/root.md#apppages), and the [quickstart](../quickstart.md).
 
 ## Steps
 

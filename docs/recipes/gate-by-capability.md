@@ -2,7 +2,7 @@
 title: Gate a page and an endpoint by capability
 ---
 
-Hide a page from members who lack a [capability](../glossary.md#capability) and refuse the same members on the server. The example gates the SDR leads page with `lead:manage`.
+Hide a [page](../glossary.md#page) from members who lack a [capability](../glossary.md#capability) and refuse the same members on the server. The example gates the SDR leads page with `lead:manage`.
 
 ## Goal
 
@@ -11,7 +11,7 @@ End with one capability enforced twice: `RequireCapability` hides the leads page
 ## Prerequisites
 
 - The app from the [quickstart](../quickstart.md), with `AppProvider` and `BootGate` mounted.
-- A member who holds the capability and one who does not. A space manager [grants](../glossary.md#grant) capabilities in Space.
+- A member who holds the capability and one who does not. A space manager [grants](../glossary.md#grant) capabilities in [Space](../glossary.md#space).
 - Background: [`RequireCapability` on the client](../reference/react.md#requirecapability).
 
 ## Steps

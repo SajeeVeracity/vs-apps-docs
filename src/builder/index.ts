@@ -1,27 +1,10 @@
-import { coreFieldRules, resourceFieldRules } from '../data/field-rules.ts';
-
-export const modalities = ['chat', 'vision', 'embed', 'rerank'] as const;
-export const modelProviders = ['ANTHROPIC', 'AZURE_OPENAI', 'COHERE', 'AZURE_DOCUMENT_INTELLIGENCE'] as const;
-export const modelCapabilities = [
-  'toolCalling',
-  'structuredOutput',
-  'reasoningOutput',
-  'promptCaching',
-  'streaming',
-] as const;
-export const connectorProviders = [
-  'REST',
-  'GRAPHQL',
-  'MCP',
-  'GOOGLE',
-  'CLICKUP',
-  'EXA',
-  'FIRECRAWL',
-  'INSTANTLY',
-  'UNIPILE',
-  'APOLLO',
-  'META',
-] as const;
+import {
+  connectorProviders,
+  coreFieldRules,
+  modalities,
+  modelCapabilities,
+  resourceFieldRules,
+} from '../data/field-rules.ts';
 
 export interface PageDraft {
   key: string;
@@ -102,7 +85,7 @@ function checkUnique(keys: string[], base: string, noun: string, errors: Issue[]
   });
 }
 
-/** Errors mirror what `defineApp` rejects. Warnings flag input `defineApp` accepts but that is likely a mistake. */
+/** Errors mirror what `defineApp` rejects. Warnings flag input `defineApp` accepts but that points at nothing. */
 export function validateDraft(draft: Draft): { errors: Issue[]; warnings: Issue[] } {
   const errors: Issue[] = [];
   const warnings: Issue[] = [];
@@ -119,8 +102,8 @@ export function validateDraft(draft: Draft): { errors: Issue[]; warnings: Issue[
     if (!page.label) fail(`pages[${i}].label`, ruleText('pages[].label'));
     if (!page.path.startsWith('/')) fail(`pages[${i}].path`, ruleText('pages[].path'));
     if (page.capability === undefined) return;
-    if (!matches('capabilities[].key', page.capability)) {
-      fail(`pages[${i}].capability`, 'Capability must look like <group>:<action>.');
+    if (!matches('pages[].capability', page.capability)) {
+      fail(`pages[${i}].capability`, ruleText('capabilities[].key'));
     } else if (!capabilityKeys.includes(page.capability)) {
       warnings.push({
         path: `pages[${i}].capability`,
@@ -142,7 +125,7 @@ export function validateDraft(draft: Draft): { errors: Issue[]; warnings: Issue[
 
   const { modules, models, connectors } = draft.resources;
   modules.forEach((m, i) => {
-    if (!m.key) fail(`resources.modules[${i}].key`, 'Module key is required.');
+    if (!m.key) fail(`resources.modules[${i}].key`, ruleText('resources.modules[].key'));
   });
   checkUnique(modules.map((m) => m.key), 'resources.modules', 'module key', errors);
 
@@ -152,7 +135,7 @@ export function validateDraft(draft: Draft): { errors: Issue[]; warnings: Issue[
     if (!oneOf(m.modality, modalities)) fail(`${at}.modality`, ruleText('resources.models[].modality'));
     if (m.providers.length === 0) fail(`${at}.providers`, ruleText('resources.models[].providers'));
     if (m.capabilities?.some((c) => !oneOf(c, modelCapabilities))) {
-      fail(`${at}.capabilities`, `Each capability is one of ${modelCapabilities.join(', ')}.`);
+      fail(`${at}.capabilities`, ruleText('resources.models[].capabilities'));
     }
   });
   checkUnique(models.map((m) => m.key), 'resources.models', 'model slot key', errors);
@@ -168,7 +151,7 @@ export function validateDraft(draft: Draft): { errors: Issue[]; warnings: Issue[
       if (!matches(handlerKeyRule, h.key)) fail(`${hat}.key`, ruleText(handlerKeyRule));
       if (!h.label) fail(`${hat}.label`, ruleText('resources.connectors[].eventHandlers[].label'));
       if (h.singleEventType && (h.defaultEventTypes?.length ?? 0) > 1) {
-        fail(`${hat}.singleEventType`, 'A single-event-type handler takes at most one default event type.');
+        fail(`${hat}.singleEventType`, ruleText('resources.connectors[].eventHandlers[].singleEventType'));
       }
     });
     checkUnique(handlers.map((h) => h.key), `${at}.eventHandlers`, 'event handler key', errors);
@@ -252,6 +235,7 @@ export function emitFile(draft: Draft): { path: string; code: string } {
   return { path, code };
 }
 
+/** Validates the draft and emits its file; `ok` is false when any error remains. */
 export function buildOutput(draft: Draft): BuildOutput {
   const { errors, warnings } = validateDraft(draft);
   return { ok: errors.length === 0, errors, warnings, file: emitFile(draft) };

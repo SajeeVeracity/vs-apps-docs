@@ -6,6 +6,7 @@ export function fileMeta(meta) {
   return /\bfile="([^"]+)"/.exec(meta ?? '')?.[1];
 }
 
+/** Reads the embedded file at `path` under `baseDir`. */
 export function readEmbedded(baseDir, path) {
   return readFileSync(join(baseDir, path), 'utf8');
 }

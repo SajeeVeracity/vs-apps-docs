@@ -17,7 +17,7 @@ End with the `hello-app` page open in a Space, showing the user and space taken 
 
 ## Set your values
 
-Replace each placeholder, then run the block in the terminal you use for the rest of the page. Later steps refer to these names and never repeat the values.
+Replace each placeholder once, then run the block. It creates the project folder, exports the package token for the install and writes the rest to a `.env` file that the dev scripts load. No later step repeats a value, and no second terminal needs an export.
 
 | Placeholder | Meaning |
 | --- | --- |
@@ -26,25 +26,29 @@ Replace each placeholder, then run the block in the terminal you use for the res
 | `SPACE_JWKS_URL` | The Space key set: `SPACE_BASE_URL` followed by `/api/.well-known/apps/jwks.json`. |
 | `ALLOWED_PARENT_ORIGIN` | Origin of the Space web client that embeds your page. |
 | `PUBLIC_BASE_URL` | Origin where the Space server reaches your app server. |
+| `SERVER_PORT` | Port your app server listens on. |
+| `CLIENT_PORT` | Port the Vite client serves on. |
 
 ```bash
+mkdir hello-app
+cd hello-app
 export GITHUB_PACKAGES_TOKEN=YOUR_GITHUB_PACKAGES_TOKEN
-export SPACE_BASE_URL=YOUR_SPACE_BASE_URL
-export SPACE_JWKS_URL=YOUR_SPACE_JWKS_URL
-export ALLOWED_PARENT_ORIGIN=YOUR_SPACE_CLIENT_ORIGIN
-export PUBLIC_BASE_URL=YOUR_APP_SERVER_ORIGIN
+cat > .env <<'ENV'
+SPACE_BASE_URL=YOUR_SPACE_BASE_URL
+SPACE_JWKS_URL=YOUR_SPACE_JWKS_URL
+ALLOWED_PARENT_ORIGIN=YOUR_SPACE_CLIENT_ORIGIN
+PUBLIC_BASE_URL=YOUR_APP_SERVER_ORIGIN
+SERVER_PORT=YOUR_SERVER_PORT
+CLIENT_PORT=YOUR_CLIENT_PORT
+ENV
+echo .env > .gitignore
 ```
 
 ## Steps
 
 ### 1. Create the project and install
 
-Create the folder and the manifest of the project.
-
-```bash
-mkdir hello-app
-cd hello-app
-```
+In the `hello-app` folder, create the manifest of the project. The scripts load `.env`, so every Space value reaches the server and the client without an export.
 
 ```json title="package.json"
 {
@@ -52,8 +56,9 @@ cd hello-app
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev:server": "tsx watch src/server/main.ts",
-    "dev:client": "vite"
+    "dev:server": "tsx watch --env-file=.env src/server/main.ts",
+    "dev:client": "node --env-file=.env node_modules/vite/bin/vite.js",
+    "check:server": "node --env-file=.env -e \"for (const p of ['client-config', 'manifest/hello-app']) fetch('http://localhost:' + process.env.SERVER_PORT + '/api/' + p).then((r) => console.log(p, r.status))\""
   }
 }
 ```
@@ -127,7 +132,7 @@ import { definition } from '../app.definition';
 
 export const manifests = buildManifests([definition], {
   catalogPath: 'agent-catalog.json',
-  publicBaseUrl: process.env.PUBLIC_BASE_URL ?? 'http://localhost:4000',
+  publicBaseUrl: process.env.PUBLIC_BASE_URL ?? '',
 });
 ```
 
@@ -208,7 +213,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bodyParser: false });
   app.setGlobalPrefix('api');
-  await app.listen(4000);
+  await app.listen(Number(process.env.SERVER_PORT));
 }
 
 bootstrap();
@@ -220,22 +225,25 @@ Start the server.
 pnpm dev:server
 ```
 
-In a second terminal, with the values from the previous section exported again, check that it answers. The manifest route is protected by a provisioning token that only Space holds, so `401` is the correct answer without one.
+In a second terminal in the same folder, check that it answers. The manifest route is protected by a provisioning token that only Space holds, so `401` is the correct answer without one.
 
 ```bash
-curl -i http://localhost:4000/api/client-config
-curl -i http://localhost:4000/api/manifest/hello-app
+pnpm check:server
 ```
 
-The first returns `200` with your Space values. The second returns `401`. Space fetches the manifest with its own token in the next step.
+`client-config` prints `200` and `manifest/hello-app` prints `401`. Space fetches the manifest with its own token in the next step.
 
 ### 4. Register the app in Space
 
 A staff member registers the manifest URL. Your server must be reachable at `PUBLIC_BASE_URL` from the Space server.
 
+:::note
+The Space labels and behaviour in this step and the next are not yet verified in a real Space. See [provenance](./provenance.md).
+:::
+
 1. Open the app registry in the Space admin area and add an app.
 2. Enter the manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. Choose Continue. Space pulls and validates the manifest and shows `hello-app`, 1 page and 1 capability.
-3. Set the iframe URL to the origin of the Vite client, `http://localhost:5173` in this quickstart. The field starts with the manifest origin, which is the server and not the client.
+3. Set the iframe URL to the origin of the Vite client, `http://localhost:` followed by `CLIENT_PORT` in this quickstart. The field starts with the manifest origin, which is the server and not the client.
 4. Switch on **Auto-apply manifest updates** so later definition changes apply without a review. Then choose Register.
 
 This creates the [app registration](./glossary.md#app-registration). Registering applies the first manifest. Then a space manager activates the app in a space and shares it with your user. Sharing at View or Edit gives the user every capability of the app, including `hello:view`.
@@ -251,8 +259,8 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   server: {
-    port: 5173,
-    proxy: { '/api': 'http://localhost:4000' },
+    port: Number(process.env.CLIENT_PORT),
+    proxy: { '/api': `http://localhost:${process.env.SERVER_PORT}` },
   },
 });
 ```
@@ -365,7 +373,7 @@ pnpm dev:client
 
 ### 6. Open the page in Space
 
-Open the Space and choose **Hello app** in the navigation. Its page `Home` loads: Space renders the page in an iframe at the iframe URL, sends a user token over `postMessage`, and the page shows the result below. Opened directly at `http://localhost:5173`, the page stays on "Waiting for Space." because no host sends a token.
+Open the Space and choose **Hello app** in the navigation. Its page `Home` loads: Space renders the page in an iframe at the iframe URL, sends a user token over `postMessage`, and the page shows the result below. Opened directly at the client port, the page stays on "Waiting for Space." because no host sends a token.
 
 ## Debugging aside: the dev harness
 

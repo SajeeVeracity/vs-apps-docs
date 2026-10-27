@@ -22,6 +22,7 @@ export interface ProgressStore {
 
 const storageKey = 'vs-apps-docs:track-progress';
 
+/** The goal tracks on the landing page, each an ordered list of pages. */
 export const tracks: Track[] = [
   {
     id: 'page-in-space',
@@ -75,6 +76,7 @@ export const tracks: Track[] = [
   },
 ];
 
+/** Returns a copy of `progress` with the step flipped between done and not done. */
 export function toggleStep(progress: Progress, trackId: string, stepId: string): Progress {
   const done = progress[trackId] ?? [];
   const next = done.includes(stepId) ? done.filter((id) => id !== stepId) : [...done, stepId];
@@ -102,6 +104,7 @@ export function loadProgress(store: ProgressStore | undefined): Progress {
   }
 }
 
+/** Persists `progress`; a missing or blocked store is ignored. */
 export function saveProgress(store: ProgressStore | undefined, progress: Progress): void {
   try {
     store?.setItem(storageKey, JSON.stringify(progress));

@@ -1,13 +1,8 @@
 import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import Layout from '@theme/Layout';
-import {
-  buildOutput,
-  connectorProviders,
-  modalities,
-  modelCapabilities,
-  modelProviders,
-} from '../builder/index.ts';
+import { buildOutput } from '../builder/index.ts';
+import { connectorProviders, modalities, modelCapabilities, modelProviders } from '../data/field-rules.ts';
 import type {
   CapabilityDraft,
   ConnectorDraft,

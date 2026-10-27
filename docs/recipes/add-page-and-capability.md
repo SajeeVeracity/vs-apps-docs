@@ -2,7 +2,7 @@
 title: Add a page and a capability
 ---
 
-Grow the SDR definition by one page and the capability that gates it, then see both in a Space.
+Grow the SDR definition by one [page](../glossary.md#page) and the [capability](../glossary.md#capability) that gates it, then see both in a [Space](../glossary.md#space).
 
 ## Goal
 
@@ -11,7 +11,7 @@ End with an ICP Library page in the Space navigation, gated by a new `icp:manage
 ## Prerequisites
 
 - The app from the [quickstart](../quickstart.md), registered in a Space.
-- Background: the [app definition](../app-definition.md) page, the [`RequireCapability` reference](../reference/react.md#requirecapability), plus the [page](../glossary.md#page) and [capability](../glossary.md#capability) terms.
+- Background: the [app definition](../app-definition.md) page, the [`RequireCapability` reference](../reference/react.md#requirecapability).
 
 ## Steps
 

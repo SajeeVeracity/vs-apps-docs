@@ -33,6 +33,12 @@ const invalid = {
   },
   'model without providers': (d) => ((d.resources.models[0].providers = []), d),
   'bad model modality': (d) => ((d.resources.models[0].modality = 'audio'), d),
+  'single-event-type handler with several defaults': (d) => {
+    Object.assign(d.resources.connectors[0].eventHandlers[0], { singleEventType: true, defaultEventTypes: ['a', 'b'] });
+    return d;
+  },
+  'unknown model capability': (d) => ((d.resources.models[0].capabilities = ['bogus']), d),
+  'empty module key': (d) => ((d.resources.modules[0].key = ''), d),
   'bad connector provider': (d) => ((d.resources.connectors[0].provider = 'FTP'), d),
 };
 
