@@ -383,6 +383,7 @@ Open the Space and choose **Hello app** in the navigation. Its page `Home` loads
 
 The page in the Space iframe shows three lines: the user and space from the token verified in the browser, the capabilities the token carries, and the user and space the server read from the same token. The path covered the definition, the manifest, the registration, the provider and the gated page.
 
-## Next step
+## Next steps
 
-Learn what each definition field does in [app definition](./app-definition.md), then add a second page and capability.
+- [App definition](./app-definition.md): learn what each definition field does.
+- [Recipes](/category/recipes): add a page, a capability or an agent action to this app.

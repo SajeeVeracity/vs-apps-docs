@@ -28,8 +28,9 @@ Two model slots and two connector slots. Each connector declares `eventHandlers`
 
 ## Result
 
-Each file passes `defineApp` as pasted. Change `key`, page paths and slot keys to match your app.
+Each file passes `defineApp` as pasted. Change `key`, page paths and slot keys to match your app. Copy one into your project as `src/app.definition.ts`, or load it in the [builder](/builder).
 
-## Next step
+## Next steps
 
-Copy one of these into your project as `src/app.definition.ts`, or load it in the [builder](/builder).
+- [App definition](./app-definition.md): learn what each definition field does.
+- [Recipes](/category/recipes): add a page, a capability or an agent action to your app.

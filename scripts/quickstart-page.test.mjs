@@ -14,7 +14,7 @@ test('states stack and languages in the first lines', () => {
 
 test('follows the page template and ends with a result and a next step', () => {
   assert.deepEqual([titles[0], titles[1], titles[2]], ['Goal', 'Prerequisites', 'Set your values']);
-  assert.deepEqual(titles.slice(-2), ['Result', 'Next step']);
+  assert.deepEqual(titles.slice(-2), ['Result', 'Next steps']);
   assert.match(text, /^## Steps$/m);
 });
 

@@ -191,6 +191,7 @@ How Space lists a page that has no capability in its navigation is not yet verif
 
 You can read, write and explain an app definition, and you know which behavior the SDK guarantees and which Space owns.
 
-## Next step
+## Next steps
 
-Fix the terms used here in the [glossary](./glossary.md).
+- [Recipes](/category/recipes): add a page, a capability or an agent action to your app.
+- [Reference](/category/reference): look up the signature of each export, and the glossary terms.
