@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
 const text = readFileSync(new URL('../docs/glossary.md', import.meta.url), 'utf8');
@@ -32,4 +32,13 @@ test('each entry has definition, mapping and owner', () => {
 test('follows the writing standard', () => {
   assert.doesNotMatch(text, /—|–/);
   assert.doesNotMatch(text, /\b(we|our|ours|us)\b/i);
+});
+
+test('published pages use no internal term', () => {
+  const docs = new URL('../docs/', import.meta.url);
+  const pages = readdirSync(docs, { recursive: true }).filter((f) => /\.mdx?$/.test(f));
+  for (const page of pages) {
+    const body = readFileSync(new URL(page, docs), 'utf8');
+    assert.doesNotMatch(body, /app developer|app binding|glossary\.md#binding/i, page);
+  }
 });
