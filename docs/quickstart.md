@@ -10,11 +10,11 @@ End with the `hello-app` page open in a Space, showing the user and space taken 
 
 ## Prerequisites
 
-- Node.js 20.6 or later, React 18 or later and TypeScript 5 with `strict`. Commands use `npm`. If you use another package manager, run the equivalent command.
+- Node.js 20.6 or later, React 18 or later and TypeScript 5 or later with `strict`. Commands use `npm`. If you use another package manager, run the equivalent command.
 - A GitHub token with `read:packages` access to `@vectoragents/vs-apps` on GitHub Packages.
 - A Space where you can register an app (staff) and activate it and share it (space manager). Your user also needs View access to the app, or admin rights.
 - Your user belongs to a space that has a published agent. Without one, Space shows "No spaces yet".
-- If your organization has a license, the license must allow the app. Space does not list an app that the license leaves out. A Space with no license needs nothing here.
+- If your organization has a license, the license must allow the app. Space does not list an app that the license leaves out. Staff change the license in the admin portal. A Space with no license needs nothing here.
 - The Space server can reach your app server over HTTP. A Space that is not on your machine needs a public URL for the server, for example from a tunnel.
 
 ## Set your values
@@ -89,6 +89,7 @@ Add the compiler settings.
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "strict": true,
+    "types": ["node"],
     "noEmit": true,
     "skipLibCheck": true
   },
