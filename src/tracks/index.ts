@@ -26,7 +26,7 @@ const storageKey = 'vs-apps-docs:track-progress';
 export const tracks: Track[] = [
   {
     id: 'first-app-in-space',
-    title: 'Hello world in a Space',
+    title: 'Hello world app',
     goal: 'Run your first hello world app in a Space.',
     steps: [
       { id: 'quickstart', label: 'Quickstart', to: '/quickstart' },
