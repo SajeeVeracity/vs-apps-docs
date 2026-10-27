@@ -2,7 +2,7 @@
 title: Quickstart
 ---
 
-Build one app from an empty folder to its page rendering inside a real [Space](./glossary.md#space) iframe. The stack is TypeScript throughout, React 19 with Vite for the client, and NestJS for the server. The page and the server both read a verified user token.
+Build one app from an empty folder to its page rendering inside a real [Space](./glossary.md#space) iframe. You write TypeScript for Node and React. The page and the server both read a verified user token.
 
 ## Goal
 
@@ -10,7 +10,7 @@ End with the `hello-app` page open in a Space, showing the user and space taken 
 
 ## Prerequisites
 
-- Node.js 22 and pnpm 10.
+- Node.js 20.6 or later, React 18 or later and TypeScript 5 with `strict`. Commands use `npm`. If you use another package manager, run the equivalent command.
 - A GitHub token with `read:packages` access to `@vectoragents/vs-apps` on GitHub Packages.
 - A Space where you can register an app (staff) and activate it and share it (space manager). Your user also needs View access to the app, or admin rights.
 - The Space server can reach your app server over HTTP. A Space that is not on your machine needs a public URL for the server, for example from a tunnel.
@@ -27,7 +27,7 @@ Replace each placeholder once, then run the block. It creates the project folder
 | `ALLOWED_PARENT_ORIGIN` | Origin of the Space web client that embeds your page. |
 | `PUBLIC_BASE_URL` | Origin where the Space server reaches your app server. |
 | `SERVER_PORT` | Port your app server listens on. |
-| `CLIENT_PORT` | Port the Vite client serves on. |
+| `CLIENT_PORT` | Port your bundler serves the client on. |
 
 ```bash
 mkdir hello-app
@@ -48,37 +48,36 @@ echo .env > .gitignore
 
 ### 1. Create the project and install
 
-In the `hello-app` folder, create the manifest of the project. The scripts load `.env`, so every Space value reaches the server and the client without an export.
+In the `hello-app` folder, create the manifest of the project. The server script loads `.env`, so every Space value reaches the server without an export.
 
 ```json title="package.json"
 {
   "name": "hello-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev:server": "tsx watch --env-file=.env src/server/main.ts",
-    "dev:client": "node --env-file=.env node_modules/vite/bin/vite.js",
     "check:server": "node --env-file=.env -e \"for (const p of ['client-config', 'manifest/hello-app']) fetch('http://localhost:' + process.env.SERVER_PORT + '/api/' + p).then((r) => console.log(p, r.status))\""
   }
 }
 ```
 
-Point the `@vectoragents` scope at GitHub Packages. The token comes from `GITHUB_PACKAGES_TOKEN`, so the file holds no secret.
+The registry setting has three parts: a scope, a registry URL and a token. Point the `@vectoragents` scope at GitHub Packages. The token comes from `GITHUB_PACKAGES_TOKEN`, so the file holds no secret.
 
 ```ini title=".npmrc"
 @vectoragents:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
 ```
 
-Install the SDK and the packages its subpaths need. `jose` verifies tokens, `@nestjs/*` and `reflect-metadata` serve the server, and `react` serves the client.
+Install the SDK and the packages its subpaths need. `jose` verifies tokens and `react` serves the client. `tsx` runs the TypeScript server on Node.
 
 ```bash
-pnpm add @vectoragents/vs-apps@0.2.4 jose react react-dom
-pnpm add @nestjs/common@11 @nestjs/core@11 @nestjs/platform-express@11 reflect-metadata rxjs
-pnpm add -D typescript tsx vite @types/node @types/react @types/react-dom
+npm install @vectoragents/vs-apps@0.2.4 jose react react-dom
+npm install --save-dev typescript tsx @types/node @types/react @types/react-dom
 ```
 
-Add the compiler settings. NestJS needs the decorator options.
+Add the compiler settings.
 
 ```json title="tsconfig.json"
 {
@@ -89,11 +88,9 @@ Add the compiler settings. NestJS needs the decorator options.
     "jsx": "react-jsx",
     "strict": true,
     "noEmit": true,
-    "skipLibCheck": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "skipLibCheck": true
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src"]
 }
 ```
 
@@ -136,99 +133,79 @@ export const manifests = buildManifests([definition], {
 });
 ```
 
-`AppPlatformModule` calls the credential store when Space provisions the app. This store keeps the secrets in memory, so they are lost on restart. Persist them in a database for anything beyond this quickstart.
+The auth module holds the token verifier and the checks that protected routes run. The verifier reads the Space key set from `SPACE_JWKS_URL`. `extractBearer` reads the `Authorization` header. `verifyAppUserToken` verifies the user token and returns its claims. `assertCapability` refuses a token that lacks `hello:view`.
 
-```ts title="src/server/credential-store.ts"
-import { Injectable } from '@nestjs/common';
-import type { AppCredentialStore } from '@vectoragents/vs-apps/nest';
+```ts title="src/server/auth.ts"
+import type { IncomingMessage } from 'node:http';
+import {
+  assertCapability,
+  createSpaceTokenVerifier,
+  extractBearer,
+  verifyAppUserToken,
+  verifyProvisioningToken,
+} from '@vectoragents/vs-apps/server';
 
-@Injectable()
-export class MemoryCredentialStore implements AppCredentialStore {
-  private readonly secrets = new Map<string, string>();
+const verifier = createSpaceTokenVerifier({ jwksUrl: process.env.SPACE_JWKS_URL ?? '' });
 
-  async upsert(appId: string, spaceId: number, secret: string): Promise<void> {
-    this.secrets.set(`${appId}:${spaceId}`, secret);
-  }
+export async function requireHelloUser(req: IncomingMessage) {
+  const claims = await verifyAppUserToken(verifier, extractBearer(req.headers));
+  assertCapability(claims, 'hello:view');
+  return claims;
+}
 
-  async remove(appId: string, spaceId: number): Promise<void> {
-    this.secrets.delete(`${appId}:${spaceId}`);
-  }
-
-  async get(appId: string, spaceId: number): Promise<string | null> {
-    return this.secrets.get(`${appId}:${spaceId}`) ?? null;
-  }
+export function requireProvisioning(req: IncomingMessage) {
+  return verifyProvisioningToken(verifier, extractBearer(req.headers));
 }
 ```
 
-The controller shows the server side of token verification. The platform module installs a global guard that verifies every user token against `SPACE_JWKS_URL`. `RequireCapability` then refuses a token that lacks `hello:view`, and `CurrentUser` hands the controller the verified claims.
-
-```ts title="src/server/hello.controller.ts"
-import { Controller, Get } from '@nestjs/common';
-import { CurrentUser, RequireCapability } from '@vectoragents/vs-apps/nest';
-import type { UserTokenClaims } from '@vectoragents/vs-apps';
-
-@Controller('hello')
-export class HelloController {
-  @Get()
-  @RequireCapability('hello:view')
-  hello(@CurrentUser() user: UserTokenClaims) {
-    return { sub: user.sub, spaceId: user.spaceId };
-  }
-}
-```
-
-The module reads the Space values from the environment you set up front.
-
-```ts title="src/server/app.module.ts"
-import { Module } from '@nestjs/common';
-import { AppPlatformModule } from '@vectoragents/vs-apps/nest';
-import { MemoryCredentialStore } from './credential-store';
-import { HelloController } from './hello.controller';
-import { manifests } from './manifests';
-
-@Module({
-  imports: [
-    AppPlatformModule.forRoot({
-      options: () => ({
-        spaceBaseUrl: process.env.SPACE_BASE_URL ?? '',
-        spaceJwksUrl: process.env.SPACE_JWKS_URL ?? '',
-        allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN ?? '',
-      }),
-      manifests,
-      credentialStore: MemoryCredentialStore,
-    }),
-  ],
-  controllers: [HelloController],
-})
-export class AppModule {}
-```
-
-`bodyParser: false` is required because the platform endpoints read the raw request body. The `api` prefix gives the manifest its `/api/manifest/:appKey` path.
+The server answers three requests. `GET /api/client-config` tells the client which parent origin and key set to trust. `GET /api/manifest/hello-app` serves the manifest to Space, which sends a provisioning token. `GET /api/hello` returns the claims of a verified user token. A failed check throws `AppAuthError`, which carries the HTTP status.
 
 ```ts title="src/server/main.ts"
-import 'reflect-metadata';
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { createServer, type ServerResponse } from 'node:http';
+import { AppAuthError } from '@vectoragents/vs-apps/server';
+import { requireHelloUser, requireProvisioning } from './auth';
+import { manifests } from './manifests';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bodyParser: false });
-  app.setGlobalPrefix('api');
-  await app.listen(Number(process.env.SERVER_PORT));
+function send(res: ServerResponse, status: number, body: unknown): void {
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(body));
 }
 
-bootstrap();
+createServer(async (req, res) => {
+  const { pathname } = new URL(req.url ?? '/', 'http://localhost');
+  try {
+    if (pathname === '/api/client-config') {
+      return send(res, 200, {
+        allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN,
+        spaceJwksUrl: process.env.SPACE_JWKS_URL,
+      });
+    }
+    if (pathname === '/api/manifest/hello-app') {
+      await requireProvisioning(req);
+      return send(res, 200, manifests['hello-app']);
+    }
+    if (pathname === '/api/hello') {
+      const claims = await requireHelloUser(req);
+      return send(res, 200, { sub: claims.sub, spaceId: claims.spaceId });
+    }
+    send(res, 404, { error: 'Not found' });
+  } catch (error) {
+    if (error instanceof AppAuthError) return send(res, error.status, { error: error.message });
+    send(res, 500, { error: 'Server error' });
+  }
+}).listen(Number(process.env.SERVER_PORT));
 ```
 
 Start the server.
 
 ```bash
-pnpm dev:server
+npm run dev:server
 ```
 
 In a second terminal in the same folder, check that it answers. The manifest route is protected by a provisioning token that only Space holds, so `401` is the correct answer without one.
 
 ```bash
-pnpm check:server
+npm run check:server
 ```
 
 `client-config` prints `200` and `manifest/hello-app` prints `401`. Space fetches the manifest with its own token in the next step.
@@ -239,7 +216,7 @@ A staff member registers the manifest URL. Your server must be reachable at `PUB
 
 1. Open the app registry in the Space admin area and add an app.
 2. Enter the manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. Choose Continue. Space pulls and validates the manifest and shows `hello-app`, 1 page and 1 capability.
-3. Set the iframe URL to the origin of the Vite client, `http://localhost:` followed by `CLIENT_PORT` in this quickstart. The field starts with the manifest origin, which is the server and not the client.
+3. Set the iframe URL to the origin of the client, `http://localhost:` followed by `CLIENT_PORT` in this quickstart. The field starts with the manifest origin, which is the server and not the client.
 4. Switch on **Auto-apply manifest updates** so later definition changes apply without a review. Then choose Register.
 
 This creates the [app registration](./glossary.md#app-registration). Registering applies the first manifest. Then a space manager activates the app in a space and shares it with your user. Sharing at View or Edit gives the user every capability of the app, including `hello:view`.
@@ -248,32 +225,12 @@ This creates the [app registration](./glossary.md#app-registration). Registering
 
 The client reads its boot config from the server with `loadAppClientConfig`, which fetches `GET /api/client-config`. `AppProvider` starts the iframe bridge, verifies each token Space sends and exposes the claims. `BootGate` holds the page back until the first verified token arrives.
 
-Add the entry page and the client files. The Vite config forwards `/api` to the server.
+The client is plain React files with no bundler-specific import and no environment access. Serve them with your bundler on `CLIENT_PORT`. Your bundler needs four settings:
 
-```ts title="vite.config.ts"
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-  server: {
-    port: Number(process.env.CLIENT_PORT),
-    proxy: { '/api': `http://localhost:${process.env.SERVER_PORT}` },
-  },
-});
-```
-
-```html title="index.html"
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hello app</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/client/main.tsx"></script>
-  </body>
-</html>
-```
+- `src/client/main.tsx` is the entry file.
+- The HTML page has a `div` with the id `root`.
+- The bundler compiles JSX and TypeScript.
+- The bundler forwards requests under `/api` to `SERVER_PORT`, so the client and the server share one origin.
 
 `main.tsx` mounts the app and `token.ts` keeps the verified token in memory for server calls.
 
@@ -361,11 +318,7 @@ export function HelloPage() {
 }
 ```
 
-Start the client in the second terminal.
-
-```bash
-pnpm dev:client
-```
+Start your bundler on `CLIENT_PORT` in the second terminal.
 
 ### 6. Open the page in Space
 
@@ -373,7 +326,7 @@ Open the Space and choose **Hello app** in the navigation. Its page `Home` loads
 
 ## Debugging aside: the dev harness
 
-`VectorAppsHarness` from `@vectoragents/vs-apps/harness` stands in for Space on your machine, so a page can run before any registration. It needs the dev issuer switched on in `AppPlatformModule.forRoot` and a second HTML entry that mounts the harness. Use it to debug a page. It is not part of this quickstart path, and the [harness](./glossary.md#harness) entry in the glossary lists what it does not cover.
+`VectorAppsHarness` from `@vectoragents/vs-apps/harness` stands in for Space on your machine, so a page can run before any registration. It needs the dev routes on your server and a second HTML page that mounts the harness. The [harness reference](./reference/harness.md) gives the routes. Use it to debug a page. It is not part of this quickstart path, and the [harness](./glossary.md#harness) entry in the glossary lists what it does not cover.
 
 ## Result
 

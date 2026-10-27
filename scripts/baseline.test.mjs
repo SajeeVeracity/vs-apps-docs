@@ -9,7 +9,6 @@ const banned = [
 
 // Pages not yet on the baseline. Each entry names the ticket that removes it.
 const exempt = {
-  'quickstart.md': 'ticket 02',
   'recipes/gate-by-capability.md': 'ticket 04',
   'reference/harness.md': 'ticket 05',
   'recipes/expose-agent-actions.md': 'ticket 06',

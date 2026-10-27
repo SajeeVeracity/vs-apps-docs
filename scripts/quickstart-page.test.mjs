@@ -7,9 +7,40 @@ const sections = text.split(/^## /m).slice(1);
 const titles = sections.map((s) => s.split('\n')[0]);
 const fences = [...text.matchAll(/^```(\w+)([^\n]*)\n([\s\S]*?)^```/gm)].map(([, lang, meta, body]) => ({ lang, meta, body }));
 
-test('states stack and languages in the first lines', () => {
+test('states the languages in the first lines', () => {
   const head = text.split('\n').slice(0, 12).join('\n');
-  for (const word of ['TypeScript', 'React 19', 'Vite', 'NestJS']) assert.match(head, new RegExp(word));
+  for (const word of ['TypeScript', 'Node', 'React']) assert.match(head, new RegExp(word));
+});
+
+test('prerequisites state the baseline versions once and allow another package manager', () => {
+  const prerequisites = sections[1];
+  assert.match(prerequisites, /Node\.js 20\.6/);
+  assert.match(prerequisites, /React 18/);
+  assert.match(prerequisites, /TypeScript 5/);
+  assert.match(prerequisites, /`strict`/);
+  assert.match(prerequisites, /another package manager/i);
+  for (const re of [/20\.6/g, /React 18/g]) assert.equal((text.match(re) ?? []).length, 1, String(re));
+});
+
+test('installs use npm and the registry is a scope, a URL and a token', () => {
+  assert.match(text, /^npm install @vectoragents\/vs-apps@0\.2\.4 /m);
+  assert.match(text, /^npm run dev:server$/m);
+  assert.match(text, /scope, a registry URL and a token/);
+  assert.match(text, /title="\.npmrc"/);
+  assert.doesNotMatch(text, /catalog:|workspace:/);
+});
+
+test('the server is a node:http handler on the /server subpath', () => {
+  assert.match(text, /from 'node:http'/);
+  for (const s of ['createSpaceTokenVerifier', 'extractBearer', 'assertCapability', 'verifyAppUserToken', 'verifyProvisioningToken']) {
+    assert.match(text, new RegExp(s), s);
+  }
+  assert.doesNotMatch(text, /@vectoragents\/vs-apps\/nest/);
+});
+
+test('the client names no bundler and shows no bundler config', () => {
+  assert.match(text, /your bundler/);
+  assert.doesNotMatch(text, /dev:client|\.config\.[jt]s|index\.html/);
 });
 
 test('follows the page template and ends with a result and a next step', () => {
@@ -61,7 +92,7 @@ test('shows one page and one capability as a gating demonstration, not a minimum
 });
 
 test('covers the client and server symbols', () => {
-  for (const s of ['defineApp', 'buildManifests', 'AppPlatformModule', 'AppProvider', 'BootGate', 'loadAppClientConfig', 'RequireCapability']) {
+  for (const s of ['defineApp', 'buildManifests', 'AppProvider', 'BootGate', 'loadAppClientConfig', 'RequireCapability']) {
     assert.match(text, new RegExp(s), s);
   }
 });
