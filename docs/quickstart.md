@@ -12,9 +12,9 @@ End with the `hello-app` page open in a Space, showing the user and space taken 
 
 - Node.js 20.6 or later, React 18 or later and TypeScript 5 or later with `strict`. Commands use `npm`. If you use another package manager, run the equivalent command.
 - A GitHub token with `read:packages` access to `@vectoragents/vs-apps` on GitHub Packages.
-- A Space where you can register an app (staff) and activate it and share it (space manager). Your user also needs View access to the app, or admin rights.
+- A Space where you can register an app ([staff](./glossary.md#staff)) and activate it and share it ([space manager](./glossary.md#space-manager)). Your user also needs View access to the app, or admin rights, which give every capability.
 - Your user belongs to a space that has a published agent. Without one, Space shows "No spaces yet".
-- If your organization has a license, the license must allow the app. Space does not list an app that the license leaves out. Staff change the license in the admin portal.
+- If your organization has a license, the license must allow the app. The license is the list of apps your organization may use. Space does not list an app that the license leaves out. Staff change the license.
 - The Space server can reach your app server over HTTP. A Space that is not on your machine needs a public URL for the server, for example from a tunnel.
 
 ## Set your values
@@ -233,9 +233,9 @@ A staff member registers the manifest URL. Your server must be reachable at `PUB
 
 This creates the [app registration](./glossary.md#app-registration). Registering applies the first manifest. Then a space manager activates the app in a space and shares it with your user. Sharing at View or Edit gives the user every capability of the app, including `hello:view`.
 
-To activate the app, open **Settings**, then **Space**, then **Context Hub**, then **Resources**. Choose **Add resource**, then **App**, and pick **Hello app**. Space calls `POST /api/provision` on your server. If the dialog stays open, check the server log for a failed route.
+To activate the app, open **Settings**, then **Space**, then **Context Hub**, then **Resources**. Choose **Add resource**, then **App**, and pick **Hello app**.
 
-A space admin already appears under **Who can use it** with `hello:view`. To share the app with another user, open the three-dots menu on the app row in **Resources**, choose **Access**, then choose **Add people, roles or groups**.
+A user with admin rights already appears under **Who can use it** with `hello:view`. To share the app with another user, open the three-dots menu on the app row in **Resources**, choose **Access**, then choose **Add people, roles or groups**.
 
 ### 5. Write the client
 
