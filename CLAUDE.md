@@ -15,3 +15,7 @@ Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `
 ### Domain docs
 
 Single-context: `docs/glossary.md` plus `.agents/adr/`. See `.agents/domain.md`.
+
+### Writing language
+
+Language rules for `docs/`: simple English, defined abbreviations, numeric limits. See `.agents/writing-language.md`.
