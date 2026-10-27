@@ -10,9 +10,11 @@ End with the `hello-app` page open in a Space, showing the user and space taken 
 
 ## Prerequisites
 
-- Node.js 20.6 or later, React 18 or later and TypeScript 5 with `strict`. Commands use `npm`. If you use another package manager, run the equivalent command.
+- Node.js 20.6 or later, React 18 or later and TypeScript 5 or later with `strict`. Commands use `npm`. If you use another package manager, run the equivalent command.
 - A GitHub token with `read:packages` access to `@vectoragents/vs-apps` on GitHub Packages.
-- A Space where you can register an app (staff) and activate it and share it (space manager). Your user also needs View access to the app, or admin rights.
+- A Space where you can register an app ([staff](./glossary.md#staff)) and activate it and share it ([space manager](./glossary.md#space-manager)). Your user also needs View access to the app, or admin rights, which give every capability.
+- Your user belongs to a space whose agent is published, so users can run it. Without such a space, Space shows "No spaces yet".
+- If your organization has a license, the license must allow the app. The license is the list of apps your organization may use. Space does not list an app that the license leaves out. Staff change the license.
 - The Space server can reach your app server over HTTP. A Space that is not on your machine needs a public URL for the server, for example from a tunnel.
 
 ## Set your values
@@ -87,6 +89,7 @@ Add the compiler settings.
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "strict": true,
+    "types": ["node"],
     "noEmit": true,
     "skipLibCheck": true
   },
@@ -121,7 +124,7 @@ export const definition = defineApp({
 
 ### 3. Serve the manifest and verify tokens
 
-`buildManifests` turns the definition into the [manifest](./glossary.md#manifest). The server serves it at `GET /api/manifest/hello-app`. `PUBLIC_BASE_URL` fills any `{publicBaseUrl}` placeholder in the manifest. `agent-catalog.json` does not exist yet, which `buildManifests` tolerates.
+`buildManifests` turns the definition into the [manifest](./glossary.md#manifest). The server serves it at `GET /api/manifest/hello-app`. `PUBLIC_BASE_URL` fills any `{publicBaseUrl}` placeholder in the manifest. `agent-catalog.json` does not exist yet, which `buildManifests` tolerates. The server prints a warning that starts with `agent-catalog file not found` when it starts. Ignore it.
 
 ```ts title="src/server/manifests.ts"
 import { buildManifests } from '@vectoragents/vs-apps/server';
@@ -158,7 +161,11 @@ export function requireProvisioning(req: IncomingMessage) {
 }
 ```
 
-The server answers three requests. `GET /api/client-config` tells the client which parent origin and key set to trust. `GET /api/manifest/hello-app` serves the manifest to Space, which sends a provisioning token. `GET /api/hello` returns the claims of a verified user token. A failed check throws `AppAuthError`, which carries the HTTP status.
+The server answers five requests. `GET /api/client-config` tells the client which parent origin and key set to trust. `GET /api/manifest/hello-app` serves the manifest to Space, which sends a provisioning token. `GET /api/hello` returns the claims of a verified user token.
+
+`POST /api/provision` and `POST /api/deprovision` are called by Space when a space manager adds or removes the app in step 4. The routes verify the provisioning token and ignore the `serviceSecret` that Space sends, because this app makes no server-to-server calls. Without these routes, adding the app fails with a `404`.
+
+A failed check throws `AppAuthError`, which carries the HTTP status.
 
 ```ts title="src/server/main.ts"
 import { createServer, type ServerResponse } from 'node:http';
@@ -183,6 +190,10 @@ createServer(async (req, res) => {
     if (pathname === '/api/manifest/hello-app') {
       await requireProvisioning(req);
       return send(res, 200, manifests['hello-app']);
+    }
+    if (pathname === '/api/provision' || pathname === '/api/deprovision') {
+      await requireProvisioning(req);
+      return send(res, 200, { ok: true });
     }
     if (pathname === '/api/hello') {
       const claims = await requireCapability(req, 'hello:view');
@@ -215,11 +226,16 @@ npm run check:server
 A staff member registers the manifest URL. Your server must be reachable at `PUBLIC_BASE_URL` from the Space server.
 
 1. Open the app registry in the Space admin area and add an app.
-2. Enter the manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. Choose Continue. Space pulls and validates the manifest and shows `hello-app`, 1 page and 1 capability.
+2. Enter the manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. Choose **Continue**. Space pulls and validates the manifest and shows `hello-app`, 1 page and 1 capability.
 3. Set the iframe URL to the origin of the client, `http://localhost:` followed by `CLIENT_PORT` in this quickstart. The field starts with the manifest origin, which is the server and not the client.
-4. Switch on **Auto-apply manifest updates** so later definition changes apply without a review. Then choose Register.
+4. Switch on **Auto-apply manifest updates** so later definition changes apply without a review. Then choose **Register**.
+5. Edit the new row and switch on **Enabled**. A new registration starts disabled.
 
 This creates the [app registration](./glossary.md#app-registration). Registering applies the first manifest. Then a space manager activates the app in a space and shares it with your user. Sharing at View or Edit gives the user every capability of the app, including `hello:view`.
+
+To activate the app, open **Settings** and choose **Space**. Open **Context Hub**, where a space keeps the things it uses, and choose **Resources**. Choose **Add resource**, then **App**. In the **Add an app** dialog, choose **Add** next to **Hello app**.
+
+The **Configure** sheet opens after you add the app. A user with admin rights already appears under **Who can use it** with `hello:view`. To share the app with another user, open the three-dots menu on the app row in **Resources**, choose **Access**, then choose **Add people, roles or groups**.
 
 ### 5. Write the client
 
@@ -228,7 +244,7 @@ The client reads its boot config from the server with `loadAppClientConfig`, whi
 The client is plain React files with no bundler-specific import and no environment access. Serve them with your bundler on `CLIENT_PORT`. Your bundler needs four settings:
 
 - `src/client/main.tsx` is the entry file.
-- The HTML page has a `div` with the id `root`.
+- The HTML page has a `div` with the id `root` and a `script` tag with `type="module"` that points at the entry file.
 - The bundler compiles JSX and TypeScript.
 - The bundler forwards requests under `/api` to `SERVER_PORT`, so the client and the server share one origin.
 
@@ -322,7 +338,7 @@ Start your bundler on `CLIENT_PORT` in the second terminal.
 
 ### 6. Open the page in Space
 
-Open the Space and choose **Hello app** in the navigation. Its page `Home` loads: Space renders the page in an iframe at the iframe URL, sends a user token over `postMessage`, and the page shows the result below. Opened directly at the client port, the page stays on "Waiting for Space." because no host sends a token.
+Open the Space, expand the **Apps** group in the sidebar and choose **Hello app**. Its page `Home` loads: Space renders the page in an iframe at the iframe URL, sends a user token over `postMessage`, and the page shows the result below. Opened directly at the client port, the page stays on "Waiting for Space." because no host sends a token.
 
 ## Debugging aside: the dev harness
 
