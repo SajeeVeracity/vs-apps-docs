@@ -43,7 +43,7 @@ export const coreFieldRules: FieldRule[] = [
   },
   { path: 'name', required: false, rule: 'Display name, 1-80 characters.' },
   { path: 'version', required: true, rule: 'Non-empty string. Not checked as semver.' },
-  { path: 'pages', required: true, rule: 'At least one page. Array order is nav order.' },
+  { path: 'pages', required: true, rule: 'At least one page. Array order is navigation order.' },
   { path: 'defaultPageKey', required: false, rule: 'When set, must equal a declared page key.' },
   { path: 'capabilities', required: true, rule: 'Array of capabilities. `capabilities: []` is valid.' },
   { path: 'pages[].key', required: true, rule: 'Lower kebab-case. Unique within the app.', pattern: kebab },
@@ -52,7 +52,7 @@ export const coreFieldRules: FieldRule[] = [
   {
     path: 'pages[].capability',
     required: false,
-    rule: 'One capability key. A page without a capability is ungated.',
+    rule: 'One capability key. A page without a capability has no gate.',
     pattern: '^[a-z][a-z0-9-]*(:[a-z][a-z0-9-]*)+$',
   },
   {
@@ -78,7 +78,7 @@ export const resourceFieldRules: FieldRule[] = [
   {
     path: 'resources.models[].modality',
     required: true,
-    rule: '`"chat"`, `"vision"`, `"embed"` or `"rerank"`.',
+    rule: 'Kind of model: `"chat"`, `"vision"`, `"embed"` or `"rerank"`.',
   },
   {
     path: 'resources.models[].providers',

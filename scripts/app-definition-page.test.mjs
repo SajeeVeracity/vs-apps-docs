@@ -19,16 +19,16 @@ test('answers the four questions', () => {
 test('states each of the ten uses once, in order', () => {
   const uses = [...text.matchAll(/^\d+\. \*\*(.+?)\.\*\*/gm)].map((m) => m[1]);
   assert.deepEqual(uses, [
-    'Import-time validation',
-    'Manifest generation and serving',
-    'Agent-callable endpoint exposure',
-    'Agent-catalog merge',
-    'Server app registry',
-    'Token-scoped surface guards',
-    'Connector-event handler wiring',
-    'Model-slot lookup',
-    'Client nav and route typing',
-    'Space-side use of the manifest',
+    'Validate on import',
+    'Generate and serve the manifest',
+    'List agent-callable routes',
+    'Merge the [agent catalog](./glossary.md#agent-catalog)',
+    "Keep the server's app registry",
+    'Check the token',
+    'Register connector event handlers',
+    'Look up a model slot',
+    'Type navigation and routes',
+    'Read the manifest in Space',
   ]);
 });
 
@@ -50,7 +50,7 @@ test('field rows equal the field-rules table, with no extra rows', () => {
 
 test('states the empty capabilities and ungated page rules and the typo warning', () => {
   assert.match(text, /`capabilities: \[\]` is valid/);
-  assert.match(text, /page without a capability is ungated/i);
+  assert.match(text, /page without a capability has no gate/i);
   assert.match(text, /:::warning[\s\S]*does not check[\s\S]*:::/);
 });
 
