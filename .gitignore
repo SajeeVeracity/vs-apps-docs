@@ -4,3 +4,4 @@ build
 .snippets-*
 static/verified.json
 .builder-*
+.scratch
