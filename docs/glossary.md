@@ -6,6 +6,12 @@ Each term has one name in these docs. Pages link a term at first use. Each entry
 
 ## Terms
 
+### app developer
+
+The reader these docs are written for first: a developer new to Vector who builds an app from scratch. Pages order concepts so this reader never meets an undefined term.
+
+- Owner: docs.
+
 ### app
 
 A product a builder ships into Spaces: a React client, a server and one app definition.
