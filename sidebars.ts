@@ -13,6 +13,7 @@ const sidebars: SidebarsConfig = {
       label: 'Guides',
       link: {
         type: 'generated-index',
+        slug: '/category/guides',
         description: 'Advanced configuration of an app, one topic per guide.',
       },
       items: ['guides/agent-action-trees', 'guides/filter-navigation-by-capability'],
@@ -22,6 +23,7 @@ const sidebars: SidebarsConfig = {
       label: 'Recipes',
       link: {
         type: 'generated-index',
+        slug: '/category/recipes',
         description: 'Step-by-step tasks that add one feature to the example app, from simplest to most advanced.',
       },
       items: [
@@ -37,6 +39,7 @@ const sidebars: SidebarsConfig = {
       label: 'Reference',
       link: {
         type: 'generated-index',
+        slug: '/category/reference',
         description: 'Signatures and behaviour of each export in @vectoragents/vs-apps, plus the glossary.',
       },
       items: [

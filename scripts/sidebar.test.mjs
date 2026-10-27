@@ -42,5 +42,6 @@ test('Guides, Recipes and Reference open on a generated-index page with a descri
     const { link } = categories.find((category) => category.label === label);
     assert.equal(link?.type, 'generated-index', label);
     assert.ok(link.description?.length > 0, label);
+    assert.equal(link.slug, `/category/${label.toLowerCase()}`, label);
   }
 });

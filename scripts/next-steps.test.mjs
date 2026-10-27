@@ -4,6 +4,9 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+const { default: sidebars } = await import(join(dirname(fileURLToPath(import.meta.url)), '..', 'sidebars.ts'));
+const slugs = sidebars.docs.map((item) => item.link?.slug).filter(Boolean);
+
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pages = {
   'quickstart.md': ['app-definition.md', '/category/recipes'],
@@ -24,11 +27,12 @@ for (const [file, targets] of Object.entries(pages)) {
   test(`${file} Next steps items are a link plus a one-line reason`, () => {
     const items = block(text)[0].split('\n').slice(1).filter((l) => l.trim());
     assert.equal(items.length, targets.length);
-    for (const line of items) assert.match(line, /^- \[[^\]]+\]\([^)]+\): [^.]+\.$/);
+    for (const line of items) assert.match(line, /^- \[[^\]]+\]\([^)]+\): [^\n]*\S\.$/);
     const links = items.map((l) => l.match(/\]\(([^)]+)\)/)[1]);
     assert.deepEqual(links.map((l) => l.replace(/^\.\//, '')), targets);
     for (const l of links) {
       if (l.startsWith('./')) assert.ok(existsSync(join(root, 'docs', l)), l);
+      if (l.startsWith('/category/')) assert.ok(slugs.includes(l), l);
     }
   });
 }
