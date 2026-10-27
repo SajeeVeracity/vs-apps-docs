@@ -17,3 +17,10 @@ An app attached to one space. It snapshots the manifest's grantable capabilities
 
 - Maps to: no SDK symbol. The SDK sees the effect through the verified token and `loadAppClientConfig`.
 - Owner: Space.
+
+### Space Page
+
+A grid of widgets in a space, with page filters. A different thing from the published term page: the SDK has no part in it, and no published docs page uses it.
+
+- Maps to: no SDK symbol. `Page` in vector-spaces, stored as `pages.pages`.
+- Owner: Space.
