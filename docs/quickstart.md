@@ -2,7 +2,7 @@
 title: Quickstart
 ---
 
-Build one app from an empty folder to its page rendering inside a real [Space](./glossary.md#space) iframe. You write TypeScript for Node and React. The page and the server both read a verified user token.
+Build an app from scratch and load it in a [Space](./glossary.md#space). You write TypeScript for Node and React. The page and the server both read a verified user token.
 
 ## Goal
 
