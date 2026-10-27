@@ -8,11 +8,11 @@ Know what an [app definition](./glossary.md#app-definition) is, what reads it, h
 
 ## Prerequisites
 
-`@vectoragents/vs-apps` 0.2.4 installed. Terms link to the [glossary](./glossary.md) at first use. The [provenance](./provenance.md) page states what each claim rests on.
+The [software development kit (SDK)](./glossary.md#sdk) `@vectoragents/vs-apps` 0.2.4 installed. Terms link to the [glossary](./glossary.md) at first use. The [provenance](./provenance.md) page states what each claim rests on.
 
 ## What an app definition is
 
-An app definition is one TypeScript object, written by hand and built with `defineApp`. It declares the app `key`, its pages, the capabilities it can be granted and the resources it needs. It is env-free, so the server and the client import the same object.
+An app definition is one TypeScript object, written by hand and built with `defineApp`. It declares the app `key`, its [pages](./glossary.md#page), the [capabilities](./glossary.md#capability) it can be granted and the resources it needs. It does not read environment variables, so the server and the client import the same object.
 
 The definition and the [manifest](./glossary.md#manifest) are two different things.
 
@@ -26,18 +26,25 @@ Space never sees the definition. It reads only the manifest the server builds fr
 
 ## What an app definition does
 
-One definition feeds ten uses. The manifest is the largest, not the only one.
+One definition is used in ten places. The manifest is the largest use, not the only one.
 
-1. **Import-time validation.** `defineApp` checks the fields when the file is imported, so a malformed edit fails at server boot and not at the Space pull. It returns the input unchanged.
-2. **Manifest generation and serving.** `buildManifests` turns each definition into a manifest at boot. The server serves it on every Space pull.
-3. **Agent-callable endpoint exposure.** Routes the server marks as agent-callable are listed in the manifest at boot.
-4. **Agent-catalog merge.** At boot, the build-time agent catalog is merged into the manifest, joined on page keys.
-5. **Server app registry.** The server holds each definition beside its Nest module, mounts the module and serves the definition's manifest.
-6. **Token-scoped surface guards.** Controllers compare the `appKey` in a Space token with the definition `key` before they answer.
-7. **Connector-event handler wiring.** At boot, the server registers one handler per connector event handler the definition declares, so the manifest and the handlers do not drift.
-8. **Model-slot lookup.** Code asks Space for a model by [model slot](./glossary.md#model-slot) key. The SDK refuses a slot the manifest does not declare and a slot nobody set.
-9. **Client nav and route typing.** The client lists pages with `appPages(...)` and derives a path type from the declared paths. No route is generated or guarded from the definition.
-10. **Space-side use of the manifest.** Space turns pages into nav entries, capabilities into the vocabulary a space manager grants, resources into its config sheet, and agents and MCP servers into subagents and connectors.
+1. **Validate on import.** `defineApp` checks the fields when the file is imported. A wrong edit fails when the server starts, before Space reads the manifest. It returns the input unchanged.
+2. **Generate and serve the manifest.** `buildManifests` turns each definition into a manifest at boot. The server serves it each time Space reads the manifest.
+3. **List agent-callable routes.** Routes the server marks as agent-callable are listed in the manifest at boot.
+4. **Merge the [agent catalog](./glossary.md#agent-catalog).** At boot, the build-time agent catalog is merged into the manifest, joined on page keys.
+5. **Keep the server's app registry.** The registry is the server's list of app definitions. The server holds each definition beside its Nest module, mounts the module and serves the definition's manifest.
+6. **Check the token.** Controllers compare the `appKey` in a Space token with the definition `key` before they answer.
+7. **Register connector event handlers.** At boot, the server registers every event handler that a [connector slot](./glossary.md#connector-slot) declares in the definition. This keeps the manifest and the handlers the same.
+8. **Look up a model slot.** Code asks Space for a model by [model slot](./glossary.md#model-slot) key. The SDK refuses a slot that the manifest does not declare, and a slot that no one set.
+9. **Type navigation and routes.** The client lists pages with `appPages(...)` and derives a path type from the declared paths. No route is generated or guarded from the definition.
+10. **Read the manifest in Space.** Space turns the manifest into these:
+
+    | Manifest field | Space shows |
+    | --- | --- |
+    | Pages | Navigation entries |
+    | Capabilities | The capabilities a [space manager](./glossary.md#space-manager) can grant |
+    | Resources | A configuration sheet |
+    | Agents and [Model Context Protocol (MCP)](./glossary.md#mcp) servers | Subagents and connectors |
 
 Uses 1 to 9 happen in your app. Use 10 happens in Space and is covered in [How it reflects in Space](#how-it-reflects-in-space).
 
@@ -47,7 +54,7 @@ Uses 1 to 9 happen in your app. Use 10 happens in Space and is covered in [How i
 
 To fill in a definition from a form instead, use the [definition builder](/builder).
 
-One [page](./glossary.md#page) gated by one [capability](./glossary.md#capability).
+One page gated by one capability.
 
 ```ts title="src/app.definition.ts"
 import { defineApp } from '@vectoragents/vs-apps';
@@ -77,13 +84,13 @@ export const definition = defineApp({
 | `key` | required | Lower kebab-case, 2-63 characters, starts with a letter. |
 | `name` | optional | Display name, 1-80 characters. |
 | `version` | required | Non-empty string. Not checked as semver. |
-| `pages` | required | At least one page. Array order is nav order. |
+| `pages` | required | At least one page. Array order is navigation order. |
 | `defaultPageKey` | optional | When set, must equal a declared page key. |
 | `capabilities` | required | Array of capabilities. `capabilities: []` is valid. |
 | `pages[].key` | required | Lower kebab-case. Unique within the app. |
 | `pages[].label` | required | Non-empty string. |
 | `pages[].path` | required | String that starts with `/`. |
-| `pages[].capability` | optional | One capability key. A page without a capability is ungated. |
+| `pages[].capability` | optional | One capability key. A page without a capability has no gate. |
 | `capabilities[].key` | required | Form `<group>:<action>`, lower kebab-case segments. Two or more segments are valid. |
 | `capabilities[].label` | required | Non-empty string. |
 | `capabilities[].description` | optional | String. |
@@ -95,7 +102,7 @@ export const definition = defineApp({
 
 ### Resources
 
-`resources` is optional and declares what the app needs from the space: modules, model slots and [connector slots](./glossary.md#connector-slot). Unknown keys are rejected. Each slot or module `key` is unique within its list.
+`resources` is optional and declares what the app needs from each [space](./glossary.md#customer-space): modules, model slots and connector slots. Unknown keys are rejected. Each slot or module `key` is unique within its list.
 
 ```ts title="src/app.definition.ts"
 import { defineApp } from '@vectoragents/vs-apps';
@@ -136,7 +143,7 @@ export const definition = defineApp({
 | `resources.modules[].key` | required | Non-empty string. Unique within modules. |
 | `resources.modules[].required` | required | Boolean. |
 | `resources.models[].key` | required | Lower kebab-case slot key. |
-| `resources.models[].modality` | required | `"chat"`, `"vision"`, `"embed"` or `"rerank"`. |
+| `resources.models[].modality` | required | Kind of model: `"chat"`, `"vision"`, `"embed"` or `"rerank"`. |
 | `resources.models[].providers` | required | At least one of `ANTHROPIC`, `AZURE_OPENAI`, `COHERE`, `AZURE_DOCUMENT_INTELLIGENCE`. |
 | `resources.models[].label` | optional | Display label. Falls back to the slot key. |
 | `resources.models[].description` | optional | String. |
@@ -157,14 +164,14 @@ export const definition = defineApp({
 
 This section rests on Space-side documentation and is not yet verified in a real Space. See [provenance](./provenance.md).
 
-A staff member registers the manifest URL in Space. Space stores the served manifest, never the definition file. After that:
+A [staff](./glossary.md#staff) member registers the manifest URL in Space. Space stores the served manifest, never the definition file. After that:
 
-- The page shows in the Space nav, for users who hold the page's capability.
+- The page shows in the Space navigation, for users who hold the page's capability.
 - A space manager grants the declared capabilities. Only declared capabilities can be granted.
-- A space manager picks a model for each model slot and attaches one connector to each connector slot. A slot nobody set runs nothing.
-- A manifest change waits as a pending review. Staff apply it before it goes live, unless the registry entry has auto-apply on.
+- A space manager picks a model for each model slot and attaches one connector to each connector slot. If no one sets a slot, the app cannot use it.
+- A manifest change waits as a pending review. Staff apply it before it goes live, unless auto-apply is on for the [app registration](./glossary.md#app-registration).
 
-Re-pulls happen on a Space pull and on the app's boot ping.
+Space reads the manifest again when staff trigger a pull and when the app announces that it started.
 
 ### SDK guarantees
 
@@ -175,14 +182,14 @@ Re-pulls happen on a Space pull and on the app's boot ping.
 ### Space-side
 
 - Registration, the pending review and auto-apply (not yet verified in a real Space).
-- Nav entries and the capability filter on them.
+- Navigation entries and the capability filter on them.
 - Grants, model choices and connector attachment.
 
-How Space lists an ungated page in its nav is not yet verified in a real Space.
+How Space lists a page that has no capability in its navigation is not yet verified in a real Space.
 
 ## Result
 
-You can read, write and explain an app definition, and you know which behaviour the SDK guarantees and which Space owns.
+You can read, write and explain an app definition, and you know which behavior the SDK guarantees and which Space owns.
 
 ## Next step
 

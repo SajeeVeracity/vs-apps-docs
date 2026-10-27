@@ -2,7 +2,7 @@
 title: Glossary
 ---
 
-Each term has one name in these docs. Pages link a term at first use. Each entry gives the definition, the code symbol or field it maps to, and who owns it. SDK means `@vectoragents/vs-apps` 0.2.4.
+Each term has one name in these docs. Pages link a term at first use. Each entry gives the definition, the code symbol or field it maps to, and who owns it.
 
 ## Terms
 
@@ -15,7 +15,7 @@ A product a builder ships into Spaces: a React client, a server and one app defi
 
 ### app definition
 
-The one object that describes an app: pages, capabilities and resources. It is env-free and feeds the server manifest and the client nav.
+The one object that describes an app: pages, capabilities and resources. It does not read environment variables. It feeds the server manifest and the client navigation.
 
 - Maps to: `defineApp(...)` in `@vectoragents/vs-apps`, typed `AppDefinition`.
 - Owner: SDK.
@@ -34,6 +34,27 @@ The Vector host where a space manager registers apps, shares capabilities and se
 - Maps to: no SDK symbol. The app talks to it through the token, the iframe bridge and the manifest.
 - Owner: Space.
 
+### space {#customer-space}
+
+One customer's workspace inside Space. A space manager attaches apps to it.
+
+- Maps to: no SDK symbol.
+- Owner: Space.
+
+### space manager
+
+The person who runs one space. They grant capabilities and choose the models and connectors for the slots.
+
+- Maps to: no SDK symbol.
+- Owner: Space.
+
+### staff
+
+The administrators of Space itself. They register apps and apply manifest changes. A space manager works inside one space instead.
+
+- Maps to: no SDK symbol.
+- Owner: Space.
+
 ### app registration
 
 The record staff create in Space by giving it a manifest URL. One registration per app. Space re-pulls the manifest on a pull or the app's boot ping.
@@ -50,10 +71,10 @@ An app attached to one space. It snapshots the manifest's grantable capabilities
 
 ### page
 
-One screen of the app. It becomes a nav entry in Space, shown only to users who hold the page's capability.
+One screen of the app. It becomes a navigation entry in Space, shown only to users who hold the page's capability.
 
 - Maps to: `pages[]` in the definition (`key`, `label`, `path`, optional `capability`). `appPages(...)` lists them on the client.
-- Owner: SDK declares it. Space renders the nav entry.
+- Owner: SDK declares it. Space renders the navigation entry.
 
 ### capability
 
@@ -117,3 +138,17 @@ A local stand-in for Space that hosts the app page in a dev shell, for debugging
 
 - Maps to: `VectorAppsHarness` in `@vectoragents/vs-apps/harness`.
 - Owner: SDK.
+
+### SDK
+
+The software development kit: the `@vectoragents/vs-apps` package, version 0.2.4.
+
+- Maps to: `@vectoragents/vs-apps` and its subpaths.
+- Owner: SDK.
+
+### MCP
+
+Model Context Protocol. An open protocol that connects a model to tools and data. A connector slot with the provider `MCP` uses it.
+
+- Maps to: `provider: 'MCP'` in `resources.connectors[]`.
+- Owner: SDK declares it. Space attaches the connector.
