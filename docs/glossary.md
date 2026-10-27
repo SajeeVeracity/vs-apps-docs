@@ -29,21 +29,14 @@ The JSON the server builds from the app definitions and serves at `GET /api/mani
 
 ### Space
 
-The Vector host where a space manager registers apps, shares capabilities and sets slots. It embeds each app page in an iframe.
+A Vector workspace. A space manager registers apps, shares capabilities and sets slots in it. It embeds each app page in an iframe.
 
 - Maps to: no SDK symbol. The app talks to it through the token, the iframe bridge and the manifest.
 - Owner: Space.
 
-### space {#customer-space}
-
-One customer's workspace inside Space. A space manager attaches apps to it.
-
-- Maps to: no SDK symbol.
-- Owner: Space.
-
 ### space manager
 
-The person who runs one space. They grant capabilities and choose the models and connectors for the slots.
+The person who runs one Space. They grant capabilities and choose the models and connectors for the slots.
 
 - Maps to: no SDK symbol.
 - Owner: Space.
