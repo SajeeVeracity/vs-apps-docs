@@ -25,9 +25,9 @@ const storageKey = 'vs-apps-docs:track-progress';
 /** The goal tracks on the landing page, each an ordered list of pages. */
 export const tracks: Track[] = [
   {
-    id: 'page-in-space',
-    title: 'Put a page in a Space',
-    goal: 'Run an app whose page renders inside a Space and reads a verified user.',
+    id: 'first-app-in-space',
+    title: 'Hello world in a Space',
+    goal: 'Run your first hello world app in a Space.',
     steps: [
       { id: 'quickstart', label: 'Quickstart', to: '/quickstart' },
       { id: 'app-definition', label: 'App definition', to: '/app-definition' },
