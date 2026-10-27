@@ -124,7 +124,7 @@ export const definition = defineApp({
 
 ### 3. Serve the manifest and verify tokens
 
-`buildManifests` turns the definition into the [manifest](./glossary.md#manifest). The server serves it at `GET /api/manifest/hello-app`. `PUBLIC_BASE_URL` fills any `{publicBaseUrl}` placeholder in the manifest. `agent-catalog.json` does not exist yet, which `buildManifests` tolerates. The server prints a warning about the missing file when it starts. Ignore it.
+`buildManifests` turns the definition into the [manifest](./glossary.md#manifest). The server serves it at `GET /api/manifest/hello-app`. `PUBLIC_BASE_URL` fills any `{publicBaseUrl}` placeholder in the manifest. `agent-catalog.json` does not exist yet, which `buildManifests` tolerates. The server prints a warning that starts with `agent-catalog file not found` when it starts. Ignore it.
 
 ```ts title="src/server/manifests.ts"
 import { buildManifests } from '@vectoragents/vs-apps/server';
@@ -226,16 +226,16 @@ npm run check:server
 A staff member registers the manifest URL. Your server must be reachable at `PUBLIC_BASE_URL` from the Space server.
 
 1. Open the app registry in the Space admin area and add an app.
-2. Enter the manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. Choose Continue. Space pulls and validates the manifest and shows `hello-app`, 1 page and 1 capability.
+2. Enter the manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. Choose **Continue**. Space pulls and validates the manifest and shows `hello-app`, 1 page and 1 capability.
 3. Set the iframe URL to the origin of the client, `http://localhost:` followed by `CLIENT_PORT` in this quickstart. The field starts with the manifest origin, which is the server and not the client.
-4. Switch on **Auto-apply manifest updates** so later definition changes apply without a review. Then choose Register.
+4. Switch on **Auto-apply manifest updates** so later definition changes apply without a review. Then choose **Register**.
 5. Edit the new row and switch on **Enabled**. A new registration starts disabled.
 
 This creates the [app registration](./glossary.md#app-registration). Registering applies the first manifest. Then a space manager activates the app in a space and shares it with your user. Sharing at View or Edit gives the user every capability of the app, including `hello:view`.
 
-To activate the app, open **Settings** and choose **Space**. Open **Context Hub** and choose **Resources**. Choose **Add resource**, then **App**, and pick **Hello app**.
+To activate the app, open **Settings** and choose **Space**. Open **Context Hub**, where a space keeps the things it uses, and choose **Resources**. Choose **Add resource**, then **App**. In the **Add an app** dialog, choose **Add** next to **Hello app**.
 
-A user with admin rights already appears under **Who can use it** with `hello:view`. To share the app with another user, open the three-dots menu on the app row in **Resources**, choose **Access**, then choose **Add people, roles or groups**.
+The **Configure** sheet opens after you add the app. A user with admin rights already appears under **Who can use it** with `hello:view`. To share the app with another user, open the three-dots menu on the app row in **Resources**, choose **Access**, then choose **Add people, roles or groups**.
 
 ### 5. Write the client
 
