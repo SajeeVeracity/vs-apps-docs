@@ -8,7 +8,7 @@ Build an app in a [monorepo](./glossary.md#monorepo), then add it to a [Space](.
 
 You build one [page](./glossary.md#page), one [capability](./glossary.md#capability), a server and a [shared package](./glossary.md#shared-package). Only users who hold the capability see the page. You also ask Vector to register the app, then add it to a space.
 
-At the end, the `hello-app` page is open in a Space. It shows your user id and space id twice: read in the browser, and read by your server. Both come from the same verified token that Space sends.
+At the end, the `hello-app` page is open in a Space. It shows your user id and space id coming from the verified token that Space sends.
 
 ## Prerequisites
 
@@ -22,40 +22,6 @@ App side:
 
 - [ ] Node.js 20.19 or later, and `npm`.
 - [ ] A GitHub token with `read:packages` access to `@vectoragents/vs-apps`.
-
-## Final layout
-
-```text
-hello-app/
-├── .env
-├── .gitignore
-├── .npmrc
-├── package.json
-├── tsconfig.base.json
-├── node_modules/
-├── client/
-│   ├── index.html
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── vite.config.ts
-│   └── src/
-│       ├── main.tsx
-│       ├── App.tsx
-│       ├── HelloPage.tsx
-│       └── token.ts
-├── server/
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── src/
-│       ├── main.ts
-│       ├── auth.ts
-│       └── manifests.ts
-└── shared/
-    ├── package.json
-    ├── tsconfig.json
-    └── src/
-        └── index.ts
-```
 
 ## Part 1: Build and run the app
 
@@ -72,6 +38,8 @@ echo node_modules >> .gitignore
 ```
 
 `GITHUB_PACKAGES_TOKEN` is a token with `read:packages`. Keep it out of the repository.
+
+The folders are empty. Later steps put files in them.
 
 The root `package.json` lists the three packages as `workspaces`. Its scripts run the dev servers, the type check and the server check. `typescript` is pinned to 7.0.2, the tested version. A new major version can change the result.
 
@@ -222,6 +190,28 @@ hello-app@0.1.0 /path/to/hello-app
   └── @vectoragents/vs-apps@0.2.4 deduped
 ```
 
+Your folder holds these files.
+
+```text
+hello-app/
+├── .gitignore
+├── .npmrc
+├── package.json
+├── tsconfig.base.json
+├── client/
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── src/
+├── server/
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── src/
+└── shared/
+    ├── package.json
+    ├── tsconfig.json
+    └── src/
+```
+
 ### 2. Write the shared app definition
 
 The [app definition](./glossary.md#app-definition) is the one file the server and the client share. [App definition](./app-definition.md) explains each field. `CAPABILITY` holds the capability key, so no file repeats the string.
@@ -249,6 +239,15 @@ export const definition = defineApp({
 
 `capability` on the page must match a capability `key` exactly. `defineApp` does not check it.
 
+The shared package now has one source file.
+
+```text
+hello-app/
+└── shared/
+    └── src/
+        └── index.ts    # new
+```
+
 **Check**: run `npm run typecheck --workspace @hello-app/shared`. The command exits with 0 and prints no error line.
 
 ```text
@@ -260,7 +259,7 @@ export const definition = defineApp({
 
 `buildManifests` turns the definition into the [manifest](./glossary.md#manifest). The server serves it at `GET /api/manifest/hello-app`. `PUBLIC_BASE_URL` fills each `{publicBaseUrl}` placeholder in the manifest.
 
-`agent-catalog.json` does not exist yet, and `buildManifests` accepts that. The path resolves against `server/`. At start, the server prints a warning that begins with `agent-catalog file not found`. Ignore it.
+At start, the server prints a warning that begins with `agent-catalog file not found`. The Hello app needs no catalog, so ignore it.
 
 ```ts title="server/src/manifests.ts"
 import { buildManifests } from '@vectoragents/vs-apps/server';
@@ -356,6 +355,18 @@ ENV
 - `ALLOWED_PARENT_ORIGIN` is the origin of the Space web client that embeds your page.
 - `PUBLIC_BASE_URL` is the origin where the Space server reaches your server.
 - `SERVER_PORT` is the port your server listens on. If port 3001 is busy, for example because a local Space client uses it, change the value.
+
+The folder now has these new files.
+
+```text
+hello-app/
+├── .env                  # new
+└── server/
+    └── src/
+        ├── main.ts       # new
+        ├── auth.ts       # new
+        └── manifests.ts  # new
+```
 
 **Check**: run this command to fetch the key set. The output is `{"keys":[`. A web page that starts with `<` means the `/api` prefix is missing.
 
@@ -474,6 +485,16 @@ export function HelloPage() {
 }
 ```
 
+The client now has two source files.
+
+```text
+hello-app/
+└── client/
+    └── src/
+        ├── HelloPage.tsx    # new
+        └── token.ts         # new
+```
+
 **Check**: run `npm run typecheck`. The command exits with 0 and prints one `tsc --noEmit` run for each package, with no error line.
 
 ```text
@@ -560,6 +581,18 @@ export function App() {
     </AppProvider>
   );
 }
+```
+
+The client folder now has these new files.
+
+```text
+hello-app/
+└── client/
+    ├── index.html        # new
+    ├── vite.config.ts    # new
+    └── src/
+        ├── main.tsx      # new
+        └── App.tsx       # new
 ```
 
 Append the client port to `.env`.

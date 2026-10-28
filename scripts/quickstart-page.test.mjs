@@ -20,7 +20,6 @@ test('follows the page order', () => {
   assert.deepEqual(titles, [
     'Goal',
     'Prerequisites',
-    'Final layout',
     'Part 1: Build and run the app',
     'See the page without Space',
     'Part 2: Add the app to Space',
@@ -54,12 +53,20 @@ test('prerequisites are two checklists and state the baseline once', () => {
   assert.doesNotMatch(prerequisites, /React 18|TypeScript 5/);
 });
 
-test('the final layout shows the three packages as a tree', () => {
-  const layout = sections.find((s) => s.startsWith('Final layout'));
-  assert.match(layout, /^hello-app\/$/m);
-  for (const name of ['client/', 'server/', 'shared/', 'tsconfig.base.json', '.npmrc', '.env']) {
-    assert.ok(layout.includes(name), name);
+test('steps 1, 2, 3, 5 and 6 end with a tree of the files they add', () => {
+  const steps = text.split(/^### /m).slice(1);
+  const trees = steps.map((s) => /^```text\nhello-app\/\n/m.test(s));
+  assert.deepEqual(trees, [true, true, true, false, true, true, false, false, false, false]);
+  assert.doesNotMatch(text, /Final layout/);
+  const step1 = steps[0];
+  for (const name of ['client/', 'server/', 'shared/', 'tsconfig.base.json', '.npmrc']) {
+    assert.ok(step1.includes(name), name);
   }
+});
+
+test('trees never list generated files or the agent catalog', () => {
+  const trees = fences.filter((f) => f.lang === 'text' && /^hello-app\/$/m.test(f.body));
+  for (const { body } of trees) assert.doesNotMatch(body, /node_modules|package-lock|agent-catalog/);
 });
 
 test('the packages and their scripts are defined once', () => {
