@@ -6,11 +6,13 @@ Build an app from scratch and load it in a [Space](./glossary.md#space). You wri
 
 ## Goal
 
-End with the `hello-app` page open in a Space, showing the user and space taken from a verified token, in the browser and on your server. The app has one [page](./glossary.md#page) gated by one [capability](./glossary.md#capability). That pairing demonstrates gating. It is not an SDK minimum: `key`, `version`, one page and `capabilities: []` already pass `defineApp`.
+You build one [page](./glossary.md#page) and one [capability](./glossary.md#capability). Only users who hold the capability see the page. You also register the app and add it to a space.
+
+At the end, the `hello-app` page is open in a Space. It shows your user id and space id twice: read in the browser, and read by your server. Both come from the same verified token that Space sends.
 
 ## Prerequisites
 
-- Node.js 20.6 or later, React 18 or later and TypeScript 5 or later with `strict`. Commands use `npm`. If you use another package manager, run the equivalent command.
+- Node.js 20.19 or later, React 18 or later and TypeScript 5 or later with `strict`. Commands use `npm`. If you use another package manager, run the equivalent command.
 - A GitHub token with `read:packages` access to `@vectoragents/vs-apps` on GitHub Packages.
 - A Space where you can register an app ([staff](./glossary.md#staff)) and activate it and share it ([space manager](./glossary.md#space-manager)). Your user also needs View access to the app, or admin rights, which give every capability.
 - Your user belongs to a space whose agent is published, so users can run it. Without such a space, Space shows "No spaces yet".

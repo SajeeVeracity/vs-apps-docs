@@ -85,9 +85,8 @@ test('no inline localhost literal with a fixed port', () => {
   assert.doesNotMatch(text, /localhost:\d+/);
 });
 
-test('shows one page and one capability as a gating demonstration, not a minimum', () => {
+test('shows one page gated by one capability', () => {
   assert.match(text, /hello:view/);
-  assert.match(text, /not an SDK minimum/i);
   assert.match(text, /RequireCapability/);
 });
 
