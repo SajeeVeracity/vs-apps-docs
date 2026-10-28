@@ -587,6 +587,76 @@ npm run dev:client
 Waiting for Space.
 ```
 
+## See the page without Space
+
+Skip this section if you have Space access. Without Space access, stop after Part 1, or debug the page with the dev harness. The harness stands in for Space and needs no registration. The [harness reference](./reference/harness.md) gives the routes, and the [harness](./glossary.md#harness) glossary entry lists what it does not cover.
+
+## Part 2: Add the app to Space
+
+Part 2 runs in the Space UI. Your server and client from Part 1 stay running. Each step names the role that does it.
+
+### 1. Register and enable the app (staff)
+
+A staff member registers the manifest URL. Your server must be reachable at `PUBLIC_BASE_URL` from the Space server. This creates the [app registration](./glossary.md#app-registration).
+
+1. Choose **Settings**, **Admin**, **Platform**, then **Apps**. Choose **Add app**.
+2. Enter the manifest URL in **Manifest URL**: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. Choose **Continue**.
+3. Check that Space shows `hello-app`, `Hello app`, `v0.1.0`, `1 pages` and `1 capabilities`.
+4. Set **Iframe URL** to `http://localhost:` followed by `CLIENT_PORT`. The field starts with the manifest origin, which is the server and not the client.
+5. Switch on **Auto-apply manifest updates**. Choose **Register**.
+6. On the new row, choose **Edit**. Switch on **Enabled**. Choose **Save**.
+
+**Check**: Space shows the toast `App saved`. The row `Hello app` shows **Enabled**.
+
+### 2. Allow the app in the license (staff)
+
+Space offers a new registration in **Add an app** only after the organization license allows it.
+
+1. Choose **Admin**, **Tenancy**, then **Organizations**. Choose **Edit license** on your organization.
+2. Under **Allowed apps**, select the **Hello app** chip. Choose **Save**.
+
+**Check**: Space shows the toast `License saved`.
+
+### 3. Add the app to a space (space manager)
+
+1. Choose **Settings**, **Space**, **Context Hub**, then **Resources**.
+2. Choose **Add resource**, then **App**. In the **Add an app** dialog, choose **Add** next to **Hello app**.
+
+**Check**: Space shows the toast `App enabled`. **Resources** lists a **Hello app** row with type **App** and status **Active**.
+
+### 4. Share the app with a user (space manager)
+
+An admin already has access. If you are an admin, skip the share and read the Check.
+
+1. On the **Hello app** row, open the row menu. Choose **Access**.
+2. Add your user in **Direct access**.
+
+**Check**: on the **Configure Hello app** sheet, your user appears under **Who can use it**. An admin has an **Admin** badge.
+
+### 5. Open the page
+
+Open the Space. Expand the **Apps** group in the sidebar and choose **Hello app**. Space renders the page in an iframe at the iframe URL and sends a user token over `postMessage`.
+
+**Check**: the page shows three lines. The two user ids are equal, and the two space ids are equal.
+
+```text
+Verified in the browser: user <id> in space <id>.
+Capabilities: hello:view
+Verified on the server: space <id>, user <id>
+```
+
+## Result
+
+The `hello-app` page is open in a Space. It shows the same three lines as the last Check.
+
+```text
+Verified in the browser: user <id> in space <id>.
+Capabilities: hello:view
+Verified on the server: space <id>, user <id>
+```
+
+Both user ids come from the one token that Space sends. The path covered the definition, the manifest, the registration, the provider and the gated page.
+
 ## Next steps
 
 - [App definition](./app-definition.md): learn what each definition field does.
