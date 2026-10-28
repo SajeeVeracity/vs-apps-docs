@@ -8,6 +8,7 @@ const sections = text.split(/^## /m).slice(1);
 const titles = sections.map((s) => s.split('\n')[0]);
 const fences = [...text.matchAll(/^```(\w+)([^\n]*)\n([\s\S]*?)^```/gm)].map(([, lang, meta, body]) => ({ lang, meta, body }));
 const part1 = sections.find((s) => s.startsWith('Part 1'));
+const part2 = sections.find((s) => s.startsWith('Part 2'));
 const steps = (part) => part.split(/^### /m).slice(1);
 const count = (re) => (text.match(re) ?? []).length;
 
@@ -15,9 +16,23 @@ test('follows the writing rules checked by steViolations', () => {
   assert.deepEqual(steViolations(text), []);
 });
 
-test('follows the page order up to Part 1', () => {
-  assert.deepEqual(titles.slice(0, 4), ['Goal', 'Prerequisites', 'Final layout', 'Part 1: Build and run the app']);
-  assert.equal(titles.at(-1), 'Next steps');
+test('follows the page order', () => {
+  assert.deepEqual(titles, [
+    'Goal',
+    'Prerequisites',
+    'Final layout',
+    'Part 1: Build and run the app',
+    'See the page without Space',
+    'Part 2: Add the app to Space',
+    'Result',
+    'Next steps',
+  ]);
+});
+
+test('the aside links the harness reference and has no steps or Check', () => {
+  const aside = sections.find((s) => s.startsWith('See the page without Space'));
+  assert.match(aside, /\(\.\/reference\/harness\.md\)/);
+  assert.doesNotMatch(aside, /^### |^\d+\. |\*\*Check\*\*/m);
 });
 
 test('opens with an intro of two sentences that links the monorepo', () => {
@@ -79,14 +94,34 @@ test('the client runs on Vite with ports and proxy taken from .env', () => {
   assert.match(text, /"dev": "node --env-file=\.\.\/\.env /);
 });
 
-test('every Part 1 step ends with a Check followed by its result', () => {
-  const list = steps(part1);
-  assert.deepEqual(list.map((s) => s.match(/^(\d+)\. /)?.[1]), list.map((_, i) => String(i + 1)));
-  for (const step of list) {
+test('every step in both parts restarts at 1 and has a Check', () => {
+  for (const part of [part1, part2]) {
+    const list = steps(part);
+    assert.deepEqual(list.map((s) => s.match(/^(\d+)\. /)?.[1]), list.map((_, i) => String(i + 1)));
+    for (const step of list) assert.ok(step.includes('**Check**'), step.split('\n')[0]);
+  }
+});
+
+test('every Part 1 Check is followed by its result', () => {
+  for (const step of steps(part1)) {
     const after = step.split(/^\*\*Check\*\*/m).at(-1);
-    assert.ok(step.includes('**Check**'), step.split('\n')[0]);
     assert.match(after, /\n\n(```|- )/, step.split('\n')[0]);
   }
+});
+
+test('Part 2 titles carry the role and the admin share Check reads the Admin badge', () => {
+  const list = steps(part2);
+  for (const step of list.slice(0, 4)) assert.match(step.split('\n')[0], /\((staff|space manager)\)$/);
+  const share = list.find((s) => /^\d+\. Share/.test(s));
+  assert.match(share, /\*\*Admin\*\* badge/);
+  assert.doesNotMatch(share.split(/^\*\*Check\*\*/m).at(-1), /hello:view/);
+});
+
+test('the Result repeats the three lines of the final Check', () => {
+  const lines = (s) => s.match(/^Verified in the browser[^\n]*\nCapabilities: hello:view\nVerified on the server[^\n]*$/m)?.[0];
+  const last = steps(part2).at(-1);
+  assert.ok(lines(last));
+  assert.equal(lines(sections.find((s) => s.startsWith('Result'))), lines(last));
 });
 
 test('the first Check line follows the step command', () => {
@@ -161,7 +196,7 @@ test('covers the client and server symbols', () => {
 
 test('links the concept page and glossary terms once at first use', () => {
   assert.match(text, /\(\.\/app-definition\.md\)/);
-  for (const a of ['app-definition', 'manifest', 'space', 'capability', 'page', 'staff', 'space-manager', 'monorepo', 'shared-package']) {
+  for (const a of ['app-definition', 'manifest', 'space', 'capability', 'page', 'staff', 'space-manager', 'monorepo', 'shared-package', 'app-registration', 'harness']) {
     assert.match(text, new RegExp(`\\(\\./glossary\\.md#${a}\\)`), a);
   }
   for (const a of ['monorepo', 'shared-package']) assert.equal(count(new RegExp(`glossary\\.md#${a}\\)`, 'g')), 1, a);
