@@ -273,7 +273,7 @@ Replace the example values with your own.
 - `SPACE_JWKS_URL` is the address of the Space key set. The server uses it to check that a token comes from Space. It is the origin of the Space API followed by `/api/.well-known/apps/jwks.json`.
 - `ALLOWED_PARENT_ORIGIN` is the origin of the Space web client that embeds your page. The client accepts messages from this origin only.
 - `PUBLIC_BASE_URL` is the origin where the Space server reaches your server. The server writes it into each `{publicBaseUrl}` placeholder in the manifest.
-- `SERVER_PORT` is the port your server listens on. If port 3001 is busy, for example because a local Space client uses it, change the value.
+- `SERVER_PORT` is the port your server listens on.
 - `CLIENT_PORT` is the port Vite serves the client on. The iframe URL you send to Vector in Part 2 uses the same value.
 
 `buildManifests` turns the definition into the [manifest](./glossary.md#manifest). The server serves it at `GET /api/manifest/hello-app`.
