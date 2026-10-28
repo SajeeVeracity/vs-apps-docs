@@ -138,3 +138,17 @@ Model Context Protocol. An open protocol that connects a model to tools and data
 
 - Maps to: `provider: 'MCP'` in `resources.connectors[]`.
 - Owner: SDK declares it. Space attaches the connector.
+
+### monorepo
+
+One repository that holds the client, the server and the shared package, each as its own package.
+
+- Maps to: the `workspaces` field in the root `package.json`.
+- Owner: docs. It is a layout the quickstart uses, not an SDK concept.
+
+### shared package
+
+The package `@hello-app/shared`. It holds the app definition and the capability key. The client and the server both import it.
+
+- Maps to: no SDK symbol.
+- Owner: docs. It is a package of the quickstart app, not part of the SDK.
