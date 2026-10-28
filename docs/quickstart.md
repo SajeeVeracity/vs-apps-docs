@@ -6,7 +6,7 @@ Build an app in a [monorepo](./glossary.md#monorepo), then add it to a [Space](.
 
 ## Goal
 
-You build one [page](./glossary.md#page), one [capability](./glossary.md#capability), a server and a [shared package](./glossary.md#shared-package). Only users who hold the capability see the page. You also register the app and add it to a space.
+You build one [page](./glossary.md#page), one [capability](./glossary.md#capability), a server and a [shared package](./glossary.md#shared-package). Only users who hold the capability see the page. You also ask Vector to register the app, then add it to a space.
 
 At the end, the `hello-app` page is open in a Space. It shows your user id and space id twice: read in the browser, and read by your server. Both come from the same verified token that Space sends.
 
@@ -14,11 +14,8 @@ At the end, the `hello-app` page is open in a Space. It shows your user id and s
 
 Space side:
 
-- [ ] You are [staff](./glossary.md#staff). Staff register apps.
 - [ ] You are a [space manager](./glossary.md#space-manager). Space managers add an app to a space and share it.
-- [ ] Your user has View access to the app, or admin rights.
 - [ ] Your space has a published agent. Without one, Space shows "No spaces yet".
-- [ ] Your license allows the app. Staff change the license.
 - [ ] The Space server can reach your server. A Space on another machine needs a public URL, for example from a tunnel.
 
 App side:
@@ -571,7 +568,7 @@ Append the client port to `.env`.
 echo CLIENT_PORT=5173 >> .env
 ```
 
-`CLIENT_PORT` is the port Vite serves the client on. You may change it. The iframe URL in Part 2 uses the same value.
+`CLIENT_PORT` is the port Vite serves the client on. You may change it. The iframe URL you send to Vector in Part 2 uses the same value.
 
 Start the client in the second terminal. Keep the server running in the first.
 
@@ -591,47 +588,36 @@ Skip this section if you have Space access. Without Space access, stop after Par
 
 ## Part 2: Add the app to Space
 
-Part 2 runs in the Space UI. Your server and client from Part 1 stay running. Each step names the role that does it.
+Part 2 runs in the Space UI, except step 1. Your server and client from Part 1 stay running. Each step names the role that does it.
 
-### 1. Register and enable the app (staff)
+### 1. Ask Vector to register the app
 
-A staff member registers the manifest URL. Your server must be reachable at `PUBLIC_BASE_URL` from the Space server. This creates the [app registration](./glossary.md#app-registration).
+Only Vector registers an app and allows it in an organization license. Your server must be reachable at `PUBLIC_BASE_URL` from the Space server. Send Vector this information:
 
-1. Choose **Settings**, **Admin**, **Platform**, then **Apps**. Choose **Add app**.
-2. Enter the manifest URL in **Manifest URL**: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. Choose **Continue**.
-3. Check that Space shows `hello-app`, `Hello app`, `v0.1.0`, `1 pages` and `1 capabilities`.
-4. Set **Iframe URL** to `http://localhost:` followed by `CLIENT_PORT`. The field starts with the manifest origin, which is the server and not the client.
-5. Switch on **Auto-apply manifest updates**. Choose **Register**.
-6. On the new row, choose **Edit**. Switch on **Enabled**. Choose **Save**.
+- The manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`.
+- The iframe URL: `http://localhost:` followed by `CLIENT_PORT`. It is the client origin, not the server origin.
+- The name of your organization.
+- The request to switch on **Auto-apply manifest updates** for the [app registration](./glossary.md#app-registration).
 
-**Check**: Space shows the toast `App saved`. The row `Hello app` shows **Enabled**.
+Contact your Vector representative. Vector registers the app, enables it and allows it in your organization license.
 
-### 2. Allow the app in the license (staff)
+**Check**: wait for Vector to confirm. In step 2, **Hello app** appears in the **Add an app** dialog.
 
-Space offers a new registration in **Add an app** only after the organization license allows it.
-
-1. Choose **Admin**, **Tenancy**, then **Organizations**. Choose **Edit license** on your organization.
-2. Under **Allowed apps**, select the **Hello app** chip. Choose **Save**.
-
-**Check**: Space shows the toast `License saved`.
-
-### 3. Add the app to a space (space manager)
+### 2. Add the app to a space (space manager)
 
 1. Choose **Settings**, **Space**, **Context Hub**, then **Resources**.
 2. Choose **Add resource**, then **App**. In the **Add an app** dialog, choose **Add** next to **Hello app**.
 
 **Check**: Space shows the toast `App enabled`. **Resources** lists a **Hello app** row with type **App** and status **Active**.
 
-### 4. Share the app with a user (space manager)
-
-An admin already has access. If you are an admin, skip the share and read the Check.
+### 3. Share the app with a user (space manager)
 
 1. On the **Hello app** row, open the row menu. Choose **Access**.
 2. Add your user in **Direct access**.
 
-**Check**: on the **Configure Hello app** sheet, your user appears under **Who can use it**. An admin has an **Admin** badge.
+**Check**: on the **Configure Hello app** sheet, your user appears under **Who can use it**.
 
-### 5. Open the page
+### 4. Open the page
 
 Open the Space. Expand the **Apps** group in the sidebar and choose **Hello app**. Space renders the page in an iframe at the iframe URL and sends a user token over `postMessage`.
 

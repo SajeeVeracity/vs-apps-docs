@@ -162,14 +162,14 @@ export const definition = defineApp({
 
 ## How it reflects in Space
 
-A [staff](./glossary.md#staff) member registers the manifest URL in Space. Space stores the served manifest, never the definition file. After that:
+Vector registers your manifest URL in Space. Space stores the served manifest, never the definition file. After that:
 
 - The page shows in the Space navigation, for users who hold the page's capability.
 - A space manager grants the declared capabilities. Only declared capabilities can be granted.
 - A space manager picks a model for each model slot and attaches one connector to each connector slot. If no one sets a slot, the app cannot use it.
-- A manifest change waits as a pending review. Staff apply it before it goes live, unless auto-apply is on for the [app registration](./glossary.md#app-registration).
+- A manifest change waits as a pending review. Vector applies it before it goes live, unless auto-apply is on for the [app registration](./glossary.md#app-registration).
 
-Space reads the manifest again when staff trigger a pull and when the app announces that it started.
+Space reads the manifest again when Vector triggers a pull and when the app announces that it started.
 
 ### SDK guarantees
 

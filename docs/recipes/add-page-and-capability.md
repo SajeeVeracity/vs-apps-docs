@@ -57,7 +57,7 @@ Enforce `icp:manage` on the endpoints the page calls, as in [gate a page and an 
 
 ### 3. Let Space pull the manifest
 
-Restart the server. A manifest change waits as a pending review until staff apply it, unless the registration has **Auto-apply manifest updates** on, as set in the quickstart.
+Restart the server. A manifest change waits as a pending review until Vector applies it, unless Vector switched on **Auto-apply manifest updates** for your registration, as requested in the quickstart.
 
 ### 4. Grant the capability
 

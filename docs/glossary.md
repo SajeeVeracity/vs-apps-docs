@@ -41,16 +41,9 @@ The person who runs one Space. They grant capabilities and choose the models and
 - Maps to: no SDK symbol.
 - Owner: Space.
 
-### staff
-
-The administrators of Space itself. They register apps and apply manifest changes. A space manager works inside one space instead.
-
-- Maps to: no SDK symbol.
-- Owner: Space.
-
 ### app registration
 
-The record staff create in Space by giving it a manifest URL. One registration per app. Space re-pulls the manifest on a pull or the app's boot ping.
+The record Vector creates in Space from your manifest URL. One registration per app. Space re-pulls the manifest on a pull or the app's boot ping.
 
 - Maps to: no SDK symbol.
 - Owner: Space.

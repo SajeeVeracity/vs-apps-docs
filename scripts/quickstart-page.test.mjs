@@ -109,11 +109,10 @@ test('every Part 1 Check is followed by its result', () => {
   }
 });
 
-test('Part 2 titles carry the role and the admin share Check reads the Admin badge', () => {
+test('Part 2 titles carry the role and the share Check does not name the capability', () => {
   const list = steps(part2);
-  for (const step of list.slice(0, 4)) assert.match(step.split('\n')[0], /\((staff|space manager)\)$/);
+  for (const step of list.slice(1, 3)) assert.match(step.split('\n')[0], /\(space manager\)$/);
   const share = list.find((s) => /^\d+\. Share/.test(s));
-  assert.match(share, /\*\*Admin\*\* badge/);
   assert.doesNotMatch(share.split(/^\*\*Check\*\*/m).at(-1), /hello:view/);
 });
 
@@ -196,7 +195,7 @@ test('covers the client and server symbols', () => {
 
 test('links the concept page and glossary terms once at first use', () => {
   assert.match(text, /\(\.\/app-definition\.md\)/);
-  for (const a of ['app-definition', 'manifest', 'space', 'capability', 'page', 'staff', 'space-manager', 'monorepo', 'shared-package', 'app-registration', 'harness']) {
+  for (const a of ['app-definition', 'manifest', 'space', 'capability', 'page', 'space-manager', 'monorepo', 'shared-package', 'app-registration', 'harness']) {
     assert.match(text, new RegExp(`\\(\\./glossary\\.md#${a}\\)`), a);
   }
   for (const a of ['monorepo', 'shared-package']) assert.equal(count(new RegExp(`glossary\\.md#${a}\\)`, 'g')), 1, a);
