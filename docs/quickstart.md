@@ -39,9 +39,8 @@ echo node_modules >> .gitignore
 
 `GITHUB_PACKAGES_TOKEN` is a token with `read:packages`. Keep it out of the repository.
 
-The folders are empty. Later steps put files in them.
 
-The root `package.json` lists the three packages as `workspaces`. Its scripts run the dev servers, the type check and the server check. `typescript` is pinned to 7.0.2, the tested version. A new major version can change the result.
+The root `package.json` lists the three packages as `workspaces`. Its scripts run the dev servers, the type check and the server check. 
 
 ```json title="package.json"
 {
