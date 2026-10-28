@@ -146,7 +146,7 @@ export async function handleDevRoute(
 
 Two more changes make the app accept the tokens. Pass `devIssuer` to `verifyAppUserToken` in place of the Space verifier. Return `/api/__dev/jwks.json` as `spaceJwksUrl` from `GET /api/client-config`.
 
-In the quickstart `src/server/main.ts`, add `import { handleDevRoute } from './dev-routes';`. Then add `if (await handleDevRoute(req, res, manifests)) return;` as the first line of the `try` block.
+In the quickstart `server/src/main.ts`, add `import { handleDevRoute } from './dev-routes';`. Then add `if (await handleDevRoute(req, res, manifests)) return;` as the first line of the `try` block.
 
 ## Result
 
