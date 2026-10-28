@@ -26,11 +26,11 @@ App side:
 - [ ] Node.js 20.19 or later, and `npm`.
 - [ ] A GitHub token with `read:packages` access to `@vectoragents/vs-apps`.
 
-You do not need React or TypeScript yet. Step 1 installs them.
+You do not need React or TypeScript yet. Part 1 step 1 installs them.
 
 ## Final layout
 
-You create these files. `node_modules/` appears after the install in step 1.
+You create these files. `node_modules/` appears after the install in Part 1 step 1.
 
 ```text
 hello-app/
@@ -308,7 +308,7 @@ export function requireProvisioning(req: IncomingMessage) {
 
 The server keeps a table of routes. `GET /api/client-config` tells the client which parent origin and key set to trust. `GET /api/manifest/hello-app` serves the manifest to Space, which sends a provisioning token. A failed check throws `AppAuthError`, which carries the HTTP status.
 
-The imports include `requireCapability` and `CAPABILITY`. Step 4 uses them.
+The imports include `requireCapability` and `CAPABILITY`. Part 1 step 4, "Add the protected routes", uses them.
 
 ```ts title="server/src/main.ts"
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
@@ -417,7 +417,9 @@ for (const path of ['/api/provision', '/api/deprovision']) {
 }
 ```
 
-Without the two provisioning routes, adding the app in Space fails with a `404`. `tsx watch` restarts the server when you save the file.
+Without the two provisioning routes, Space gets a `404` when a space manager adds the app.
+
+`tsx watch` restarts the server when you save the file.
 
 **Check**: wait a few seconds. In the second terminal, run `npm run check:server -- hello provision`. Both routes answer `401`, because the request has no Space token.
 
@@ -448,7 +450,7 @@ export async function fetchHello(): Promise<{ sub?: string; spaceId: number }> {
 }
 ```
 
-The page reads the claims with `useApp`. `RequireCapability` hides the content from a user without `hello:view`. It is a display gate only. The server check in step 4 enforces access.
+The page reads the claims with `useApp`. `RequireCapability` hides the content from a user without `hello:view`. It is a display gate only. The server check in Part 1 step 4, "Add the protected routes", enforces access.
 
 ```tsx title="client/src/HelloPage.tsx"
 import { useEffect, useState } from 'react';

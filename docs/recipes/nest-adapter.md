@@ -111,7 +111,13 @@ export class HelloController {
 }
 ```
 
-The module reads the Space values from the root `.env` file that you set up in the quickstart. It also serves `GET /api/client-config` and the manifest route, so it replaces `main.ts` routing and `requireProvisioning` from the quickstart.
+The module reads the Space values from the root `.env` file that you set up in the quickstart. The Nest platform module also needs `SPACE_BASE_URL`, the origin of the Space API. Append it to `.env`.
+
+```bash
+echo 'SPACE_BASE_URL=YOUR_SPACE_API_ORIGIN' >> .env
+```
+
+The module also serves `GET /api/client-config` and the manifest route, so it replaces `main.ts` routing and `requireProvisioning` from the quickstart.
 
 ```ts title="src/server/app.module.ts"
 import { Module } from '@nestjs/common';
