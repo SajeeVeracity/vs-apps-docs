@@ -84,7 +84,7 @@ The base compiler settings are shared. Each package extends them.
 }
 ```
 
-Each package lists only what it imports, and the SDK version is pinned. `jose` verifies tokens, and `tsx` runs the TypeScript server on Node. Vite serves the client. The `dev` scripts load `../.env`.
+Each package lists only what it imports, and the SDK version is pinned. `jose` verifies tokens, and `tsx` runs the TypeScript server on Node. Vite serves the client. The `dev` scripts and `check:server` load `.env`. You create it in [step 3](#3-serve-the-manifest).
 
 ```json title="shared/package.json"
 {
@@ -236,7 +236,7 @@ export const definition = defineApp({
 });
 ```
 
-`capability` on the page must match a capability `key` exactly. `defineApp` does not check it.
+`capability` on the page must match a capability `key` exactly.
 
 The shared package now has one source file.
 
@@ -256,7 +256,27 @@ hello-app/
 
 ### 3. Serve the manifest
 
-`buildManifests` turns the definition into the [manifest](./glossary.md#manifest). The server serves it at `GET /api/manifest/hello-app`. `PUBLIC_BASE_URL` fills each `{publicBaseUrl}` placeholder in the manifest.
+The server reads five values from `.env`. Create the file first.
+
+```bash
+cat > .env <<'ENV'
+SPACE_JWKS_URL=https://space-api.example.com/api/.well-known/apps/jwks.json
+ALLOWED_PARENT_ORIGIN=https://space.example.com
+PUBLIC_BASE_URL=https://hello-app.example.com
+SERVER_PORT=3001
+CLIENT_PORT=5173
+ENV
+```
+
+Replace the example values with your own.
+
+- `SPACE_JWKS_URL` is the address of the Space key set. The server uses it to check that a token comes from Space. It is the origin of the Space API followed by `/api/.well-known/apps/jwks.json`.
+- `ALLOWED_PARENT_ORIGIN` is the origin of the Space web client that embeds your page. The client accepts messages from this origin only.
+- `PUBLIC_BASE_URL` is the origin where the Space server reaches your server. The server writes it into each `{publicBaseUrl}` placeholder in the manifest.
+- `SERVER_PORT` is the port your server listens on. If port 3001 is busy, for example because a local Space client uses it, change the value.
+- `CLIENT_PORT` is the port Vite serves the client on. The iframe URL you send to Vector in Part 2 uses the same value.
+
+`buildManifests` turns the definition into the [manifest](./glossary.md#manifest). The server serves it at `GET /api/manifest/hello-app`.
 
 At start, the server prints a warning that begins with `agent-catalog file not found`. The Hello app needs no catalog, so ignore it.
 
@@ -338,22 +358,6 @@ createServer(async (req, res) => {
   }
 }).listen(Number(process.env.SERVER_PORT));
 ```
-
-Append the values this step needs to `.env`.
-
-```bash
-cat >> .env <<'ENV'
-SPACE_JWKS_URL=YOUR_SPACE_API_ORIGIN/api/.well-known/apps/jwks.json
-ALLOWED_PARENT_ORIGIN=YOUR_SPACE_CLIENT_ORIGIN
-PUBLIC_BASE_URL=YOUR_APP_SERVER_ORIGIN
-SERVER_PORT=3001
-ENV
-```
-
-- `SPACE_JWKS_URL` is the Space key set. It is the origin of the Space API followed by `/api/.well-known/apps/jwks.json`. Do not use the Space web origin.
-- `ALLOWED_PARENT_ORIGIN` is the origin of the Space web client that embeds your page.
-- `PUBLIC_BASE_URL` is the origin where the Space server reaches your server.
-- `SERVER_PORT` is the port your server listens on. If port 3001 is busy, for example because a local Space client uses it, change the value.
 
 The folder now has these new files.
 
@@ -594,14 +598,6 @@ hello-app/
         └── App.tsx       # new
 ```
 
-Append the client port to `.env`.
-
-```bash
-echo CLIENT_PORT=5173 >> .env
-```
-
-`CLIENT_PORT` is the port Vite serves the client on. You may change it. The iframe URL you send to Vector in Part 2 uses the same value.
-
 Start the client in the second terminal. Keep the server running in the first.
 
 ```bash
@@ -624,7 +620,7 @@ Part 2 runs in the Space UI, except step 1. Your server and client from Part 1 s
 
 ### 1. Ask Vector to register the app
 
-Only Vector registers an app and allows it in an organization license. Your server must be reachable at `PUBLIC_BASE_URL` from the Space server. Send Vector this information:
+Only Vector registers an app and allows it in an organization license. `PUBLIC_BASE_URL` and `CLIENT_PORT` are the values in your `.env`. Your server must be reachable at `PUBLIC_BASE_URL` from the Space server. Send Vector this information:
 
 - The manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`.
 - The iframe URL: `http://localhost:` followed by `CLIENT_PORT`. It is the client origin, not the server origin.
