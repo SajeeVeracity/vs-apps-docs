@@ -10,7 +10,7 @@ What each claim in these docs rests on.
 
 ## SDK gaps
 
-- The SDK declares no `engines` field. The Node 20.6+ minimum in the docs rests on the `--env-file` flag, not on an official number.
+- The SDK declares no `engines` field. The Node 20.19+ minimum in the docs rests on the Vite 8 `engines` field, not on an SDK number.
 - The SDK has no framework-free dev routes. The harness dev routes (`/api/__dev/manifests`, `/api/__dev/token`) exist only as a Nest controller, so the harness page carries a hand-written `node:http` handler. The SDK handler replaces it once the SDK ships framework-free dev routes.
 - The dev route shapes rest on the compiled dev controller (`nest/platform/controllers/dev-issuer.controller.js`), `server/dev-issuer.js` and the harness component, all in the installed 0.2.4 dist.
 

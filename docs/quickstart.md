@@ -21,7 +21,7 @@ At the end, the `hello-app` page is open in a Space. It shows your user id and s
 
 ## Set your values
 
-Replace each placeholder once, then run the block. It creates the project folder, exports the package token for the install and writes the rest to a `.env` file that the dev scripts load. No later step repeats a value, and no second terminal needs an export.
+Replace each placeholder once, then run the block. It creates the project folder, exports the package token for the install and writes the rest to a `.env` file. The dev scripts load every other value from `.env`. The package token stays exported in this terminal, so run every `npm install` here.
 
 | Placeholder | Meaning |
 | --- | --- |
@@ -52,7 +52,7 @@ echo .env > .gitignore
 
 ### 1. Create the project and install
 
-In the `hello-app` folder, create the manifest of the project. The server script loads `.env`, so every Space value reaches the server without an export.
+In the `hello-app` folder, create the manifest of the project.
 
 ```json title="package.json"
 {
@@ -62,6 +62,7 @@ In the `hello-app` folder, create the manifest of the project. The server script
   "type": "module",
   "scripts": {
     "dev:server": "tsx watch --env-file=.env src/server/main.ts",
+    "dev:client": "node --env-file=.env node_modules/vite/bin/vite.js",
     "check:server": "node --env-file=.env -e \"for (const p of ['client-config', 'manifest/hello-app']) fetch('http://localhost:' + process.env.SERVER_PORT + '/api/' + p).then((r) => console.log(p, r.status))\""
   }
 }
@@ -74,11 +75,11 @@ The registry setting has three parts: a scope, a registry URL and a token. Point
 //npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
 ```
 
-Install the SDK and the packages its subpaths need. `jose` verifies tokens and `react` serves the client. `tsx` runs the TypeScript server on Node.
+Install the SDK and the packages its subpaths need. `jose` verifies tokens and `react` serves the client. `tsx` runs the TypeScript server on Node. `vite` serves the client.
 
 ```bash
 npm install @vectoragents/vs-apps@0.2.4 jose react react-dom
-npm install --save-dev typescript tsx @types/node @types/react @types/react-dom
+npm install --save-dev typescript tsx vite @types/node @types/react @types/react-dom
 ```
 
 Add the compiler settings.
@@ -243,12 +244,35 @@ The **Configure** sheet opens after you add the app. A user with admin rights al
 
 The client reads its boot config from the server with `loadAppClientConfig`, which fetches `GET /api/client-config`. `AppProvider` starts the iframe bridge, verifies each token Space sends and exposes the claims. `BootGate` holds the page back until the first verified token arrives.
 
-The client is plain React files with no bundler-specific import and no environment access. Serve them with your bundler on `CLIENT_PORT`. Your bundler needs four settings:
+The client is plain React files with no bundler-specific import and no environment access. Vite serves them on `CLIENT_PORT`. It forwards requests under `/api` to `SERVER_PORT`, so the client and the server share one origin.
 
-- `src/client/main.tsx` is the entry file.
-- The HTML page has a `div` with the id `root` and a `script` tag with `type="module"` that points at the entry file.
-- The bundler compiles JSX and TypeScript.
-- The bundler forwards requests under `/api` to `SERVER_PORT`, so the client and the server share one origin.
+```ts title="vite.config.ts"
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  server: {
+    port: Number(process.env.CLIENT_PORT),
+    strictPort: true,
+    proxy: { '/api': `http://localhost:${process.env.SERVER_PORT}` },
+  },
+});
+```
+
+The HTML page has a `div` with the id `root` and a `script` tag with `type="module"` that points at the entry file.
+
+```html title="index.html"
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hello app</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/client/main.tsx"></script>
+  </body>
+</html>
+```
 
 `main.tsx` mounts the app and `token.ts` keeps the verified token in memory for server calls.
 
@@ -336,7 +360,11 @@ export function HelloPage() {
 }
 ```
 
-Start your bundler on `CLIENT_PORT` in the second terminal.
+Start the client in the second terminal.
+
+```bash
+npm run dev:client
+```
 
 ### 6. Open the page in Space
 

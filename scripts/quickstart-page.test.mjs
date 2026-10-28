@@ -14,12 +14,12 @@ test('states the languages in the first lines', () => {
 
 test('prerequisites state the baseline versions once and allow another package manager', () => {
   const prerequisites = sections.find((s) => s.startsWith('Prerequisites'));
-  assert.match(prerequisites, /Node\.js 20\.6/);
+  assert.match(prerequisites, /Node\.js 20\.19/);
   assert.match(prerequisites, /React 18/);
   assert.match(prerequisites, /TypeScript 5/);
   assert.match(prerequisites, /`strict`/);
   assert.match(prerequisites, /another package manager/i);
-  for (const re of [/20\.6/g, /React 18/g]) assert.equal((text.match(re) ?? []).length, 1, String(re));
+  for (const re of [/20\.19/g, /React 18/g]) assert.equal((text.match(re) ?? []).length, 1, String(re));
 });
 
 test('installs use npm and the registry is a scope, a URL and a token', () => {
@@ -38,9 +38,11 @@ test('the server is a node:http handler on the /server subpath', () => {
   assert.doesNotMatch(text, /@vectoragents\/vs-apps\/nest/);
 });
 
-test('the client names no bundler and shows no bundler config', () => {
-  assert.match(text, /your bundler/);
-  assert.doesNotMatch(text, /dev:client|\.config\.[jt]s|index\.html/);
+test('the client runs on Vite with ports and proxy taken from .env', () => {
+  assert.match(text, /^npm run dev:client$/m);
+  assert.match(text, /title="vite\.config\.ts"/);
+  assert.match(text, /title="index\.html"/);
+  assert.match(text, /"dev:client": "node --env-file=\.env /);
 });
 
 test('follows the page template and ends with a result and a next step', () => {
