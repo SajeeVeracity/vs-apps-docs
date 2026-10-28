@@ -24,3 +24,10 @@ A grid of widgets in a space, with page filters. A different thing from the publ
 
 - Maps to: no SDK symbol. `Page` in vector-spaces, stored as `pages.pages`.
 - Owner: Space.
+
+### staff
+
+Vector employees who administer Space itself. Only staff register apps, apply manifest changes and edit an organization license. External developers are not staff. A space manager works inside one space instead.
+
+- Maps to: no SDK symbol.
+- Owner: Space.
