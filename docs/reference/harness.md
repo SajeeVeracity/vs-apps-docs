@@ -100,7 +100,7 @@ Returns status `200` and the public key set of the dev issuer, the value of `dev
 
 `createDevIssuer` signs tokens and verifies them, so one object serves both. Call `handleDevRoute` first in your request handler. It returns `true` when it answered the request. It returns `false` for every other request, and always when `VA_DEV_ISSUER` is not `true`.
 
-```ts title="src/server/dev-routes.ts"
+```ts title="server/src/dev-routes.ts"
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { DEV_APP_ID, type AppManifest } from '@vectoragents/vs-apps';
 import { createDevIssuer, devTokenRequestSchema, readJsonBody } from '@vectoragents/vs-apps/server';

@@ -2,6 +2,7 @@ const PROCEDURE_MAX = 20;
 const SENTENCE_MAX = 25;
 const PARAGRAPH_MAX = 4;
 const CONTRACTION = /\b(?:\w+n['’]t|\w+['’](?:re|ve|ll|d|m)|(?:it|that|there|here|what|let|he|she)['’]s)\b/i;
+const CHECKBOX = /^\[[ xX]\]\s+/;
 const LIST_ITEM = /^\s*(?:[-*+]|\d+\.)\s+/;
 
 /** Splits markdown into prose blocks, skipping frontmatter, fences, tables, headings and admonition markers. */
@@ -24,7 +25,7 @@ function blocks(markdown) {
       flush();
     } else if (LIST_ITEM.test(line)) {
       flush();
-      current = { procedure: true, text: line.replace(LIST_ITEM, '') };
+      current = { procedure: true, text: line.replace(LIST_ITEM, '').replace(CHECKBOX, '') };
     } else if (current) {
       current.text += ` ${line.trim()}`;
     } else {

@@ -51,3 +51,9 @@ test('skips frontmatter, fences, tables, headings and the tree', () => {
 test('a list item is not part of a paragraph count', () => {
   assert.deepEqual(rules('Intro.\n- One. Two. Three. Four. Five.'), []);
 });
+
+test('a checkbox marker does not count as a word', () => {
+  assert.deepEqual(rules(`- [ ] ${words(19)}.`), []);
+  assert.deepEqual(rules(`- [x] ${words(20)}.`), []);
+  assert.deepEqual(rules(`- [ ] ${words(21)}.`), ['procedure-length']);
+});
