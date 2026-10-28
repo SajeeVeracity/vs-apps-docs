@@ -2,7 +2,7 @@
 
 Reader: a working developer who knows TypeScript, Node and React and has not used Space.
 Coverage: prose, tables, headings, code comments. Not identifiers or string values in code.
-Precedence: rules here win over any reference.
+Precedence: rules here win over any reference. The quickstart also follows [STE rules](writing-ste.md), and the stricter rule wins.
 
 ## Shared layer (all pages)
 
