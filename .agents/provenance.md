@@ -17,3 +17,11 @@ What each claim in these docs rests on.
 ## Not yet verified in a real Space
 
 No page has been walked through in a real Space, including the `node:http` quickstart. Quickstart step 4 and step 6, the Space UI labels, and the Space-side behaviour listed in the [app definition](../docs/app-definition.md) page are statements of the Space documentation, not observations.
+
+## Quickstart monorepo
+
+| Claim | Rests on |
+| --- | --- |
+| `shared/` exports TypeScript source through `exports` and needs no build step: `tsx watch`, Vite dev and `tsc --noEmit` per package all work. | Scratch run in ticket 01, [Prove shared package works with no build step](../.scratch/quickstart-revamp/issues/01-prove-shared-no-build.md). |
+| Tested versions: `typescript` 7.0.2, `vite` 8.3.5, `tsx` 4.23.15, `@vectoragents/vs-apps` 0.2.4. | Ticket 01 for all four. Ticket 10, [Verify the Part 1 commands and outputs](../.scratch/quickstart-revamp/issues/10-verify-part-1-commands.md), re-ran `typescript`, `vite` and the SDK from GitHub Packages. It did not record `tsx`. |
+| The Part 1 Checks and their outputs. | Ticket 10. |

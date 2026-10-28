@@ -12,7 +12,7 @@ End with a NestJS server that does what the quickstart server does: it serves th
 
 ## Prerequisites
 
-- The project from the [quickstart](../quickstart.md), up to step 2 (the app definition). The client is unchanged.
+- The project from the [quickstart](../quickstart.md), up to the step "Write the shared app definition". The client is unchanged.
 - NestJS 11. The adapter lists `@nestjs/common` and `@nestjs/core` as peer packages.
 - Background: the [server primitives](../reference/root.md) that the adapter wraps.
 
@@ -26,18 +26,13 @@ Install the NestJS packages and `reflect-metadata`. `@nestjs/platform-express` i
 npm install @nestjs/common@11 @nestjs/core@11 @nestjs/platform-express@11 reflect-metadata rxjs
 ```
 
-NestJS needs the decorator options. Add them to the compiler options of the quickstart.
+NestJS needs the decorator options. Add them to `server/tsconfig.json`.
 
-```json title="tsconfig.json"
+```json title="server/tsconfig.json"
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "jsx": "react-jsx",
-    "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
+    "types": ["node"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
@@ -45,7 +40,7 @@ NestJS needs the decorator options. Add them to the compiler options of the quic
 }
 ```
 
-Point the `dev:server` script at `src/server/main.ts` as before.
+Point the `dev` script in `server/package.json` at `src/main.ts` as before.
 
 ### 2. Serve the manifest
 
@@ -116,7 +111,13 @@ export class HelloController {
 }
 ```
 
-The module reads the Space values from the `.env` file that you set up in the quickstart. It also serves `GET /api/client-config` and the manifest route, so it replaces `main.ts` routing and `requireProvisioning` from the quickstart.
+The module reads the Space values from the root `.env` file that you set up in the quickstart. The Nest platform module also needs `SPACE_BASE_URL`, the origin of the Space API. Append it to `.env`.
+
+```bash
+echo 'SPACE_BASE_URL=YOUR_SPACE_API_ORIGIN' >> .env
+```
+
+The module also serves `GET /api/client-config` and the manifest route, so it replaces `main.ts` routing and `requireProvisioning` from the quickstart.
 
 ```ts title="src/server/app.module.ts"
 import { Module } from '@nestjs/common';
@@ -168,4 +169,4 @@ The NestJS server answers the same three requests as the quickstart server. Regi
 
 ## Next step
 
-Continue with step 4 of the [quickstart](../quickstart.md#4-register-the-app-in-space) to register the app in Space.
+Continue with [Part 2 of the quickstart](../quickstart.md#part-2-add-the-app-to-space) to register the app in Space.

@@ -14,7 +14,7 @@ const entries = text
 const required = [
   'app', 'app definition', 'manifest', 'Space', 'space manager', 'staff', 'app registration', 'page',
   'capability', 'grant', 'model slot', 'connector slot', 'agent action', 'agent catalog', 'acts', 'approvals',
-  'harness', 'SDK', 'MCP',
+  'harness', 'SDK', 'MCP', 'monorepo', 'shared package',
 ];
 
 test('covers every candidate term', () => {
@@ -25,7 +25,7 @@ test('each entry has definition, mapping and owner', () => {
   for (const { name, body } of entries) {
     assert.match(body, /^[^\s-].*$/m, `${name}: definition`);
     assert.match(body, /^- Maps to: .+/m, `${name}: mapping`);
-    assert.match(body, /^- Owner: (SDK|Space|SDK and Space)\b/m, `${name}: owner`);
+    assert.match(body, /^- Owner: (SDK|Space|SDK and Space|docs)\b/m, `${name}: owner`);
   }
 });
 
@@ -51,4 +51,8 @@ test('published pages carry no provenance link or unverified caveat', () => {
     const body = readFileSync(new URL(page, docs), 'utf8');
     assert.doesNotMatch(body, /provenance|not yet verified/i, page);
   }
+});
+
+test('glossary defines no workspace term', () => {
+  assert.ok(!entries.some((e) => /workspace/i.test(e.name)));
 });

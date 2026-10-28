@@ -100,7 +100,7 @@ Returns status `200` and the public key set of the dev issuer, the value of `dev
 
 `createDevIssuer` signs tokens and verifies them, so one object serves both. Call `handleDevRoute` first in your request handler. It returns `true` when it answered the request. It returns `false` for every other request, and always when `VA_DEV_ISSUER` is not `true`.
 
-```ts title="src/server/dev-routes.ts"
+```ts title="server/src/dev-routes.ts"
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { DEV_APP_ID, type AppManifest } from '@vectoragents/vs-apps';
 import { createDevIssuer, devTokenRequestSchema, readJsonBody } from '@vectoragents/vs-apps/server';
@@ -146,7 +146,7 @@ export async function handleDevRoute(
 
 Two more changes make the app accept the tokens. Pass `devIssuer` to `verifyAppUserToken` in place of the Space verifier. Return `/api/__dev/jwks.json` as `spaceJwksUrl` from `GET /api/client-config`.
 
-In the quickstart `src/server/main.ts`, add `import { handleDevRoute } from './dev-routes';`. Then add `if (await handleDevRoute(req, res, manifests)) return;` as the first line of the `try` block.
+In the quickstart `server/src/main.ts`, add `import { handleDevRoute } from './dev-routes';`. Then add `if (await handleDevRoute(req, res, manifests)) return;` as the first line of the `try` block.
 
 ## Result
 

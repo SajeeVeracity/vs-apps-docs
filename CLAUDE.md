@@ -18,4 +18,4 @@ Single-context: `docs/glossary.md` plus `.agents/adr/`. See `.agents/domain.md`.
 
 ### Writing language
 
-Language rules for `docs/`: simple English, defined abbreviations, numeric limits. See `.agents/writing-language.md`.
+Language rules for `docs/`: simple English, defined abbreviations, numeric limits. See `.agents/writing-language.md`. The quickstart also follows `.agents/writing-ste.md`.
