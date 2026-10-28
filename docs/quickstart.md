@@ -26,11 +26,7 @@ App side:
 - [ ] Node.js 20.19 or later, and `npm`.
 - [ ] A GitHub token with `read:packages` access to `@vectoragents/vs-apps`.
 
-You do not need React or TypeScript yet. Part 1 step 1 installs them.
-
 ## Final layout
-
-You create these files. `node_modules/` appears after the install in Part 1 step 1.
 
 ```text
 hello-app/
@@ -80,7 +76,7 @@ echo node_modules >> .gitignore
 
 `GITHUB_PACKAGES_TOKEN` is a token with `read:packages`. Keep it out of the repository.
 
-The root `package.json` lists the three packages as `workspaces`. Its scripts run the dev servers, the type check and the server check. `typescript` has no version range. The tested version is 7.0.2, and a new major version can change the result.
+The root `package.json` lists the three packages as `workspaces`. Its scripts run the dev servers, the type check and the server check. `typescript` is pinned to 7.0.2, the tested version. A new major version can change the result.
 
 ```json title="package.json"
 {
@@ -96,7 +92,7 @@ The root `package.json` lists the three packages as `workspaces`. Its scripts ru
     "check:server": "node --env-file=.env -e \"for (const p of process.argv.slice(1)) fetch('http://localhost:' + process.env.SERVER_PORT + '/api/' + p).then((r) => console.log(p, r.status))\" --"
   },
   "devDependencies": {
-    "typescript": "*"
+    "typescript": "7.0.2"
   }
 }
 ```
