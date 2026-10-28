@@ -102,7 +102,7 @@ export const definition = defineApp({
 
 ### Resources
 
-`resources` is optional and declares what the app needs from each [Space](./glossary.md#space): modules, model slots and connector slots. Unknown keys are rejected. Each slot or module `key` is unique within its list.
+`resources` is optional and declares what the app needs from each Space: modules, model slots and connector slots. Unknown keys are rejected. Each slot or module `key` is unique within its list.
 
 ```ts title="src/app.definition.ts"
 import { defineApp } from '@vectoragents/vs-apps';
