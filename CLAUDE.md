@@ -19,3 +19,10 @@ Single-context: `docs/glossary.md` plus `.agents/adr/`. See `.agents/domain.md`.
 ### Writing language
 
 Language rules for `docs/`: simple English, defined abbreviations, numeric limits. See `.agents/writing-language.md`.
+
+## Runbooks and sibling repos
+
+- Register an app in a Space as Vector staff: `.agents/staff-registration.md`.
+- Run a local Space and drive its UI: `.agents/local-space.md`.
+- Sibling repos: `../vector-spaces` (the Space, owns its start commands) and `../vector-app-quickstart` (the starter the quickstart clones).
+- `pnpm check` runs the commit checks: `check:snippets`, `typecheck` and `pnpm test`.
