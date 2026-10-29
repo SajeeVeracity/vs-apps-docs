@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { checkFences } from './starter-sync.mjs';
 import { STARTER_URL } from './starter-url.mjs';
 import { voiceViolations } from './voice.mjs';
 
@@ -253,12 +253,7 @@ test('follows the writing standard', () => {
   assert.doesNotMatch(text, /\b(simply|just|easy|easily)\b/i);
 });
 
-// STARTER_DIR names a clone of the starter repo. Tickets for CI reuse this check.
+// STARTER_DIR names a clone of the starter repo.
 test('every starter fence is a verbatim substring of the starter file it names', { skip: !process.env.STARTER_DIR }, () => {
-  for (const f of fences.filter((g) => /(^|\s)starter(\s|$)/.test(g.meta.replace(/title="[^"]*"/, '')))) {
-    const path = /title="([^"]+)"/.exec(f.meta)[1];
-    const file = join(process.env.STARTER_DIR, path);
-    assert.ok(existsSync(file), `${path} is missing from the starter`);
-    assert.ok(readFileSync(file, 'utf8').includes(f.body.trimEnd()), `${path} excerpt differs from the starter`);
-  }
+  assert.deepEqual(checkFences(text, process.env.STARTER_DIR), []);
 });
