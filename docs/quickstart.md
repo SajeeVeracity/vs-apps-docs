@@ -314,7 +314,7 @@ The harness signs its own tokens, so it proves your page and server but not your
 
 ## Part 2: Add the app to a Space
 
-Part 2 puts the app in a real Space and needs a registration from Vector, so stop after Part 1 if you have no Space access. Steps 3, 4 and 5 run in the Space UI.
+Part 2 puts the app in a real Space and needs a registration from Vector, so stop after Part 1 if you have no Space access. Steps 3, 4, 5 and 6 run in the Space UI.
 
 ### Before you start
 
@@ -386,18 +386,19 @@ The space manager decides which spaces hold the app, so this step belongs to tha
 
 ### 5. Share the app with a user (space manager)
 
-A user sees the page only after the space manager shares the app with that user. The space manager who adds the app already has access, so skip this step if you are that person.
+A user sees the page only after the space manager shares the app with that user. **Direct access** lists only members of the space, so add the user to the space first. Skip this step if you are the space manager who added the app, because you already have access.
 
-1. On the **Hello app** row, open the row menu. Choose **Access**.
-2. In **Direct access**, choose **Add people, roles or groups…** and pick the user.
+1. Choose **Settings**, **Space**, then **Access**. Under **Members**, choose **Add** and pick the user.
+2. Choose **Context Hub**, then **Resources**. On the **Hello app** row, open the row menu and choose **Access**.
+3. In **Direct access**, choose **Add people, roles or groups…** and pick the user. Keep the access level at **View**, which is enough for the page. Choose **Save changes**.
 
-**Check**: choose the **Hello app** row. On the **Configure Hello app** sheet, the user appears under **Who can use it**.
+**Check**: Space shows the toasts `Member added` and `Access saved`. Open the row menu and choose **Access** again. **Direct access** lists the user.
 
 ### 6. Open the page
 
 Space renders the page in an iframe at the iframe URL and sends a user token over `postMessage`, so the page can show what the token and your server say. Open the Space. Expand the **Apps** group in the sidebar and choose **Hello app**.
 
-**Check**: the page shows three lines. The two user ids are equal, and the two space ids are equal.
+**Check**: the page shows three lines, also for a user you shared the app with at the **View** level. The two user ids are equal, and the two space ids are equal.
 
 ```text
 Verified in the browser: user <id> in space <id>.

@@ -225,7 +225,9 @@ test('Part 2 click paths and Checks', () => {
   assert.match(addApp, /App enabled/);
   assert.match(share, /\*\*Access\*\*/);
   assert.match(share, /\*\*Direct access\*\*/);
-  assert.doesNotMatch(share.split(/^\*\*Check\*\*/m).at(-1), /hello:view/);
+  assert.match(share, /Member added/);
+  assert.match(share, /Save changes/);
+  assert.match(share.split(/^\*\*Check\*\*/m).at(-1), /Access saved/);
   assert.match(
     open,
     /^Verified in the browser: user <id> in space <id>\.\nCapabilities: hello:view\nVerified on the server: space <id>, user <id>$/m,
