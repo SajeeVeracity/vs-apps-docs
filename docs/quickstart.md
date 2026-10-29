@@ -390,7 +390,7 @@ A user sees the page only after the space manager shares the app with that user.
 
 1. Choose **Settings**, **Space**, then **Access**. Under **Members**, choose **Add** and pick the user.
 2. Choose **Context Hub**, then **Resources**. On the **Hello app** row, open the row menu and choose **Access**.
-3. In **Direct access**, choose **Add people, roles or groups…** and pick the user. Keep the level at **View**, which is enough for the page. Choose **Save changes**.
+3. In **Direct access**, choose **Add people, roles or groups…** and pick the user. Keep the access level at **View**, which is enough for the page. Choose **Save changes**.
 
 **Check**: Space shows the toasts `Member added` and `Access saved`. Open the row menu and choose **Access** again. **Direct access** lists the user.
 
