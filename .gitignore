@@ -6,3 +6,4 @@ static/verified.json
 .builder-*
 .scratch
 .playwright-cli
+.claude
