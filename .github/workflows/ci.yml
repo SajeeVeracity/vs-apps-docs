@@ -22,7 +22,7 @@ jobs:
           cache: pnpm
       # The package is restricted on GitHub Packages; the secret must grant read:packages.
       - name: Authenticate to GitHub Packages
-        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.VS_APPS_NPM_TOKEN }}" >> .npmrc
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.PACKAGES_TOKEN }}" >> .npmrc
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
       # CI is set, so a failed clone of the public starter fails the job.
