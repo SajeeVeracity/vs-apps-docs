@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks",
     "prestart": "node scripts/ensure-stamp.mjs",
     "start": "docusaurus start --port 8080",
     "build": "node scripts/check-snippets.mjs && docusaurus build",
     "check:snippets": "node scripts/check-snippets.mjs",
+    "check": "pnpm check:snippets && pnpm typecheck && pnpm test",
     "check:starter": "node scripts/starter-sync.mjs",
     "test": "node --test scripts/*.test.mjs",
     "pretypecheck": "node scripts/ensure-stamp.mjs",

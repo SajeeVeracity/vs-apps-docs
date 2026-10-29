@@ -1,0 +1,7 @@
+#!/bin/sh
+# Skips only when every staged file is under .agents/ or is the root CLAUDE.md or README.md.
+# A new folder runs the checks by default. --no-renames lists a moved file's old path too.
+if ! git diff --cached --name-only --no-renames | grep -qvE '^(\.agents/|CLAUDE\.md$|README\.md$)'; then
+  exit 0
+fi
+exec pnpm check
