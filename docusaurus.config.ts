@@ -11,6 +11,7 @@ const config: Config = {
   url: process.env.DOCS_URL ?? 'https://docs.example.com',
   baseUrl: process.env.DOCS_BASE_URL ?? '/',
   onBrokenLinks: 'throw',
+  markdown: { mermaid: true },
   customFields: { sdkVersion },
   presets: [
     [
@@ -23,6 +24,7 @@ const config: Config = {
     ],
   ],
   themes: [
+    '@docusaurus/theme-mermaid',
     [
       '@easyops-cn/docusaurus-search-local',
       { docsRouteBasePath: '/', indexBlog: false, hashed: true },

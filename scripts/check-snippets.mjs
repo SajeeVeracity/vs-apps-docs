@@ -7,7 +7,6 @@ import { fileMeta, readEmbedded } from '../src/plugins/embed-file.mjs';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const nestPage = 'recipes/nest-adapter.md';
 const nestDir = 'nest';
-const sharedEntry = 'shared/src/index.ts';
 const fence = /^```(ts|tsx)\b([^\n]*)\n([\s\S]*?)^```/gm;
 
 function docFiles(dir) {
@@ -27,37 +26,22 @@ export function checkSnippets({
   const work = mkdtempSync(join(root, '.snippets-'));
   try {
     const origins = new Map();
-    let shared;
     for (const [fileIndex, file] of docFiles(docsDir).entries()) {
       let index = 0;
       const titled = new Set();
-      const lastByTitle = new Map();
       const blocks = [];
       for (const [, lang, meta, body] of readFileSync(file, 'utf8').matchAll(fence)) {
         index++;
         const title = /title="([^"]+)"/.exec(meta)?.[1];
+        // The starter's CI typechecks a `starter` fence.
+        if (/(^|\s)starter(\s|$)/.test(meta.replace(/title="[^"]*"/, ''))) continue;
         const code = fileMeta(meta) ? readEmbedded(baseDir, fileMeta(meta)) : body;
-        if (/(^|\s)add(\s|$)/.test(meta.replace(/title="[^"]*"/, ''))) {
-          const base = title && lastByTitle.get(title);
-          if (!base) {
-            return {
-              ok: false,
-              count: origins.size,
-              output: `${relative(docsDir, file)} block ${index}: add block has no earlier block titled "${title ?? ''}"`,
-            };
-          }
-          base.code += `\n${code}`;
-          continue;
-        }
         // A titled block is written at its title path so relative imports between a page's blocks resolve.
         const placed = title && !titled.has(title);
         if (placed) titled.add(title);
         const dir = relative(docsDir, file).replaceAll('\\', '/') === nestPage ? `${nestDir}/` : '';
         const name = dir + (placed ? `page-${fileIndex}/${title}` : `snippet-${origins.size + blocks.length}.${lang}`);
-        if (placed && title === sharedEntry) shared = name;
-        const block = { name, code, origin: `${relative(docsDir, file)} block ${index}` };
-        blocks.push(block);
-        if (title) lastByTitle.set(title, block);
+        blocks.push({ name, code, origin: `${relative(docsDir, file)} block ${index}` });
       }
       for (const { name, code, origin } of blocks) {
         mkdirSync(dirname(join(work, name)), { recursive: true });
@@ -78,7 +62,6 @@ export function checkSnippets({
           noEmit: true,
           skipLibCheck: true,
           types: ['node'],
-          ...(shared && { paths: { '@hello-app/shared': [`./${shared}`] } }),
         },
         include: ['**/*.ts', '**/*.tsx'],
         exclude: [nestDir],
