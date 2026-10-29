@@ -189,5 +189,6 @@ You can read, write and explain an app definition, and you know which behavior t
 
 ## Next steps
 
+- [Example app definitions](./examples.md): copy a complete definition into your project.
 - [Recipes](/category/recipes): add a page, a capability or an agent action to your app.
 - [Reference](/category/reference): look up the signature of each export, and the glossary terms.
