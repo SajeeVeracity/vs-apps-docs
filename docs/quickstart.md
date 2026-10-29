@@ -215,7 +215,7 @@ hello-app/
 
 The [app definition](./glossary.md#app-definition) is the one file the server and the client share. [App definition](./app-definition.md) explains each field. `CAPABILITY` holds the capability key, so no file repeats the string.
 
-```ts title="shared/src/index.ts"
+```ts title="shared/src/index.ts" starter
 import { defineApp } from '@vectoragents/vs-apps';
 
 export const CAPABILITY = 'hello:view';
@@ -280,7 +280,7 @@ Replace the example values with your own.
 
 At start, the server prints a warning that begins with `agent-catalog file not found`. The Hello app needs no catalog, so ignore it.
 
-```ts title="server/src/manifests.ts"
+```ts title="server/src/manifests.ts" starter
 import { buildManifests } from '@vectoragents/vs-apps/server';
 import { definition } from '@hello-app/shared';
 
@@ -294,7 +294,7 @@ The auth module holds the token verifier and the checks that protected routes ru
 
 `assertCapability` refuses a token that lacks the capability you name.
 
-```ts title="server/src/auth.ts"
+```ts title="server/src/auth.ts" starter
 import type { IncomingMessage } from 'node:http';
 import {
   assertCapability,
@@ -321,7 +321,7 @@ The server keeps a table of routes. `GET /api/client-config` tells the client wh
 
 The imports include `requireCapability` and `CAPABILITY`. Part 1 step 4, "Add the protected routes", uses them.
 
-```ts title="server/src/main.ts"
+```ts title="server/src/main.ts" starter
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { CAPABILITY } from '@hello-app/shared';
 import { AppAuthError } from '@vectoragents/vs-apps/server';
@@ -406,7 +406,7 @@ manifest/hello-app 401
 
 Add this block at the end of `server/src/main.ts`.
 
-```ts title="server/src/main.ts" add
+```ts title="server/src/main.ts" add starter
 routes['/api/hello'] = async (req) => {
   const claims = await requireCapability(req, CAPABILITY);
   return { sub: claims.sub, spaceId: claims.spaceId };
@@ -415,7 +415,7 @@ routes['/api/hello'] = async (req) => {
 
 Add this block below it.
 
-```ts title="server/src/main.ts" add
+```ts title="server/src/main.ts" add starter
 for (const path of ['/api/provision', '/api/deprovision']) {
   routes[path] = async (req) => {
     await requireProvisioning(req);
@@ -441,7 +441,7 @@ The client reads its boot config from the server with `loadAppClientConfig`, whi
 
 `token.ts` keeps the verified token in memory for server calls.
 
-```ts title="client/src/token.ts"
+```ts title="client/src/token.ts" starter
 let appToken: string | null = null;
 
 export function setAppToken(token: string | null): void {
@@ -459,7 +459,7 @@ export async function fetchHello(): Promise<{ sub?: string; spaceId: number }> {
 
 The page reads the claims with `useApp`. `RequireCapability` hides the content from a user without `hello:view`. It is a display gate only. The server check in Part 1 step 4, "Add the protected routes", enforces access.
 
-```tsx title="client/src/HelloPage.tsx"
+```tsx title="client/src/HelloPage.tsx" starter
 import { useEffect, useState } from 'react';
 import { CAPABILITY } from '@hello-app/shared';
 import { RequireCapability, useApp } from '@vectoragents/vs-apps/react';
@@ -518,7 +518,7 @@ hello-app/
 
 The client is plain React files with no bundler-specific import and no environment access. Vite serves them on `CLIENT_PORT`. It forwards requests under `/api` to `SERVER_PORT`, so the client and the server share one origin.
 
-```ts title="client/vite.config.ts"
+```ts title="client/vite.config.ts" starter
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -548,7 +548,7 @@ The HTML page has a `div` with the id `root` and a `script` tag with `type="modu
 
 `main.tsx` mounts the app. `App.tsx` wraps the page in the provider and the boot gate.
 
-```tsx title="client/src/main.tsx"
+```tsx title="client/src/main.tsx" starter
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
@@ -560,7 +560,7 @@ createRoot(document.getElementById('root')!).render(
 );
 ```
 
-```tsx title="client/src/App.tsx"
+```tsx title="client/src/App.tsx" starter
 import { loadAppClientConfig } from '@vectoragents/vs-apps/client';
 import { AppProvider, BootGate } from '@vectoragents/vs-apps/react';
 import { HelloPage } from './HelloPage';

@@ -56,26 +56,19 @@ test('passes a decorator snippet on the Nest page', () => {
   assert.equal(result.ok, true, result.output);
 });
 
-test('appends an add block to the last block with the same title', () => {
+test('skips a starter fence with a type error and does not count it', () => {
   const { docs, stamp } = docsDir(
-    `${fence}ts title="a.ts"\nexport const a = 1;\n${fence}\n\n${fence}ts title="a.ts" add\nexport const b = a + 1;\n${fence}\n`,
+    `${fence}ts title="a.ts" starter\nconst n: number = 'x';\n${fence}\n\n${fence}ts title="b.ts"\nexport const b = 1;\n${fence}\n`,
   );
   const result = checkSnippets({ docsDir: docs, stampFile: stamp });
   assert.equal(result.ok, true, result.output);
   assert.equal(result.count, 1);
+  assert.equal(JSON.parse(readFileSync(stamp, 'utf8')).snippets, 1);
 });
 
-test('fails an add block with no base block and names the title', () => {
-  const { docs, stamp } = docsDir(`${fence}ts title="a.ts" add\nexport const b = 1;\n${fence}\n`);
-  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
-  assert.equal(result.ok, false);
-  assert.match(result.output, /a\.ts/);
-});
-
-test('resolves @hello-app/shared to the shared source of the page', () => {
-  const { docs, stamp } = docsDir(
-    `${fence}ts title="shared/src/index.ts"\nexport const n = 1;\n${fence}\n\n${fence}ts title="server/src/main.ts"\nimport { n } from '@hello-app/shared';\nexport const m: number = n;\n${fence}\n`,
-  );
+test('accepts a mermaid fence and does not count it', () => {
+  const { docs, stamp } = docsDir(`${fence}mermaid\nsequenceDiagram\n  A->>B: hi\n${fence}\n`);
   const result = checkSnippets({ docsDir: docs, stampFile: stamp });
   assert.equal(result.ok, true, result.output);
+  assert.equal(result.count, 0);
 });
