@@ -18,6 +18,8 @@ Read `../vector-spaces/CLAUDE.md` under "Build, verify, run" and `../vector-spac
 
 Follow `.agents/staff-registration.md`. Run every step through the user interface, as Vector staff would. Never write SQL. A step that needs SQL is a guide defect: stop and report it to the user.
 
+A leftover registration from an earlier run blocks a fresh one. The Space refuses to delete it while any space holds the app. Open each space listed in the refusal, choose **Settings**, **Space**, **Context Hub**, **Resources**, and delete the app row. Then delete the registration under **Admin**, **Platform**, **Apps**.
+
 ## Local source only
 
 After a pull, pending database migrations break Space pages. Read `docs/systems/DATABASE.md` under "Branch databases" in `../vector-spaces`, then run `pnpm migration:run` there.
