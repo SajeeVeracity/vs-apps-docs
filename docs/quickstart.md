@@ -314,14 +314,14 @@ The harness signs its own tokens, so it proves your page and server but not your
 
 ## Part 2: Add the app to a Space
 
-Part 2 puts the app in a real Space and needs a registration from Vector, so stop after Part 1 if you have no Space access. Steps 3 and 4 run in the Space UI.
+Part 2 puts the app in a real Space and needs a registration from Vector, so stop after Part 1 if you have no Space access. Steps 3, 4 and 5 run in the Space UI.
 
 ### Before you start
 
 A real Space needs three things in place, so check them before step 1.
 
-- [ ] A space manager is ready to do steps 3 and 4. You can be that person.
-- [ ] Your space has a published agent. Without one, Space shows "No spaces yet".
+- [ ] A space manager is ready to do steps 3, 4 and 5. You can be that person.
+- [ ] Your space has a published agent, or you publish it in [step 3](#3-publish-the-space-agent-space-manager). Without one, Space shows "No spaces yet".
 - [ ] The Space server can reach your server. A Space on another machine needs a public URL, for example from a tunnel.
 
 ### 1. Point the app at your Space
@@ -364,9 +364,18 @@ Only Vector registers an app and allows it in an organization license, so you se
 
 Contact your Vector representative. Vector creates the [app registration](./glossary.md#app-registration), enables it and allows it in your organization license.
 
-**Check**: wait for Vector to confirm. In step 3, **Hello app** appears in the **Add an app** dialog.
+**Check**: wait for Vector to confirm. In step 4, **Hello app** appears in the **Add an app** dialog.
 
-### 3. Add the app to a space (space manager)
+### 3. Publish the space agent (space manager)
+
+Space shows "No spaces yet" until the agent of a space has a published version, so a new space hides your app. A new space holds a draft agent that you publish as it is.
+
+1. Choose **Settings**, **Space**, **Agent Studio**, then **Canvas**.
+2. Choose **Publish All**. In the **Review Changes Before Publishing** dialog, choose **Publish All**.
+
+**Check**: Space shows the toast `All published`. The canvas shows **Published** and the date. If the canvas already shows **Published** and has no **Publish All** button, skip this step.
+
+### 4. Add the app to a space (space manager)
 
 The space manager decides which spaces hold the app, so this step belongs to that role.
 
@@ -375,7 +384,7 @@ The space manager decides which spaces hold the app, so this step belongs to tha
 
 **Check**: Space shows the toast `App enabled`. **Resources** lists a **Hello app** row with type **App** and status **Active**. The **Configure Hello app** sheet opens. Close it.
 
-### 4. Share the app with a user (space manager)
+### 5. Share the app with a user (space manager)
 
 A user sees the page only after the space manager shares the app with that user. The space manager who adds the app already has access, so skip this step if you are that person.
 
@@ -384,7 +393,7 @@ A user sees the page only after the space manager shares the app with that user.
 
 **Check**: choose the **Hello app** row. On the **Configure Hello app** sheet, the user appears under **Who can use it**.
 
-### 5. Open the page
+### 6. Open the page
 
 Space renders the page in an iframe at the iframe URL and sends a user token over `postMessage`, so the page can show what the token and your server say. Open the Space. Expand the **Apps** group in the sidebar and choose **Hello app**.
 

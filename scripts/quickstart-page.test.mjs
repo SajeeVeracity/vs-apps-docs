@@ -84,7 +84,7 @@ test('Part 1 has the six steps, numbered from 1', () => {
   ]);
 });
 
-test('Part 2 has Before you start, then five steps with roles only on steps 3 and 4', () => {
+test('Part 2 has Before you start, then six steps with roles only on steps 3, 4 and 5', () => {
   const [intro, ...rest] = subsections(part2);
   assert.equal(title(intro), 'Before you start');
   const items = intro.split('\n').filter((l) => /^- /.test(l));
@@ -93,11 +93,15 @@ test('Part 2 has Before you start, then five steps with roles only on steps 3 an
   assert.deepEqual(rest.map(title), [
     '1. Point the app at your Space',
     '2. Ask Vector to register the app',
-    '3. Add the app to a space (space manager)',
-    '4. Share the app with a user (space manager)',
-    '5. Open the page',
+    '3. Publish the space agent (space manager)',
+    '4. Add the app to a space (space manager)',
+    '5. Share the app with a user (space manager)',
+    '6. Open the page',
   ]);
-  assert.equal(count(/\(space manager\)$/gm), 2);
+  assert.match(intro, /\]\(#3-publish-the-space-agent-space-manager\)/);
+  assert.equal(count(/\(space manager\)$/gm), 3);
+  assert.match(text, /ready to do steps 3, 4 and 5\./);
+  assert.match(text, /In step 4, \*\*Hello app\*\* appears/);
   assert.doesNotMatch(text, /Each step names the role/);
 });
 
@@ -213,7 +217,10 @@ test('names Vite once the page shows it, so the baseline allowance holds', () =>
 });
 
 test('Part 2 click paths and Checks', () => {
-  const [, , addApp, share, open] = steps(part2);
+  const [, , publish, addApp, share, open] = steps(part2);
+  assert.match(publish, /\*\*Agent Studio\*\*/);
+  assert.match(publish, /\*\*Publish All\*\*/);
+  assert.match(publish, /All published/);
   assert.match(addApp, /\*\*Add an app\*\*/);
   assert.match(addApp, /App enabled/);
   assert.match(share, /\*\*Access\*\*/);
