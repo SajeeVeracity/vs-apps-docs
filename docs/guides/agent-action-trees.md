@@ -19,7 +19,7 @@ End with a child action `sdr-leads.export_leads` that the agent can call only af
 
 `child` declares an action that is available only while its parent is mounted. Calling it without the parent returns `UNAVAILABLE_ACTION`.
 
-```ts title="src/actions.ts"
+```ts title="client/src/actions.ts"
 import { defineAgentPage } from '@vectoragents/vs-apps';
 import { z } from 'zod';
 
@@ -45,10 +45,10 @@ export const exportLeadsAction = openLeadListAction.child({
 
 Mount the child binding inside the component that the parent action opens, so the child exists only while a Lead List is open.
 
-```tsx title="src/client/LeadListView.tsx"
+```tsx title="client/src/LeadListView.tsx"
 import { useAgentAction } from '@vectoragents/vs-apps/agent-react';
 import { useState } from 'react';
-import { exportLeadsAction, openLeadListAction } from '../actions';
+import { exportLeadsAction, openLeadListAction } from './actions';
 
 function ExportControls({ leadListId }: { leadListId: string }) {
   const [last, setLast] = useState('none');
@@ -75,7 +75,7 @@ export function LeadListView() {
 
 `AppProvider` already mounts the registry, and a second `AgentActionRegistryProvider` splits it. Mount the provider directly only where `AppProvider` is absent, such as a test or a story.
 
-```tsx title="src/client/LeadListView.harness.tsx"
+```tsx title="client/src/LeadListView.harness.tsx"
 import { AgentActionRegistryProvider } from '@vectoragents/vs-apps/agent-react';
 import { LeadListView } from './LeadListView';
 

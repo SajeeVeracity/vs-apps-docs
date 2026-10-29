@@ -19,7 +19,7 @@ End with a navigation component that lists the pages of the SDR definition that 
 
 `defaultPageKey` must name a declared page. A page without `capability` is ungated.
 
-```ts title="src/app.definition.ts"
+```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
 
 export const definition = defineApp({
@@ -43,10 +43,10 @@ export const definition = defineApp({
 
 `appPages` returns the pages of the definition whose `key` equals the `appKey` claim. It does not filter by capability, so filter with `hasCapability`.
 
-```tsx title="src/client/AppNav.tsx"
+```tsx title="client/src/AppNav.tsx"
 import { appPages } from '@vectoragents/vs-apps';
 import { useApp } from '@vectoragents/vs-apps/react';
-import { definition } from '../app.definition';
+import { definition } from '../../shared/src/index';
 
 export function AppNav() {
   const { claims, hasCapability } = useApp();

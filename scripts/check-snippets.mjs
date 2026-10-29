@@ -7,6 +7,8 @@ import { fileMeta, readEmbedded } from '../src/plugins/embed-file.mjs';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const nestPage = 'recipes/nest-adapter.md';
 const nestDir = 'nest';
+const titleRoots = /^(client|server|shared)\//;
+const titleFolders = /^(recipes|guides)\//;
 const fence = /^```(ts|tsx)\b([^\n]*)\n([\s\S]*?)^```/gm;
 
 /** True when the fence meta carries the `starter` word; a title that contains it does not count. */
@@ -20,7 +22,7 @@ function docFiles(dir) {
   });
 }
 
-/** Typechecks every ts/tsx fence under `docsDir`; writes `stampFile` only when all pass. */
+/** Rejects off-layout recipe and guide titles, then typechecks every ts/tsx fence under `docsDir`; writes `stampFile` only when all pass. */
 export function checkSnippets({
   docsDir = join(root, 'docs'),
   baseDir = root,
@@ -29,6 +31,7 @@ export function checkSnippets({
   const work = mkdtempSync(join(root, '.snippets-'));
   try {
     const origins = new Map();
+    const badTitles = [];
     for (const [fileIndex, file] of docFiles(docsDir).entries()) {
       let index = 0;
       const titled = new Set();
@@ -36,13 +39,16 @@ export function checkSnippets({
       for (const [, lang, meta, body] of readFileSync(file, 'utf8').matchAll(fence)) {
         index++;
         const title = /title="([^"]+)"/.exec(meta)?.[1];
+        const doc = relative(docsDir, file).replaceAll('\\', '/');
+        // Recipes and guides build on the quickstart app, so their file paths use its layout.
+        if (title && titleFolders.test(doc) && !titleRoots.test(title)) badTitles.push(`${doc}: ${title}`);
         // The starter's CI typechecks a `starter` fence.
         if (isStarterFence(meta)) continue;
         const code = fileMeta(meta) ? readEmbedded(baseDir, fileMeta(meta)) : body;
         // A titled block is written at its title path so relative imports between a page's blocks resolve.
         const placed = title && !titled.has(title);
         if (placed) titled.add(title);
-        const isNest = relative(docsDir, file).replaceAll('\\', '/') === nestPage;
+        const isNest = doc === nestPage;
         // The Nest page's titled blocks sit at the project root so the `@hello-app/shared` mapping below resolves.
         const titledName = isNest ? title : `page-${fileIndex}/${title}`;
         const name = (isNest ? `${nestDir}/` : '') + (placed ? titledName : `snippet-${origins.size + blocks.length}.${lang}`);
@@ -54,6 +60,10 @@ export function checkSnippets({
         writeFileSync(join(work, name), `${code}\nexport {};\n`);
         origins.set(name, origin);
       }
+    }
+    if (badTitles.length) {
+      const output = `Snippet titles must start with client/, server/ or shared/:\n${badTitles.join('\n')}\n`;
+      return { ok: false, count: origins.size, output };
     }
     writeFileSync(
       join(work, 'tsconfig.json'),

@@ -32,7 +32,7 @@ test('fails a snippet that does not typecheck and writes no stamp', () => {
   assert.throws(() => readFileSync(stamp));
 });
 
-const decorated = `${fence}ts title="a.ts"
+const decorated = `${fence}ts title="server/a.ts"
 import { Get } from '@nestjs/common';
 export class X {
   @Get()
@@ -91,4 +91,36 @@ test('resolves @hello-app/shared to the shared/src/index.ts block on the Nest pa
   );
   const result = checkSnippets({ docsDir: docs, stampFile: stamp });
   assert.equal(result.ok, true, result.output);
+});
+
+function pageIn(folder, body) {
+  const { docs, stamp } = docsDir('');
+  mkdirSync(join(docs, folder));
+  writeFileSync(join(docs, folder, 'page.md'), body);
+  return { docs, stamp };
+}
+
+test('fails a recipe or guide snippet whose title is outside client, server and shared, and writes no stamp', () => {
+  for (const folder of ['recipes', 'guides']) {
+    const { docs, stamp } = pageIn(folder, `${fence}ts title="src/actions.ts"\nexport const a = 1;\n${fence}\n`);
+    const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+    assert.equal(result.ok, false);
+    assert.match(result.output, new RegExp(`${folder}/page\\.md: src/actions\\.ts`));
+    assert.throws(() => readFileSync(stamp));
+  }
+});
+
+test('passes a recipe snippet titled under client, server or shared', () => {
+  for (const title of ['client/src/a.ts', 'server/src/a.ts', 'shared/src/a.ts']) {
+    const { docs, stamp } = pageIn('recipes', `${fence}ts title="${title}"\nexport const a = 1;\n${fence}\n`);
+    const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+    assert.equal(result.ok, true, result.output);
+  }
+});
+
+test('skips untitled fences and fences outside recipes and guides', () => {
+  const untitled = pageIn('recipes', `${fence}ts\nexport const a = 1;\n${fence}\n`);
+  assert.equal(checkSnippets({ docsDir: untitled.docs, stampFile: untitled.stamp }).ok, true);
+  const reference = pageIn('reference', `${fence}ts title="src/a.ts"\nexport const a = 1;\n${fence}\n`);
+  assert.equal(checkSnippets({ docsDir: reference.docs, stampFile: reference.stamp }).ok, true);
 });
