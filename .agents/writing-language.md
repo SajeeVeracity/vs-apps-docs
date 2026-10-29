@@ -66,5 +66,5 @@ Scope: `docs/quickstart.md` only. `scripts/voice.mjs` checks the TU1 hard cap, T
 
 ## Not in this checklist
 
-- Contractions. Decision pending.
+- Contractions. Decided for the Tutorial page (TU3). Pending for other pages.
 - Existing writing standard (hyphens, current state only). Reported in a separate section.

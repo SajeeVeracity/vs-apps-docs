@@ -7,7 +7,6 @@ Not published. Staff register an external developer's app and allow it in the cu
 - Manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`.
 - Iframe URL: the client origin, not the manifest origin.
 - Customer organization name.
-- Whether to switch on **Auto-apply manifest updates**.
 
 ## 1. Register and enable the app
 
@@ -17,7 +16,7 @@ Registration is staff-only: the controller is the cross-organization staff app r
 2. Enter the manifest URL in **Manifest URL**. Choose **Continue**.
 3. Check the key, name, version, page count and capability count against the developer's manifest.
 4. Set **Iframe URL** to the developer's iframe URL. The field starts with the manifest origin.
-5. Set **Auto-apply manifest updates** as requested. Choose **Register**.
+5. Leave **Auto-apply manifest updates** off, Vector's default. Switch it on only when Vector decides to. Choose **Register**.
 6. On the new row, choose **Edit**. Switch on **Enabled**. Choose **Save**.
 
 Check: toast `App saved`. The row shows **Enabled**. The Space server must reach the manifest URL.

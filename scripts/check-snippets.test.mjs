@@ -3,7 +3,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { checkSnippets } from './check-snippets.mjs';
+import { checkSnippets, isStarterFence } from './check-snippets.mjs';
 
 const fence = '```';
 
@@ -71,4 +71,24 @@ test('accepts a mermaid fence and does not count it', () => {
   const result = checkSnippets({ docsDir: docs, stampFile: stamp });
   assert.equal(result.ok, true, result.output);
   assert.equal(result.count, 0);
+});
+
+test('isStarterFence reads the starter word in the fence meta, not in a title', () => {
+  assert.equal(isStarterFence('title="a.ts" starter'), true);
+  assert.equal(isStarterFence('starter title="a.ts"'), true);
+  assert.equal(isStarterFence('title="starter"'), false);
+  assert.equal(isStarterFence('title="a.ts" starters'), false);
+  assert.equal(isStarterFence(''), false);
+});
+
+test('resolves @hello-app/shared to the shared/src/index.ts block on the Nest page', () => {
+  const { docs, stamp } = docsDir('');
+  mkdirSync(join(docs, 'recipes'));
+  writeFileSync(
+    join(docs, 'recipes', 'nest-adapter.md'),
+    `${fence}ts title="shared/src/index.ts"\nexport const CAPABILITY = 'hello:view';\n${fence}\n\n` +
+      `${fence}ts title="server/src/use.ts"\nimport { CAPABILITY } from '@hello-app/shared';\nexport const c: string = CAPABILITY;\n${fence}\n`,
+  );
+  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+  assert.equal(result.ok, true, result.output);
 });

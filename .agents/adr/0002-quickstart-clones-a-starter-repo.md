@@ -1,11 +1,11 @@
 # The quickstart clones a starter repo
 
-The quickstart tells the reader to clone a working app from a Vector-owned starter repo, run it in the harness, then read its code in a tour of excerpts. The reader writes no file in Part 1. A clone gets the reader to a running app faster than an empty folder that needs four `package.json` files, four `tsconfig` files, `.npmrc` and `.gitignore`. The clone URL is the single value `STARTER_URL` in `scripts/starter-url.mjs`, shared by the page, its test and CI. The ref is `main`, not a tag.
+The quickstart tells the reader to clone a working app from the starter repo, run it in the harness, then read its code in a tour of excerpts. The reader edits no file in Part 1. A clone gives a running app at once, where an empty folder needs four `package.json` files, four `tsconfig` files, `.npmrc` and `.gitignore` first. The repo's target home is `VectorAgents/vector-app-quickstart`, owned by Vector. Until the move it lives under the `SajeeVeracity` GitHub account. The clone URL is the single value `STARTER_URL` in `scripts/starter-url.mjs`, shared by the page, its test and CI. The ref is `main`.
 
 ## Considered options
 
-- **Keep the build-it flow.** Rejected: the reader spends most of the page on configuration instead of the token path. ADR 0001 chose it for a reader with an empty folder.
-- **Keep the manual setup beside the clone, as a second path or behind a collapsible block.** Rejected: two paths double the commands to keep correct, and only the clone path has CI.
+- **The reader builds the app from an empty folder.** Rejected: the reader spends most of the page on configuration instead of the token path.
+- **Manual setup beside the clone, as a second path or behind a collapsible block.** Rejected: two paths double the commands to keep correct, and only the clone path has CI.
 - **A `starter` branch or a release tag.** Rejected: `main` holds the full working app, so no second ref has to stay in step with it.
 
 ## Consequences
@@ -17,6 +17,6 @@ The quickstart tells the reader to clone a working app from a Vector-owned start
   - A path in the page's directory tree is missing from the starter.
 - A starter commit can fail this repo's CI with no change here, and a page edit to an excerpt can need a starter commit first.
 - `scripts/check-snippets.mjs` skips every `starter` fence and leaves it out of the `snippets` count. The starter's CI typechecks those excerpts instead. Every other page is still typechecked here.
-- The build-it flow, its shared-package claims and its per-step Checks are gone. Part 1 has two Checks: `npm ls @vectoragents/vs-apps` after install, and the harness run.
-- The starter repo is public from its first push, so the clone needs no credential. The URL value changes once, in `scripts/starter-url.mjs`, when the repo moves to the `VectorAgents` org as `vector-app-quickstart`.
+- Part 1 has two Checks: `npm ls @vectoragents/vs-apps` after install, and the harness run. The page shows excerpts of the starter and the reader edits no file.
+- The starter repo is public from its first push, so the clone takes no credential. The URL value changes once, in `scripts/starter-url.mjs`, at the move.
 - The harness reference is a manual-wiring guide for an app that is not built from the starter.

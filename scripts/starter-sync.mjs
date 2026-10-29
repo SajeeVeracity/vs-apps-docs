@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isStarterFence } from './check-snippets.mjs';
 import { STARTER_URL } from './starter-url.mjs';
 
 const SDK = '@vectoragents/vs-apps';
@@ -16,8 +17,6 @@ export const installedSdkVersion = () => readJson(join(root, 'node_modules', SDK
 
 export const fencesOf = (text) =>
   [...text.matchAll(/^```(\w+)([^\n]*)\n([\s\S]*?)^```/gm)].map(([, lang, meta, body]) => ({ lang, meta, body }));
-
-const isStarterFence = (fence) => /(^|\s)starter(\s|$)/.test(fence.meta.replace(/title="[^"]*"/, ''));
 
 /** Fails for every pin of the SDK in the starter that differs from the installed version. */
 export function checkSdkPin(starterDir, installed) {
@@ -44,10 +43,24 @@ export function checkSdkPin(starterDir, installed) {
   return problems;
 }
 
+const VERSION_PAGES = ['docs/quickstart.md', 'docs/reference/harness.md'];
+const SDK_VERSION_STRING = /@vectoragents\/vs-apps(?:\/[\w-]+)?(?:@|`? )(\d+\.\d+\.\d+)/g;
+
+const readVersionPages = () => Object.fromEntries(VERSION_PAGES.map((path) => [path, readFileSync(join(root, path), 'utf8')]));
+
+/** Fails for every SDK version string on the pages that differs from the installed version. */
+export function checkPageVersions(pages = readVersionPages(), installed = installedSdkVersion()) {
+  return Object.entries(pages).flatMap(([path, text]) =>
+    [...text.matchAll(SDK_VERSION_STRING)]
+      .filter(([, version]) => version !== installed)
+      .map(([string, version]) => `${path} names ${SDK} ${version} (\`${string}\`), installed ${installed}`),
+  );
+}
+
 /** Fails for every `starter` fence that is not a verbatim substring of the starter file its title names. */
 export function checkFences(pageText, starterDir) {
   const problems = [];
-  for (const fence of fencesOf(pageText).filter(isStarterFence)) {
+  for (const fence of fencesOf(pageText).filter((fence) => isStarterFence(fence.meta))) {
     const path = /title="([^"]+)"/.exec(fence.meta)?.[1];
     if (!path) {
       problems.push(`a starter fence has no title: ${fence.body.split('\n')[0]}`);
@@ -94,6 +107,7 @@ export async function main({
   clone = gitClone,
   page = readFileSync(pagePath, 'utf8'),
   sdkVersion = installedSdkVersion(),
+  versionPages = readVersionPages(),
   log = console.log,
   warn = console.warn,
   error = console.error,
@@ -117,7 +131,7 @@ export async function main({
     dir = temp;
   }
   try {
-    const problems = [...checkSdkPin(dir, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir)];
+    const problems = [...checkSdkPin(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir)];
     for (const problem of problems) error(`starter-sync: ${problem}`);
     if (problems.length === 0) log(`starter-sync: ok (SDK ${sdkVersion}, ${STARTER_URL})`);
     return problems.length === 0 ? 0 : 1;

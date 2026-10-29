@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { checkFences, checkSdkPin, checkTree, installedSdkVersion, main, pageTreePaths } from './starter-sync.mjs';
+import { checkFences, checkPageVersions, checkSdkPin, checkTree, installedSdkVersion, main, pageTreePaths } from './starter-sync.mjs';
 
 const tree = ['hello-app/', '├── .env.example', '├── client/', '│   ├── index.html', '│   └── src/', '│       └── main.tsx', '└── shared/', '    └── src/', '        └── index.ts'].join('\n');
 const page = [
@@ -149,4 +149,33 @@ test('main: a clean starter exits 0', async () => {
   const clone = () => assert.fail('clone must not run');
   const ok = await main({ env: { STARTER_DIR: starter() }, clone, page, sdkVersion: '0.2.4', ...silent });
   assert.equal(ok, 0);
+});
+
+test('page versions: passes when every SDK version string on the pages is the installed version', () => {
+  const pages = {
+    'docs/quickstart.md': '└── @vectoragents/vs-apps@0.2.4 deduped',
+    'docs/reference/harness.md': 'Reference for `@vectoragents/vs-apps/harness` 0.2.4.',
+  };
+  assert.deepEqual(checkPageVersions(pages, '0.2.4'), []);
+});
+
+test('page versions: fails for each string that names another version', () => {
+  const pages = {
+    'docs/quickstart.md': '├── @vectoragents/vs-apps@0.2.3\n└── @vectoragents/vs-apps@0.2.4',
+    'docs/reference/harness.md': 'Reference for `@vectoragents/vs-apps/harness` 0.2.3.',
+  };
+  const problems = checkPageVersions(pages, '0.2.4');
+  assert.equal(problems.length, 2);
+  assert.match(problems[0], /docs\/quickstart\.md/);
+  assert.match(problems[1], /docs\/reference\/harness\.md/);
+});
+
+test('page versions: the real quickstart and harness pages name the installed version', () => {
+  assert.deepEqual(checkPageVersions(undefined, installedSdkVersion()), []);
+});
+
+test('main: a page with a stale SDK version exits 1', async () => {
+  const stale = { 'docs/quickstart.md': '@vectoragents/vs-apps@0.1.0' };
+  const code = await main({ env: { STARTER_DIR: starter() }, page, sdkVersion: '0.2.4', versionPages: stale, ...silent });
+  assert.equal(code, 1);
 });

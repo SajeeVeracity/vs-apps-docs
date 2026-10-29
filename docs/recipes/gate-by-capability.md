@@ -18,21 +18,23 @@ End with one capability enforced twice: `RequireCapability` hides the leads page
 
 ### 1. Declare the capability and the page
 
-A page names its capability in `capability`. `defineApp` does not check that the name exists in `capabilities`, so keep the two keys identical. The definition below is the quickstart definition plus the leads page, so the starter server serves it unchanged. Add the leads entries to the definition in `shared/src/index.ts`, which the server imports.
+A page names its capability in `capability`. `defineApp` does not check that the name exists in `capabilities`, so keep the two keys identical. The definition below is the starter definition plus the leads page, so the starter server serves it unchanged. Replace the definition in `shared/src/index.ts`, which the server and the client import. The `CAPABILITY` export stays, because the starter's `main.ts` and `HelloPage.tsx` use it.
 
-```ts title="src/app.definition.ts"
+```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
+
+export const CAPABILITY = 'hello:view';
 
 export const definition = defineApp({
   key: 'hello-app',
   name: 'Hello app',
   version: '0.1.0',
   pages: [
-    { key: 'home', label: 'Home', path: '/', capability: 'hello:view' },
+    { key: 'home', label: 'Home', path: '/', capability: CAPABILITY },
     { key: 'leads', label: 'Leads', path: '/leads', capability: 'lead:manage' },
   ],
   capabilities: [
-    { key: 'hello:view', label: 'View hello', effect: 'read' },
+    { key: CAPABILITY, label: 'View hello', effect: 'read' },
     { key: 'lead:manage', label: 'Manage Leads', effect: 'write' },
   ],
 });
@@ -42,7 +44,7 @@ export const definition = defineApp({
 
 `RequireCapability` renders its children only when the token holds the capability. A function `fallback` receives the missing capability name.
 
-```tsx title="src/client/LeadsPage.tsx"
+```tsx title="client/src/LeadsPage.tsx"
 import { RequireCapability } from '@vectoragents/vs-apps/react';
 
 export function LeadsPage() {
@@ -63,7 +65,7 @@ This check shapes the UI only. A member can still call the endpoint directly.
 
 `requireCapability` in `server/src/auth.ts` of the [quickstart](../quickstart.md) starter verifies the user token. It throws `AppAuthError` with status `403` when the claims lack the named capability. The leads handler receives the verified claims.
 
-```ts title="src/server/leads.ts"
+```ts title="server/src/leads.ts"
 import type { UserTokenClaims } from '@vectoragents/vs-apps';
 
 export function listLeads(claims: UserTokenClaims) {
