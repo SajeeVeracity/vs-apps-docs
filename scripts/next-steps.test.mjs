@@ -9,9 +9,9 @@ const slugs = sidebars.docs.map((item) => item.link?.slug).filter(Boolean);
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pages = {
-  'quickstart.md': ['app-definition.md', '/category/recipes'],
-  'examples.md': ['app-definition.md', '/category/recipes'],
-  'app-definition.md': ['/category/recipes', '/category/reference'],
+  'quickstart.md': ['app-definition.md', '/category/recipes', 'reference/harness.md'],
+  'examples.md': ['/category/recipes'],
+  'app-definition.md': ['examples.md', '/category/recipes', '/category/reference'],
 };
 
 const block = (text) => text.split(/^## /m).slice(1).filter((s) => s.startsWith('Next steps\n'));

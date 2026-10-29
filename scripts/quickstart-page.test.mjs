@@ -1,156 +1,179 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { test } from 'node:test';
-import { steViolations } from './ste.mjs';
+import { STARTER_URL } from './starter-url.mjs';
+import { voiceViolations } from './voice.mjs';
 
 const text = readFileSync(new URL('../docs/quickstart.md', import.meta.url), 'utf8');
 const sections = text.split(/^## /m).slice(1);
 const titles = sections.map((s) => s.split('\n')[0]);
+const section = (prefix) => sections.find((s) => s.startsWith(prefix));
 const fences = [...text.matchAll(/^```(\w+)([^\n]*)\n([\s\S]*?)^```/gm)].map(([, lang, meta, body]) => ({ lang, meta, body }));
-const part1 = sections.find((s) => s.startsWith('Part 1'));
-const part2 = sections.find((s) => s.startsWith('Part 2'));
-const steps = (part) => part.split(/^### /m).slice(1);
+const part1 = section('Part 1');
+const part2 = section('Part 2');
+const goal = section('Goal');
+const result = section('Result');
+const subsections = (part) => part.split(/^### /m).slice(1);
+const steps = (part) => subsections(part).filter((s) => /^\d+\. /.test(s));
+const title = (step) => step.split('\n')[0];
+const hasCheck = (step) => step.includes('**Check**');
 const count = (re) => (text.match(re) ?? []).length;
+const prose = text
+  .replace(/^---\n[\s\S]*?\n---\n/, '')
+  .replace(/^```[\s\S]*?^```/gm, '')
+  .replace(/^#{1,6} .*$/gm, '');
 
-test('follows the writing rules checked by steViolations', () => {
-  assert.deepEqual(steViolations(text), []);
+test('follows the tutorial voice checked by voiceViolations', () => {
+  assert.deepEqual(voiceViolations(text), []);
 });
 
 test('follows the page order', () => {
   assert.deepEqual(titles, [
     'Goal',
     'Prerequisites',
-    'Part 1: Build and run the app',
-    'See the page without Space',
-    'Part 2: Add the app to Space',
+    'Part 1: Run the app locally',
+    'Part 2: Add the app to a Space',
     'Result',
     'Next steps',
   ]);
 });
 
-test('the aside links the harness reference and has no steps or Check', () => {
-  const aside = sections.find((s) => s.startsWith('See the page without Space'));
-  assert.match(aside, /\(\.\/reference\/harness\.md\)/);
-  assert.doesNotMatch(aside, /^### |^\d+\. |\*\*Check\*\*/m);
+test('has the Quickstart frontmatter title and a one-paragraph opening that links Space', () => {
+  assert.match(text, /^---\ntitle: Quickstart\n/);
+  const opening = text.replace(/^---\n[\s\S]*?\n---\n/, '').trim().split('\n\n')[0];
+  assert.doesNotMatch(opening, /^#/);
+  assert.match(opening, /\(\.\/glossary\.md#space\)/);
 });
 
-test('opens with an intro of two sentences that links the monorepo', () => {
-  const intro = text.replace(/^---\n[\s\S]*?\n---\n/, '').split('\n\n')[0];
-  assert.equal(intro.split(/(?<=[.!?])\s+/).length, 2);
-  assert.match(intro, /\(\.\/glossary\.md#monorepo\)/);
+test('Goal names both end states and ends with the Mermaid diagram and its caption', () => {
+  assert.match(goal, /harness/);
+  assert.match(goal, /open in a Space/);
+  const diagrams = fences.filter((f) => f.lang === 'mermaid');
+  assert.equal(diagrams.length, 1);
+  const [{ body }] = diagrams;
+  assert.match(body, /^sequenceDiagram$/m);
+  assert.match(body, /^\s+accTitle: \S/m);
+  assert.match(body, /^\s+accDescr: \S/m);
+  assert.equal(count(/^\s+participant \w+ as /gm), 4);
+  assert.match(body, /display only/);
+  assert.ok(goal.includes('```mermaid'));
+  assert.match(goal.split('```mermaid')[1].split(/^```$/m)[1], /Only the server check protects data\./);
 });
 
-test('prerequisites are two checklists and state the baseline once', () => {
-  const prerequisites = sections.find((s) => s.startsWith('Prerequisites'));
-  assert.match(prerequisites, /^Space side:\n\n- \[ \] /m);
-  assert.match(prerequisites, /^App side:\n\n- \[ \] /m);
+test('prerequisites are one app-side checklist and state the baseline once', () => {
+  const prerequisites = section('Prerequisites');
   const items = prerequisites.split('\n').filter((l) => /^- /.test(l));
   assert.ok(items.length >= 2);
   for (const line of items) assert.match(line, /^- \[ \] /);
   assert.match(prerequisites, /Node\.js 20\.19/);
   assert.match(prerequisites, /`read:packages`/);
   assert.equal(count(/20\.19/g), 1);
-  assert.doesNotMatch(prerequisites, /React 18|TypeScript 5/);
+  assert.doesNotMatch(prerequisites, /space manager|published agent|Space server/i);
 });
 
-test('steps 1, 2, 3, 5 and 6 end with a tree of the files they add', () => {
-  const steps = text.split(/^### /m).slice(1);
-  const trees = steps.map((s) => /^```text\nhello-app\/\n/m.test(s));
-  assert.deepEqual(trees, [true, true, true, false, true, true, false, false, false, false]);
-  assert.doesNotMatch(text, /Final layout/);
-  const step1 = steps[0];
-  for (const name of ['client/', 'server/', 'shared/', 'tsconfig.base.json', '.npmrc']) {
-    assert.ok(step1.includes(name), name);
-  }
+test('Part 1 has the six steps, numbered from 1', () => {
+  const list = steps(part1);
+  assert.deepEqual(list.map(title), [
+    '1. Clone the starter and install',
+    '2. Read the app definition',
+    '3. Serve the manifest and client config',
+    '4. Verify the token on the server',
+    '5. Read the token in the page',
+    '6. Run the app in the harness',
+  ]);
 });
 
-test('trees never list generated files or the agent catalog', () => {
+test('Part 2 has Before you start, then five steps with roles only on steps 3 and 4', () => {
+  const [intro, ...rest] = subsections(part2);
+  assert.equal(title(intro), 'Before you start');
+  const items = intro.split('\n').filter((l) => /^- /.test(l));
+  assert.equal(items.length, 3);
+  for (const line of items) assert.match(line, /^- \[ \] /);
+  assert.deepEqual(rest.map(title), [
+    '1. Point the app at your Space',
+    '2. Ask Vector to register the app',
+    '3. Add the app to a space (space manager)',
+    '4. Share the app with a user (space manager)',
+    '5. Open the page',
+  ]);
+  assert.equal(count(/\(space manager\)$/gm), 2);
+  assert.doesNotMatch(text, /Each step names the role/);
+});
+
+test('Checks sit in Part 1 steps 1 and 6 and in every Part 2 step', () => {
+  assert.deepEqual(steps(part1).map(hasCheck), [true, false, false, false, false, true]);
+  for (const step of steps(part2)) assert.ok(hasCheck(step), title(step));
+});
+
+test('one tree of the cloned layout, after clone, with no per-step trees or new markers', () => {
   const trees = fences.filter((f) => f.lang === 'text' && /^hello-app\/$/m.test(f.body));
-  for (const { body } of trees) assert.doesNotMatch(body, /node_modules|package-lock|agent-catalog/);
-});
-
-test('the packages and their scripts are defined once', () => {
-  for (const name of ['client', 'server', 'shared']) assert.equal(count(new RegExp(`"name": "@hello-app/${name}"`, 'g')), 1, name);
-  for (const script of ['dev:server', 'dev:client', 'check:server']) {
-    assert.equal(count(new RegExp(`^    "${script}": `, 'gm')), 1, script);
+  assert.equal(trees.length, 1);
+  assert.ok(steps(part1)[0].includes(trees[0].body));
+  for (const name of ['client/', 'server/', 'shared/', '.env.example', 'index.html', 'main.tsx', 'vite.config.ts']) {
+    assert.ok(trees[0].body.includes(name), name);
   }
-  assert.equal(count(/"typecheck": "npm run typecheck --workspaces --if-present"/g), 1);
-  assert.match(text, /^npm install$/m);
-  assert.match(text, /"@vectoragents\/vs-apps": "0\.2\.4"/);
-  assert.doesNotMatch(text, /catalog:|workspace:/);
-  assert.match(text, /title="\.npmrc"/);
-  assert.match(text, /scope, a registry URL and a token/);
+  assert.doesNotMatch(trees[0].body, /node_modules|package-lock|agent-catalog/);
+  assert.doesNotMatch(text, /# new\b/);
 });
 
-test('step 2 uses the shared-package typecheck', () => {
-  assert.match(steps(part1)[1], /npm run typecheck --workspace @hello-app\/shared/);
+test('the clone command uses the one shared starter URL', () => {
+  assert.match(STARTER_URL, /^https:\/\/github\.com\/[\w-]+\/vector-app-quickstart\.git$/);
+  assert.match(steps(part1)[0], new RegExp(`^git clone ${STARTER_URL.replaceAll('.', '\\.')} hello-app$`, 'm'));
+  const urls = text.match(/https:\/\/github\.com\/\S*vector-app-quickstart\S*/g) ?? [];
+  assert.ok(urls.length >= 1);
+  for (const url of urls) assert.equal(url, STARTER_URL);
 });
 
-test('the server is a node:http handler on the /server subpath', () => {
-  assert.match(text, /from 'node:http'/);
-  for (const s of ['createSpaceTokenVerifier', 'extractBearer', 'assertCapability', 'verifyAppUserToken', 'verifyProvisioningToken']) {
-    assert.match(text, new RegExp(s), s);
+test('commands run in the step that needs them', () => {
+  const list = steps(part1);
+  assert.equal(count(/export GITHUB_PACKAGES_TOKEN=/g), 1);
+  assert.match(list[0], /^export GITHUB_PACKAGES_TOKEN=/m);
+  assert.match(list[0], /^npm install$/m);
+  assert.match(list[0], /^\*\*Check\*\*: run `npm ls @vectoragents\/vs-apps`/m);
+  assert.doesNotMatch(text, /_authToken=[A-Za-z0-9_]{20,}/);
+  assert.match(list[5], /^npm run dev$/m);
+  assert.match(list[5], /http:\/\/localhost:5173\/harness\.html/);
+  assert.match(list[5], /^Waiting for Space\.$|Waiting for Space\./m);
+  const space = steps(part2)[0];
+  assert.match(space, /^cp \.env\.example \.env$/m);
+  assert.match(space, /^npm run dev:space$/m);
+  for (const name of ['SPACE_JWKS_URL', 'ALLOWED_PARENT_ORIGIN', 'PUBLIC_BASE_URL', 'SERVER_PORT', 'CLIENT_PORT']) {
+    assert.match(space, new RegExp(`^- \`${name}\``, 'm'), name);
   }
-  assert.doesNotMatch(text, /@vectoragents\/vs-apps\/nest/);
-});
-
-test('the client runs on Vite with ports and proxy taken from .env', () => {
-  assert.match(text, /^npm run dev:client$/m);
-  assert.match(text, /title="client\/vite\.config\.ts"/);
-  assert.match(text, /title="client\/index\.html"/);
-  assert.match(text, /"dev": "node --env-file=\.\.\/\.env /);
-});
-
-test('every step in both parts restarts at 1 and has a Check', () => {
-  for (const part of [part1, part2]) {
-    const list = steps(part);
-    assert.deepEqual(list.map((s) => s.match(/^(\d+)\. /)?.[1]), list.map((_, i) => String(i + 1)));
-    for (const step of list) assert.ok(step.includes('**Check**'), step.split('\n')[0]);
+  assert.match(space, /^\{"keys":\[$/m);
+  assert.match(space, /\/api\/\.well-known\/apps\/jwks\.json/);
+  for (const dropped of ['dev:server', 'dev:client', 'check:server', 'SPACE_BASE_URL']) {
+    assert.doesNotMatch(text, new RegExp(dropped));
   }
 });
 
-test('every Part 1 Check is followed by its result', () => {
-  for (const step of steps(part1)) {
-    const after = step.split(/^\*\*Check\*\*/m).at(-1);
-    assert.match(after, /\n\n(```|- )/, step.split('\n')[0]);
-  }
+test('the harness Check shows three lines and a limits sentence follows it', () => {
+  const step = steps(part1)[5];
+  const [, afterCheck] = step.split(/^\*\*Check\*\*/m);
+  assert.match(
+    afterCheck,
+    /^Verified in the browser: user dev-user in space 1\.\nCapabilities: hello:view\nVerified on the server: space 1, user dev-user$/m,
+  );
+  const afterBlock = afterCheck.split(/^```$/m).at(-1);
+  assert.match(afterBlock, /The harness signs its own tokens, so it proves your page and server but not your registration or Space access\./);
+  assert.match(afterBlock, /Part 2 covers those\./);
 });
 
-test('Part 2 titles carry the role and the share Check does not name the capability', () => {
-  const list = steps(part2);
-  for (const step of list.slice(1, 3)) assert.match(step.split('\n')[0], /\(space manager\)$/);
-  const share = list.find((s) => /^\d+\. Share/.test(s));
-  assert.doesNotMatch(share.split(/^\*\*Check\*\*/m).at(-1), /hello:view/);
+test('the page says a client check is display only and the server check decides', () => {
+  assert.match(steps(part1)[4], /display only/);
+  assert.match(steps(part1)[4], /server check/);
 });
 
-test('the Result repeats the three lines of the final Check', () => {
-  const lines = (s) => s.match(/^Verified in the browser[^\n]*\nCapabilities: hello:view\nVerified on the server[^\n]*$/m)?.[0];
-  const last = steps(part2).at(-1);
-  assert.ok(lines(last));
-  assert.equal(lines(sections.find((s) => s.startsWith('Result'))), lines(last));
-});
-
-test('the first Check line follows the step command', () => {
-  assert.match(text, /^\*\*Check\*\*: run `npm ls @vectoragents\/vs-apps`/m);
-  assert.match(text, /^\{"keys":\[$/m);
-  assert.match(text, /^client-config 200\nmanifest\/hello-app 401$/m);
-  assert.match(text, /^hello 401\nprovision 401$/m);
-  assert.match(text, /^Waiting for Space\.$/m);
-});
-
-test('every ts and tsx block is a labelled file with no ellipsis', () => {
+test('every ts and tsx block is a starter excerpt of a named file with no ellipsis', () => {
   const code = fences.filter((f) => f.lang === 'ts' || f.lang === 'tsx');
-  assert.ok(code.length >= 8);
+  assert.ok(code.length >= 6);
   for (const f of code) {
     assert.match(f.meta, /title="[\w./-]+"/);
+    assert.match(f.meta.replace(/title="[^"]*"/, ''), /(^|\s)starter(\s|$)/);
+    assert.doesNotMatch(f.meta, /\badd\b/);
     assert.doesNotMatch(f.body, /\.\.\.|…/);
   }
-});
-
-test('step 4 adds blocks to main.ts', () => {
-  const adds = fences.filter((f) => /\badd\b/.test(f.meta.replace(/title="[^"]*"/, '')));
-  assert.ok(adds.length >= 2);
-  for (const f of adds) assert.match(f.meta, /title="server\/src\/main\.ts"/);
 });
 
 test('shell blocks have no prompt and one command per line', () => {
@@ -164,57 +187,78 @@ test('shell blocks have no prompt and one command per line', () => {
   }
 });
 
-test('each .env value is appended once, in the step that first uses it', () => {
-  const list = steps(part1);
-  assert.equal(count(/export GITHUB_PACKAGES_TOKEN=/g), 1);
-  assert.match(list[0], /export GITHUB_PACKAGES_TOKEN=/);
-  for (const name of ['SPACE_JWKS_URL', 'ALLOWED_PARENT_ORIGIN', 'PUBLIC_BASE_URL', 'SERVER_PORT']) {
-    assert.equal(count(new RegExp(`^${name}=`, 'gm')), 1, name);
-    assert.match(list[2], new RegExp(`^${name}=`, 'm'), name);
-    assert.doesNotMatch(text, new RegExp(`export ${name}=`));
+test('covers the server and client symbols and gates one page with one capability', () => {
+  for (const s of [
+    'defineApp',
+    'buildManifests',
+    'createSpaceTokenVerifier',
+    'extractBearer',
+    'assertCapability',
+    'verifyAppUserToken',
+    'verifyProvisioningToken',
+    'AppProvider',
+    'BootGate',
+    'loadAppClientConfig',
+    'RequireCapability',
+  ]) {
+    assert.match(text, new RegExp(s), s);
   }
-  assert.equal(count(/^SERVER_PORT=3001$/gm), 1);
-  assert.equal(count(/CLIENT_PORT=5173/g), 1);
-  assert.match(list[5], /^echo CLIENT_PORT=5173 >> \.env$/m);
-  assert.doesNotMatch(text, /SPACE_BASE_URL/);
-  assert.doesNotMatch(text, /_authToken=[A-Za-z0-9_]{20,}/);
-});
-
-test('the key-set URL has the /api prefix, a Check and the port-clash note', () => {
-  const step3 = steps(part1)[2];
-  assert.match(step3, /^SPACE_JWKS_URL=\S*\/api\/\.well-known\/apps\/jwks\.json$/m);
-  assert.match(step3, /\{"keys":\[/);
-  assert.match(step3, /port 3001 is busy/);
-});
-
-test('shows one page gated by one capability', () => {
-  assert.match(text, /hello:view/);
-  assert.match(text, /RequireCapability/);
+  assert.match(text, /from 'node:http'/);
+  assert.doesNotMatch(text, /@vectoragents\/vs-apps\/nest/);
   assert.equal(count(/'hello:view'/g), 1);
 });
 
-test('covers the client and server symbols', () => {
-  for (const s of ['defineApp', 'buildManifests', 'AppProvider', 'BootGate', 'loadAppClientConfig', 'RequireCapability']) {
-    assert.match(text, new RegExp(s), s);
-  }
-  assert.match(text, /import \{ definition \} from '@hello-app\/shared';|import \{ CAPABILITY \} from '@hello-app\/shared';/);
+test('names Vite once the page shows it, so the baseline allowance holds', () => {
+  assert.match(text, /\bVite\b/);
 });
 
-test('links the concept page and glossary terms once at first use', () => {
+test('Part 2 click paths and Checks', () => {
+  const [, , addApp, share, open] = steps(part2);
+  assert.match(addApp, /\*\*Add an app\*\*/);
+  assert.match(addApp, /App enabled/);
+  assert.match(share, /\*\*Access\*\*/);
+  assert.match(share, /\*\*Direct access\*\*/);
+  assert.doesNotMatch(share.split(/^\*\*Check\*\*/m).at(-1), /hello:view/);
+  assert.match(
+    open,
+    /^Verified in the browser: user <id> in space <id>\.\nCapabilities: hello:view\nVerified on the server: space <id>, user <id>$/m,
+  );
+  assert.doesNotMatch(steps(part2)[1], /Auto-apply/);
+});
+
+test('the Result summarises the last Check and has no second output block', () => {
+  assert.doesNotMatch(result, /^```/m);
+  assert.match(result, /same three lines as the last Check/);
+  assert.match(result, /one token/);
+});
+
+test('links the four glossary terms, the concept page and the harness reference', () => {
   assert.match(text, /\(\.\/app-definition\.md\)/);
-  for (const a of ['app-definition', 'manifest', 'space', 'capability', 'page', 'space-manager', 'monorepo', 'shared-package', 'app-registration', 'harness']) {
-    assert.match(text, new RegExp(`\\(\\./glossary\\.md#${a}\\)`), a);
-  }
-  for (const a of ['monorepo', 'shared-package']) assert.equal(count(new RegExp(`glossary\\.md#${a}\\)`, 'g')), 1, a);
+  const links = [...text.matchAll(/\]\(\.\/glossary\.md#([\w-]+)\)/g)].map((m) => m[1]);
+  assert.deepEqual([...links].sort(), ['app-definition', 'app-registration', 'harness', 'space']);
+  assert.match(section('Next steps'), /\(\.\/reference\/harness\.md\)/);
 });
 
-test('follows the writing standard and makes no STE claim', () => {
+test('defines capability, space manager and manifest in one clause at first use', () => {
+  for (const term of ['capability', 'space manager', 'manifest']) {
+    const at = prose.indexOf(term);
+    assert.ok(at >= 0, term);
+    assert.match(prose.slice(at + term.length), /^,\s(a|the)\s[^.]*?[,.]/, term);
+  }
+});
+
+test('follows the writing standard', () => {
   assert.doesNotMatch(text, /—|–/);
   assert.doesNotMatch(text, /\b(we|our|let's)\b/i);
   assert.doesNotMatch(text, /\b(simply|just|easy|easily)\b/i);
-  assert.doesNotMatch(text, /\bSTE\b|ASD-STE100/);
 });
 
-test('has the Quickstart frontmatter title', () => {
-  assert.match(text, /^---\ntitle: Quickstart\n/);
+// STARTER_DIR names a clone of the starter repo. Tickets for CI reuse this check.
+test('every starter fence is a verbatim substring of the starter file it names', { skip: !process.env.STARTER_DIR }, () => {
+  for (const f of fences.filter((g) => /(^|\s)starter(\s|$)/.test(g.meta.replace(/title="[^"]*"/, '')))) {
+    const path = /title="([^"]+)"/.exec(f.meta)[1];
+    const file = join(process.env.STARTER_DIR, path);
+    assert.ok(existsSync(file), `${path} is missing from the starter`);
+    assert.ok(readFileSync(file, 'utf8').includes(f.body.trimEnd()), `${path} excerpt differs from the starter`);
+  }
 });

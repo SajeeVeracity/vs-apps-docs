@@ -169,4 +169,4 @@ The NestJS server answers the same three requests as the quickstart server. Regi
 
 ## Next step
 
-Continue with [Part 2 of the quickstart](../quickstart.md#part-2-add-the-app-to-space) to register the app in Space.
+Continue with [Part 2 of the quickstart](../quickstart.md#part-2-add-the-app-to-a-space) to register the app in Space.
