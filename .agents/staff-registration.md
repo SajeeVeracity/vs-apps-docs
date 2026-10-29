@@ -1,6 +1,6 @@
 # Staff registration runbook
 
-Not published. Staff register an external developer's app and allow it in the customer organization. The quickstart's Part 2 step 1 sends the developer's request here.
+Not published. Staff register an external developer's app and allow it in the customer organization. The quickstart's Part 2 step 2 sends the developer's request here.
 
 ## Input from the developer
 
@@ -29,7 +29,7 @@ Check: toast `App saved`. The row shows **Enabled**. The Space server must reach
 1. Choose **Admin**, **Tenancy**, then **Organizations**. Choose **Edit license** on the organization.
 2. Under **Allowed apps**, select the app chip. Choose **Save**.
 
-Check: toast `License saved`. Tell the developer to continue at quickstart Part 2 step 2.
+Check: toast `License saved`. Tell the developer to continue at quickstart Part 2 step 3.
 
 ## Open gap
 
