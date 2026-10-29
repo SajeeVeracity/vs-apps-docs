@@ -19,7 +19,7 @@ End with an ICP Library page in the Space navigation, gated by a new `icp:manage
 
 Add one entry to `pages` and one to `capabilities`. The page `capability` must match the capability `key` exactly, because `defineApp` does not check it. A capability key has the form `<group>:<action>`, and a page `path` starts with `/`.
 
-```ts title="src/app.definition.ts"
+```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
 
 export const definition = defineApp({
@@ -41,7 +41,7 @@ export const definition = defineApp({
 
 Gate the content with the same capability, so the browser matches the definition.
 
-```tsx title="src/client/IcpPage.tsx"
+```tsx title="client/src/IcpPage.tsx"
 import { RequireCapability } from '@vectoragents/vs-apps/react';
 
 export function IcpPage() {

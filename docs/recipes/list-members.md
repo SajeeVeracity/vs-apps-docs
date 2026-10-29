@@ -19,7 +19,7 @@ End with an owners list built with `useUsers` and a member picker built with the
 
 `useUsers` takes user ids your data already holds, for example the owner of each lead. Pass a stable array. A deleted user stays in the map with `deleted: true`.
 
-```tsx title="src/client/LeadOwners.tsx"
+```tsx title="client/src/LeadOwners.tsx"
 import { useUsers } from '@vectoragents/vs-apps/react';
 
 export function LeadOwners({ ownerIds }: { ownerIds: readonly string[] }) {
@@ -47,7 +47,7 @@ export function LeadOwners({ ownerIds }: { ownerIds: readonly string[] }) {
 
 `useApp().directory` is `null` without a directory. `search` returns `DirectoryUser` entries.
 
-```tsx title="src/client/OwnerPicker.tsx"
+```tsx title="client/src/OwnerPicker.tsx"
 import type { DirectoryUser } from '@vectoragents/vs-apps/client';
 import { useApp } from '@vectoragents/vs-apps/react';
 import { useState } from 'react';
@@ -83,7 +83,7 @@ export function OwnerPicker({ onPick }: { onPick: (user: DirectoryUser) => void 
 
 `directory.groups()` returns every `DirectoryGroup`. Its `id` is numeric, unlike the string id of a user.
 
-```tsx title="src/client/TeamGroups.tsx"
+```tsx title="client/src/TeamGroups.tsx"
 import type { DirectoryGroup } from '@vectoragents/vs-apps/client';
 import { useApp } from '@vectoragents/vs-apps/react';
 import { useEffect, useState } from 'react';

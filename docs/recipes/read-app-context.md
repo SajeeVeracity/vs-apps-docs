@@ -19,7 +19,7 @@ End with a header component that reads the verified user, the [space](../glossar
 
 `useApp` returns the token claims and the [granted](../glossary.md#grant) capabilities. `claims` is `null` until the handshake completes, so mount the component under `BootGate`.
 
-```tsx title="src/client/SdrHeader.tsx"
+```tsx title="client/src/SdrHeader.tsx"
 import { useApp } from '@vectoragents/vs-apps/react';
 
 export function SdrHeader() {
@@ -41,7 +41,7 @@ export function SdrHeader() {
 
 ### 2. Mount it under the gate
 
-```tsx title="src/client/Shell.tsx"
+```tsx title="client/src/Shell.tsx"
 import { BootGate } from '@vectoragents/vs-apps/react';
 import type { ReactNode } from 'react';
 import { SdrHeader } from './SdrHeader';

@@ -20,7 +20,7 @@ End with the action `sdr-leads.open_lead_list` available to the agent while the 
 
 Keep the declarations in one module. The [agent catalog](../glossary.md#agent-catalog) and the component import the same handle. The `description` fields are the only guidance the agent has, so write them for the agent.
 
-```ts title="src/actions.ts"
+```ts title="client/src/actions.ts"
 import { defineAgentPage } from '@vectoragents/vs-apps';
 import { z } from 'zod';
 
@@ -42,10 +42,10 @@ The action id is `sdr-leads.open_lead_list`. `id` must be a snake_case local nam
 
 The action is available to the agent only while a component that binds it is mounted. The handler receives the params parsed by the schema.
 
-```tsx title="src/client/LeadListsPage.tsx"
+```tsx title="client/src/LeadListsPage.tsx"
 import { useAgentAction } from '@vectoragents/vs-apps/agent-react';
 import { useState } from 'react';
-import { openLeadListAction } from '../actions';
+import { openLeadListAction } from './actions';
 
 export function LeadListsPage() {
   const [openId, setOpenId] = useState<string | null>(null);
