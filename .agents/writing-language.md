@@ -2,7 +2,7 @@
 
 Reader: a working developer who knows TypeScript, Node and React and has not used Space.
 Coverage: prose, tables, headings, code comments. Not identifiers or string values in code.
-Precedence: rules here win over any reference. The quickstart also follows [STE rules](writing-ste.md), and the stricter rule wins.
+Precedence: rules here win over any reference. A page-type section wins over the shared layer on that page.
 
 ## Shared layer (all pages)
 
@@ -51,6 +51,18 @@ Precedence: rules here win over any reference. The quickstart also follows [STE 
 - **C2 Example early.** A minimal example follows the definition and the main rule.
 - **C3 Rule, then reason.** State the rule, then the consequence in the same or the next sentence.
 - **C4 End with what next.** Last section gives a result and one next step.
+
+## Tutorial page
+
+Scope: `docs/quickstart.md` only. `scripts/voice.mjs` checks the TU1 hard cap, TU2 and TU3 outside code.
+
+- **TU1 Sentence.** Target 30 words. Hard cap 40. Replaces L3 on this page.
+- **TU2 Paragraph.** 5 sentences or fewer. Replaces L4 on this page.
+- **TU3 No contractions.**
+- **TU4 Reason first.** A step or section opens with a sentence that says why.
+- **TU5 Imperative steps.** A step starts with an imperative verb. "-ing" forms are allowed where natural.
+- **TU6 Define in one clause.** Define a term in one clause at first use. Link only a destination the reader follows.
+- **TU7 Security contract first.** Lead with the security contract. Teach through running code, not folder creation. Say that a client check is display only and the server check decides.
 
 ## Not in this checklist
 
