@@ -53,6 +53,12 @@ test('published pages carry no provenance link or unverified caveat', () => {
   }
 });
 
+test('harness entry does not mention the quickstart and lists no limits', () => {
+  const harness = entries.find((e) => e.name === 'harness');
+  assert.doesNotMatch(harness.body, /quickstart/i);
+  assert.doesNotMatch(harness.body, /^- (?!Maps to|Owner)/m);
+});
+
 test('glossary defines no workspace term', () => {
   assert.ok(!entries.some((e) => /workspace/i.test(e.name)));
 });

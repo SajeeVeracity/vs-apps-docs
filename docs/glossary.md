@@ -113,7 +113,7 @@ Declared points where a person must confirm an action. Each approval can opt int
 
 ### harness
 
-A local stand-in for Space that hosts the app page in a dev shell, for debugging without a registration. The quickstart does not use it.
+A local stand-in for Space that hosts the app page in a dev shell, for debugging without a registration.
 
 - Maps to: `VectorAppsHarness` in `@vectoragents/vs-apps/harness`.
 - Owner: SDK.
