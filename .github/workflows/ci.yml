@@ -25,6 +25,8 @@ jobs:
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.VS_APPS_NPM_TOKEN }}" >> .npmrc
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
+      # CI is set, so a failed clone of the public starter fails the job.
+      - run: pnpm check:starter
       - run: pnpm typecheck
       # Typechecks every code block, writes static/verified.json, then builds the site.
       - run: pnpm build
