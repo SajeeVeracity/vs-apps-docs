@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "prepare": "git config core.hooksPath .githooks",
+    "prepare": "git config core.hooksPath .githooks || true",
     "prestart": "node scripts/ensure-stamp.mjs",
     "start": "docusaurus start --port 8080",
     "build": "node scripts/check-snippets.mjs && docusaurus build",

@@ -22,7 +22,7 @@ function docFiles(dir) {
   });
 }
 
-/** Rejects off-layout recipe and guide titles, then typechecks every ts/tsx fence under `docsDir`; writes `stampFile` only when all pass. */
+/** Typechecks the ts/tsx fences under `docsDir`; writes `stampFile` only on a clean pass. */
 export function checkSnippets({
   docsDir = join(root, 'docs'),
   baseDir = root,
