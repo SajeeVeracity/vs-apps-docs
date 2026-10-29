@@ -77,3 +77,24 @@ test('shell blocks have no prompt and one command per line', () => {
     }
   }
 });
+
+const docFiles = (dir) =>
+  readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) return docFiles(path);
+    return /\.mdx?$/.test(entry.name) ? [path] : [];
+  });
+
+test('no page names a script the starter lacks or the old Part 2 anchor', () => {
+  for (const path of docFiles(docs)) {
+    const text = readFileSync(path, 'utf8');
+    assert.doesNotMatch(text, /check:server|dev:server|#part-2-add-the-app-to-space\b/, path);
+  }
+});
+
+test('nest-adapter checks the server with dev:space and two curl lines', () => {
+  const { text } = recipes.find((r) => r.name === 'nest-adapter');
+  assert.match(text, /npm run dev:space/);
+  assert.match(text, /curl .*localhost:<SERVER_PORT>\/api\/client-config/);
+  assert.match(text, /curl .*localhost:<SERVER_PORT>\/api\/manifest\/hello-app/);
+});

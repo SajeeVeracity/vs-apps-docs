@@ -10,7 +10,7 @@ End with an ICP Library page in the Space navigation, gated by a new `icp:manage
 
 ## Prerequisites
 
-- The app from the [quickstart](../quickstart.md), registered in a Space.
+- The app from the [quickstart](../quickstart.md), registered in a Space ([Part 2](../quickstart.md#part-2-add-the-app-to-a-space)).
 - Background: the [app definition](../app-definition.md) page, the [`RequireCapability` reference](../reference/react.md#requirecapability).
 
 ## Steps
@@ -57,7 +57,7 @@ Enforce `icp:manage` on the endpoints the page calls, as in [gate a page and an 
 
 ### 3. Let Space pull the manifest
 
-Restart the server. A manifest change waits as a pending review until Vector applies it, unless Vector switched on **Auto-apply manifest updates** for your registration, as requested in the quickstart.
+Restart the server. A manifest change waits as a pending review. Ask Vector to apply it.
 
 ### 4. Grant the capability
 

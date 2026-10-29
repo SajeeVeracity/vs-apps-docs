@@ -10,7 +10,7 @@ End with one capability enforced twice: `RequireCapability` hides the leads page
 
 ## Prerequisites
 
-- The app from the [quickstart](../quickstart.md): its `node:http` server, and a client with `AppProvider` and `BootGate` mounted.
+- The app from the [quickstart](../quickstart.md): its `node:http` server in `server/src`, and a client with `AppProvider` and `BootGate` mounted.
 - A member who holds the capability and one who does not. A space manager [grants](../glossary.md#grant) capabilities in [Space](../glossary.md#space).
 - Background: [`RequireCapability` on the client](../reference/react.md#requirecapability).
 
@@ -18,7 +18,7 @@ End with one capability enforced twice: `RequireCapability` hides the leads page
 
 ### 1. Declare the capability and the page
 
-A page names its capability in `capability`. `defineApp` does not check that the name exists in `capabilities`, so keep the two keys identical. The definition below is the quickstart definition plus the leads page, so the quickstart server serves it unchanged.
+A page names its capability in `capability`. `defineApp` does not check that the name exists in `capabilities`, so keep the two keys identical. The definition below is the quickstart definition plus the leads page, so the starter server serves it unchanged. Add the leads entries to the definition in `shared/src/index.ts`, which the server imports.
 
 ```ts title="src/app.definition.ts"
 import { defineApp } from '@vectoragents/vs-apps';
@@ -61,7 +61,7 @@ This check shapes the UI only. A member can still call the endpoint directly.
 
 ### 3. Enforce the capability on the server
 
-`requireCapability` in the auth module of the [quickstart](../quickstart.md) verifies the user token. It throws `AppAuthError` with status `403` when the claims lack the named capability. The leads handler receives the verified claims.
+`requireCapability` in `server/src/auth.ts` of the [quickstart](../quickstart.md) starter verifies the user token. It throws `AppAuthError` with status `403` when the claims lack the named capability. The leads handler receives the verified claims.
 
 ```ts title="src/server/leads.ts"
 import type { UserTokenClaims } from '@vectoragents/vs-apps';
@@ -71,7 +71,7 @@ export function listLeads(claims: UserTokenClaims) {
 }
 ```
 
-In `src/server/main.ts`, import `listLeads` and add this line before the `404` response: `if (pathname === '/api/leads') return send(res, 200, listLeads(await requireCapability(req, 'lead:manage')));`. The existing `catch` block turns the `403` into the response. For the decorator form, see the [framework adapter page](./nest-adapter.md).
+In `server/src/main.ts`, import `listLeads` and add this entry to the `routes` map: `'/api/leads': async (req) => listLeads(await requireCapability(req, 'lead:manage')),`. The existing `catch` block turns the `403` into the response. For the decorator form, see the [framework adapter page](./nest-adapter.md).
 
 ### 4. Check both gates
 
