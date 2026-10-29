@@ -373,16 +373,16 @@ The space manager decides which spaces hold the app, so this step belongs to tha
 1. Choose **Settings**, **Space**, **Context Hub**, then **Resources**.
 2. Choose **Add resource**, then **App**. In the **Add an app** dialog, choose **Add** next to **Hello app**.
 
-**Check**: Space shows the toast `App enabled`. **Resources** lists a **Hello app** row with type **App** and status **Active**.
+**Check**: Space shows the toast `App enabled`. **Resources** lists a **Hello app** row with type **App** and status **Active**. The **Configure Hello app** sheet opens. Close it.
 
 ### 4. Share the app with a user (space manager)
 
-A user sees the page only after the space manager shares the app with that user.
+A user sees the page only after the space manager shares the app with that user. The space manager who adds the app already has access, so skip this step if you are that person.
 
 1. On the **Hello app** row, open the row menu. Choose **Access**.
-2. Add your user in **Direct access**.
+2. In **Direct access**, choose **Add people, roles or groups…** and pick the user.
 
-**Check**: on the **Configure Hello app** sheet, your user appears under **Who can use it**.
+**Check**: choose the **Hello app** row. On the **Configure Hello app** sheet, the user appears under **Who can use it**.
 
 ### 5. Open the page
 
