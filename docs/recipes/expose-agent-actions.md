@@ -60,7 +60,7 @@ export function LeadListsPage() {
 
 ### 3. Merge the catalog into the manifest
 
-`buildManifests` reads the extracted catalog from `catalogPath`, as set up in the quickstart. Regenerate `agent-catalog.json` after you add an action, restart the server and let Space pull the manifest.
+`buildManifests` reads the extracted catalog from `catalogPath`, which the starter sets to `agent-catalog.json` in `server/src/manifests.ts`. Regenerate `agent-catalog.json` after you add an action, restart the server and let Space pull the manifest.
 
 ### 4. Check in Space
 

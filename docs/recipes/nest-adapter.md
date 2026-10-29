@@ -12,7 +12,7 @@ End with a NestJS server that does what the quickstart server does: it serves th
 
 ## Prerequisites
 
-- The project from the [quickstart](../quickstart.md), up to the step "Write the shared app definition". The client is unchanged.
+- The starter app from the [quickstart](../quickstart.md), cloned and installed (Part 1, step 1). The client is unchanged.
 - NestJS 11. The adapter lists `@nestjs/common` and `@nestjs/core` as peer packages.
 - Background: the [server primitives](../reference/root.md) that the adapter wraps.
 
@@ -40,7 +40,7 @@ NestJS needs the decorator options. Add them to `server/tsconfig.json`.
 }
 ```
 
-Point the `dev` script in `server/package.json` at `src/main.ts` as before.
+The `dev` script in `server/package.json` runs `src/main.ts`, so it needs no change.
 
 ### 2. Serve the manifest
 
@@ -111,13 +111,13 @@ export class HelloController {
 }
 ```
 
-The module reads the Space values from the root `.env` file that you set up in the quickstart. The Nest platform module also needs `SPACE_BASE_URL`, the origin of the Space API. Append it to `.env`.
+The module reads the Space values from the `.env` file from Part 2 step 1 of the quickstart. The Nest platform module also needs `SPACE_BASE_URL`, the origin of the Space API. Append it to `.env`.
 
 ```bash
 echo 'SPACE_BASE_URL=YOUR_SPACE_API_ORIGIN' >> .env
 ```
 
-The module also serves `GET /api/client-config` and the manifest route, so it replaces `main.ts` routing and `requireProvisioning` from the quickstart.
+The module also serves `GET /api/client-config` and the manifest route, so it replaces the `routes` map in `server/src/main.ts` and `requireProvisioning` in `server/src/auth.ts` of the starter.
 
 ```ts title="src/server/app.module.ts"
 import { Module } from '@nestjs/common';
@@ -161,11 +161,18 @@ async function bootstrap() {
 bootstrap();
 ```
 
-Run `npm run dev:server` and `npm run check:server`. The output is the same as in the quickstart: `client-config` prints `200` and `manifest/hello-app` prints `401`.
+Run `npm run dev:space`. In a second terminal, request the two routes. `SERVER_PORT` is the value in `.env`.
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:<SERVER_PORT>/api/client-config
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:<SERVER_PORT>/api/manifest/hello-app
+```
+
+**Check**: the first command prints `200`. The second prints `401`, because the request carries no provisioning token.
 
 ## Result
 
-The NestJS server answers the same three requests as the quickstart server. Registration in Space and the client are the same as in the quickstart.
+The NestJS server answers `client-config` with `200` and `manifest/hello-app` with `401`, as the starter server does. Registration in Space and the client are the same as in the quickstart.
 
 ## Next step
 
