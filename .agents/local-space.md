@@ -12,13 +12,13 @@ Read `../vector-spaces/CLAUDE.md` under "Build, verify, run" and `../vector-spac
 
 - The Space server listens on port 3000.
 - The Space client listens on port 3001.
-- Set `SERVER_PORT=3101` for the starter. Its client proxies `/api` to `SERVER_PORT`, and port 3001 is taken by the Space client.
+- Set `SERVER_PORT=3101` for the starter. Its client proxies `/api` to `SERVER_PORT`.
 
 ## Register the app
 
 Follow `.agents/staff-registration.md`. Run every step through the user interface, as Vector staff would. Never write SQL. A step that needs SQL is a guide defect: stop and report it to the user.
 
-A leftover registration from an earlier run blocks a fresh one. The Space refuses to delete it while any space holds the app. Open each space listed in the refusal, choose **Settings**, **Space**, **Context Hub**, **Resources**, and delete the app row. Then delete the registration under **Admin**, **Platform**, **Apps**.
+An existing registration blocks a new one: see "Replace an existing registration" in that file.
 
 ## Local source only
 

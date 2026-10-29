@@ -30,6 +30,10 @@ Check: toast `App saved`. The row shows **Enabled**. The Space server must reach
 
 Check: toast `License saved`. Tell the developer to continue at quickstart Part 2 step 3.
 
+## Replace an existing registration
+
+An existing registration blocks a new one. The Space refuses to delete it while any space holds the app. Open each space listed in the refusal, choose **Settings**, **Space**, **Context Hub**, **Resources**, and delete the app row. Then delete the registration under **Admin**, **Platform**, **Apps**.
+
 ## Open gap
 
 No request channel exists. The quickstart tells developers to contact their Vector representative.
