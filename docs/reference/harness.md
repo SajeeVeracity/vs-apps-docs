@@ -2,7 +2,7 @@
 title: Harness reference
 ---
 
-Reference for `@vectoragents/vs-apps/harness` 0.2.4. This is a debugging aside. The [harness](../glossary.md#harness) is a local stand-in for [Space](../glossary.md#space). An app does not need it to ship or to follow the quickstart.
+Reference for `@vectoragents/vs-apps/harness` 0.2.4. The [harness](../glossary.md#harness) is a local stand-in for [Space](../glossary.md#space). The starter includes the harness already wired. This page is the manual-wiring guide for an app that is not built from the starter. An app does not need the harness to ship.
 
 Every symbol below follows one layout: signature, behaviour, example. Each example is a complete file and is typechecked against the installed package.
 
@@ -10,7 +10,7 @@ Every symbol below follows one layout: signature, behaviour, example. Each examp
 
 - `@vectoragents/vs-apps` installed with a registry token.
 - React 18 or later with TypeScript.
-- The app server running with `VA_DEV_ISSUER=true`, and serving the [dev routes](#dev-routes).
+- The app server running with `VA_DEV_ISSUER=true`, and serving the [dev routes](#dev-routes). See [Turn the harness on and off](#turn-the-harness-on-and-off).
 - A second HTML entry for the harness, served by your bundler.
 
 ## `VectorAppsHarness`
@@ -47,11 +47,27 @@ createRoot(document.getElementById('root')!).render(
 );
 ```
 
-Load it from `harness.html`, a sibling of `index.html` whose script tag points at this file. Serve `harness.html` with your bundler, and open `/harness.html` on the client port.
+Load it from `harness.html`, a sibling of `index.html` whose script tag points at this file.
+
+```html title="harness.html"
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Harness</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/harness.tsx"></script>
+  </body>
+</html>
+```
+
+Serve `harness.html` with your bundler, and open `/harness.html` on the client port.
 
 ## Dev routes
 
-The app server serves three routes on the same origin as the page, under `/api`. Your bundler forwards `/api` to the app server, as in the [quickstart](../quickstart.md), only when `VA_DEV_ISSUER=true`. The harness calls the first two. The third publishes the key set that verifies the dev tokens.
+The app server serves three routes on the same origin as the page, under `/api`. Your bundler forwards `/api` to the app server. Each route returns `404` while `VA_DEV_ISSUER` is not `true`. The harness calls the first two. The third publishes the key set that verifies the dev tokens.
 
 ### `GET /api/__dev/manifests`
 
@@ -60,7 +76,7 @@ Returns status `200` and a JSON array with one entry per app in the server. The 
 | Field | Type | Meaning |
 | --- | --- | --- |
 | `appKey` | string | The `key` of the app definition. |
-| `appId` | string | The fixed dev id, `DEV_APP_ID` from `@vectoragents/vs-apps`. |
+| `appId` | UUID | The fixed dev id, `DEV_APP_ID` from `@vectoragents/vs-apps`. |
 | `manifest` | object | The [manifest](../glossary.md#manifest) that `buildManifests` returns for the app. |
 
 ### `POST /api/__dev/token`
@@ -73,7 +89,7 @@ A `user` request has these fields:
 | --- | --- | --- |
 | `kind` | `"user"` | Selects the user token. |
 | `sub` | string | The user id. |
-| `appId` | string | The app id. |
+| `appId` | UUID | The app id. A string that is not a UUID gets status `400`. Use `DEV_APP_ID`. |
 | `appKey` | string | The app key. |
 | `spaceId` | number | The space id. |
 | `organizationId` | number | The organization id. |
@@ -98,14 +114,14 @@ Returns status `200` and the public key set of the dev issuer, the value of `dev
 
 ### Example
 
-`createDevIssuer` signs tokens and verifies them, so one object serves both. Call `handleDevRoute` first in your request handler. It returns `true` when it answered the request. It returns `false` for every other request, and always when `VA_DEV_ISSUER` is not `true`.
+`createDevIssuer` signs tokens and verifies them, so one object serves both. It writes a key file to the OS temp directory on every call, so the example creates it only when `VA_DEV_ISSUER` is `true`. Call `handleDevRoute` first in your request handler. It returns `true` when it answered the request. It returns `false` for every other request, and always when the dev issuer does not exist.
 
 ```ts title="server/src/dev-routes.ts"
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { DEV_APP_ID, type AppManifest } from '@vectoragents/vs-apps';
 import { createDevIssuer, devTokenRequestSchema, readJsonBody } from '@vectoragents/vs-apps/server';
 
-export const devIssuer = createDevIssuer();
+export const devIssuer = process.env.VA_DEV_ISSUER === 'true' ? createDevIssuer() : undefined;
 
 function send(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'Content-Type': 'application/json' });
@@ -117,7 +133,7 @@ export async function handleDevRoute(
   res: ServerResponse,
   manifests: Record<string, AppManifest>,
 ): Promise<boolean> {
-  if (process.env.VA_DEV_ISSUER !== 'true') return false;
+  if (!devIssuer) return false;
   const { pathname } = new URL(req.url ?? '/', 'http://localhost');
   if (req.method === 'GET' && pathname === '/api/__dev/manifests') {
     send(
@@ -144,9 +160,38 @@ export async function handleDevRoute(
 }
 ```
 
-Two more changes make the app accept the tokens. Pass `devIssuer` to `verifyAppUserToken` in place of the Space verifier. Return `/api/__dev/jwks.json` as `spaceJwksUrl` from `GET /api/client-config`.
+## Accept dev tokens
 
-In the quickstart `server/src/main.ts`, add `import { handleDevRoute } from './dev-routes';`. Then add `if (await handleDevRoute(req, res, manifests)) return;` as the first line of the `try` block.
+Call `handleDevRoute` first inside the `try` block of your request handler, before any route of your own: `if (await handleDevRoute(req, res, manifests)) return;`. Then make three changes so the app accepts the tokens that the dev issuer signs. Without all three, the iframe stays on "Waiting for Space.".
+
+1. **Allow the harness origin.** Set `ALLOWED_PARENT_ORIGIN` to the harness origin, the origin that your bundler serves `harness.html` from, for example `http://localhost:5173`. The harness page is the parent of the iframe, so the client accepts messages from this origin only. A Space origin here makes the `postMessage` call from the iframe fail.
+2. **Return the dev key set URL.** Make `GET /api/client-config` return `/api/__dev/jwks.json` as `spaceJwksUrl`. The browser fetches that key set to verify the token. Otherwise the console logs `token verification failed: Failed to fetch`.
+3. **Verify with the dev issuer.** In `server/src/auth.ts`, pass `devIssuer` to `verifyAppUserToken` in place of the Space verifier. Otherwise `GET /api/hello` fails with status `401`.
+
+```ts title="server/src/auth.ts"
+import { createSpaceTokenVerifier } from '@vectoragents/vs-apps/server';
+import { devIssuer } from './dev-routes';
+
+export const verifier = devIssuer ?? createSpaceTokenVerifier({ jwksUrl: process.env.SPACE_JWKS_URL ?? '' });
+```
+
+When the page works, the harness card shows the user, the space and the capabilities of the token, and a request to your server succeeds.
+
+## Turn the harness on and off
+
+Set `VA_DEV_ISSUER=true` in the environment of the app server process, in the command that starts it, for example `VA_DEV_ISSUER=true npm run dev`. A watch runner such as `tsx watch` does not reload `.env`, so restart the server after you change the value.
+
+To run against a real Space, start the server without `VA_DEV_ISSUER`. Set `ALLOWED_PARENT_ORIGIN` to the Space origin and `SPACE_JWKS_URL` to the Space key set URL. Never build `harness.html` into the production bundle.
+
+## Limits
+
+The harness signs its own tokens, so it proves your page and server. These parts of the path stay outside it:
+
+- Vector's registration of the app.
+- Space fetching the manifest from your server.
+- The license and space access that let a user open the app.
+- The real Space key set and the real iframe URL.
+- A real Space origin sending the token.
 
 ## Result
 
