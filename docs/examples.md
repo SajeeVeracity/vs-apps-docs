@@ -34,5 +34,4 @@ Copy one into your project as `src/app.definition.ts`, or load it in the [defini
 
 ## Next steps
 
-- [App definition](./app-definition.md): learn what each definition field does.
 - [Recipes](/category/recipes): add a page, a capability or an agent action to your app.

@@ -6,7 +6,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Get started',
       collapsible: false,
-      items: ['index', 'quickstart', 'examples', 'app-definition'],
+      items: ['index', 'quickstart', 'app-definition', 'examples'],
     },
     {
       type: 'category',
