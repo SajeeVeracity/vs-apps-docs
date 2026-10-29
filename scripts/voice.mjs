@@ -1,11 +1,10 @@
-const PROCEDURE_MAX = 20;
-const SENTENCE_MAX = 25;
-const PARAGRAPH_MAX = 4;
+const SENTENCE_MAX = 40;
+const PARAGRAPH_MAX = 5;
 const CONTRACTION = /\b(?:\w+n['’]t|\w+['’](?:re|ve|ll|d|m)|(?:it|that|there|here|what|let|he|she)['’]s)\b/i;
 const CHECKBOX = /^\[[ xX]\]\s+/;
 const LIST_ITEM = /^\s*(?:[-*+]|\d+\.)\s+/;
 
-/** Splits markdown into prose blocks, skipping frontmatter, fences, tables, headings and admonition markers. */
+/** Splits markdown into prose blocks, skipping frontmatter, fences (the directory tree is one), tables, headings and admonition markers. */
 function blocks(markdown) {
   const lines = markdown.replace(/^---\n[\s\S]*?\n---\n/, '').split('\n');
   const out = [];
@@ -25,11 +24,11 @@ function blocks(markdown) {
       flush();
     } else if (LIST_ITEM.test(line)) {
       flush();
-      current = { procedure: true, text: line.replace(LIST_ITEM, '').replace(CHECKBOX, '') };
+      current = { item: true, text: line.replace(LIST_ITEM, '').replace(CHECKBOX, '') };
     } else if (current) {
       current.text += ` ${line.trim()}`;
     } else {
-      current = { procedure: false, text: line.trim() };
+      current = { item: false, text: line.trim() };
     }
   }
   flush();
@@ -37,26 +36,25 @@ function blocks(markdown) {
 }
 
 /**
- * Reports STE rule breaks in prose. Inline code counts as one word and is not
- * checked for banned forms. A list item or numbered step is a procedure.
+ * Reports tutorial-voice breaks in prose: sentence over 40 words, paragraph
+ * over 5 sentences, contractions. Inline code counts as one word and is not
+ * checked for contractions. A list item is not counted as a paragraph.
  * @returns {{ rule: string, text: string }[]}
  */
-export function steViolations(markdown) {
+export function voiceViolations(markdown) {
   const violations = [];
   for (const block of blocks(markdown)) {
     const text = block.text
       .replace(/`[^`]*`/g, 'CODE')
       .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
-    if (text.includes(';')) violations.push({ rule: 'semicolon', text });
     if (CONTRACTION.test(text)) violations.push({ rule: 'contraction', text });
     const sentences = text.split(/(?<=[.!?])\s+/).filter((s) => s.trim());
-    const max = block.procedure ? PROCEDURE_MAX : SENTENCE_MAX;
     for (const sentence of sentences) {
-      if (sentence.split(/\s+/).length > max) {
-        violations.push({ rule: block.procedure ? 'procedure-length' : 'sentence-length', text: sentence });
+      if (sentence.split(/\s+/).length > SENTENCE_MAX) {
+        violations.push({ rule: 'sentence-length', text: sentence });
       }
     }
-    if (!block.procedure && sentences.length > PARAGRAPH_MAX) {
+    if (!block.item && sentences.length > PARAGRAPH_MAX) {
       violations.push({ rule: 'paragraph-length', text });
     }
   }
