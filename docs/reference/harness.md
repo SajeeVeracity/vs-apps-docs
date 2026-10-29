@@ -114,7 +114,7 @@ Returns status `200` and the public key set of the dev issuer, the value of `dev
 
 ### Example
 
-`createDevIssuer` signs tokens and verifies them, so one object serves both. It writes a key file to the OS temp directory on every call, so the example creates it only when `VA_DEV_ISSUER` is `true`. Call `handleDevRoute` first in your request handler. It returns `true` when it answered the request. It returns `false` for every other request, and always when the dev issuer does not exist.
+`createDevIssuer` signs tokens and verifies them, so one object serves both. It reads or creates the key file `vs-apps-dev-issuer.pem` in the OS temp directory, which every process on the machine shares, so the example creates it only when `VA_DEV_ISSUER` is `true`. Call `handleDevRoute` first in your request handler. It returns `true` when it answered the request. It returns `false` for every other request, and always when the dev issuer does not exist.
 
 ```ts title="server/src/dev-routes.ts"
 import type { IncomingMessage, ServerResponse } from 'node:http';

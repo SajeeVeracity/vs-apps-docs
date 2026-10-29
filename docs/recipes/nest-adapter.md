@@ -12,7 +12,7 @@ End with a NestJS server that does what the quickstart server does: it serves th
 
 ## Prerequisites
 
-- The starter app from the [quickstart](../quickstart.md), cloned and installed (Part 1, step 1). The client is unchanged.
+- The starter app from the [quickstart](../quickstart.md), cloned and installed (Part 1, step 1), with the `.env` file from Part 2, step 1 in place. Step 3 below reads it. The client is unchanged.
 - NestJS 11. The adapter lists `@nestjs/common` and `@nestjs/core` as peer packages.
 - Background: the [server primitives](../reference/root.md) that the adapter wraps.
 
@@ -44,23 +44,32 @@ The `dev` script in `server/package.json` runs `src/main.ts`, so it needs no cha
 
 ### 2. Serve the manifest
 
-The manifest builder is the same as in the quickstart. `AppPlatformModule` serves the result.
+The definition and the manifest builder are the starter files, unchanged. They are repeated so that the module below has its input. `AppPlatformModule` serves the result.
 
-```ts title="src/app.definition.ts"
+```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
+
+export const CAPABILITY = 'hello:view';
 
 export const definition = defineApp({
   key: 'hello-app',
   name: 'Hello app',
   version: '0.1.0',
-  pages: [{ key: 'home', label: 'Home', path: '/', capability: 'hello:view' }],
-  capabilities: [{ key: 'hello:view', label: 'View hello', effect: 'read' }],
+  pages: [
+    {
+      key: 'home',
+      label: 'Home',
+      path: '/',
+      capability: CAPABILITY,
+    },
+  ],
+  capabilities: [{ key: CAPABILITY, label: 'View hello', effect: 'read' }],
 });
 ```
 
-```ts title="src/server/manifests.ts"
+```ts title="server/src/manifests.ts"
 import { buildManifests } from '@vectoragents/vs-apps/server';
-import { definition } from '../app.definition';
+import { definition } from '@hello-app/shared';
 
 export const manifests = buildManifests([definition], {
   catalogPath: 'agent-catalog.json',
@@ -70,7 +79,7 @@ export const manifests = buildManifests([definition], {
 
 The module calls a credential store when Space provisions the app. The store below keeps the secrets in memory, so a restart loses them. Use a database for anything beyond a first run.
 
-```ts title="src/server/credential-store.ts"
+```ts title="server/src/credential-store.ts"
 import { Injectable } from '@nestjs/common';
 import type { AppCredentialStore } from '@vectoragents/vs-apps/nest';
 
@@ -96,7 +105,7 @@ export class MemoryCredentialStore implements AppCredentialStore {
 
 In the quickstart, `requireCapability` calls `verifyAppUserToken` and then `assertCapability`. In NestJS, the platform module installs a global guard. The guard verifies every user token against `SPACE_JWKS_URL`. The `RequireCapability` decorator replaces `assertCapability`. `CurrentUser` hands the controller the verified claims.
 
-```ts title="src/server/hello.controller.ts"
+```ts title="server/src/hello.controller.ts"
 import { Controller, Get } from '@nestjs/common';
 import { CurrentUser, RequireCapability } from '@vectoragents/vs-apps/nest';
 import type { UserTokenClaims } from '@vectoragents/vs-apps';
@@ -117,9 +126,9 @@ The module reads the Space values from the `.env` file from Part 2 step 1 of the
 echo 'SPACE_BASE_URL=YOUR_SPACE_API_ORIGIN' >> .env
 ```
 
-The module also serves `GET /api/client-config` and the manifest route, so it replaces the `routes` map in `server/src/main.ts` and `requireProvisioning` in `server/src/auth.ts` of the starter.
+The module also serves `GET /api/client-config` and the manifest route, so it replaces the `routes` map of the starter's `server/src/main.ts` and `requireProvisioning` in `server/src/auth.ts`.
 
-```ts title="src/server/app.module.ts"
+```ts title="server/src/app.module.ts"
 import { Module } from '@nestjs/common';
 import { AppPlatformModule } from '@vectoragents/vs-apps/nest';
 import { MemoryCredentialStore } from './credential-store';
@@ -145,9 +154,9 @@ export class AppModule {}
 
 ### 4. Start the server
 
-Set `bodyParser: false`. The platform endpoints read the raw request body. The `api` prefix gives the manifest its `/api/manifest/:appKey` path.
+The file below replaces the starter's `server/src/main.ts`, which the `dev` script runs. Set `bodyParser: false`. The platform endpoints read the raw request body. The `api` prefix gives the manifest its `/api/manifest/:appKey` path.
 
-```ts title="src/server/main.ts"
+```ts title="server/src/main.ts"
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';

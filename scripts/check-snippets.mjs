@@ -9,6 +9,9 @@ const nestPage = 'recipes/nest-adapter.md';
 const nestDir = 'nest';
 const fence = /^```(ts|tsx)\b([^\n]*)\n([\s\S]*?)^```/gm;
 
+/** True when the fence meta carries the `starter` word; a title that contains it does not count. */
+export const isStarterFence = (meta) => /(^|\s)starter(\s|$)/.test(meta.replace(/title="[^"]*"/, ''));
+
 function docFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
@@ -34,13 +37,15 @@ export function checkSnippets({
         index++;
         const title = /title="([^"]+)"/.exec(meta)?.[1];
         // The starter's CI typechecks a `starter` fence.
-        if (/(^|\s)starter(\s|$)/.test(meta.replace(/title="[^"]*"/, ''))) continue;
+        if (isStarterFence(meta)) continue;
         const code = fileMeta(meta) ? readEmbedded(baseDir, fileMeta(meta)) : body;
         // A titled block is written at its title path so relative imports between a page's blocks resolve.
         const placed = title && !titled.has(title);
         if (placed) titled.add(title);
-        const dir = relative(docsDir, file).replaceAll('\\', '/') === nestPage ? `${nestDir}/` : '';
-        const name = dir + (placed ? `page-${fileIndex}/${title}` : `snippet-${origins.size + blocks.length}.${lang}`);
+        const isNest = relative(docsDir, file).replaceAll('\\', '/') === nestPage;
+        // The Nest page's titled blocks sit at the project root so the `@hello-app/shared` mapping below resolves.
+        const titledName = isNest ? title : `page-${fileIndex}/${title}`;
+        const name = (isNest ? `${nestDir}/` : '') + (placed ? titledName : `snippet-${origins.size + blocks.length}.${lang}`);
         blocks.push({ name, code, origin: `${relative(docsDir, file)} block ${index}` });
       }
       for (const { name, code, origin } of blocks) {
@@ -72,7 +77,11 @@ export function checkSnippets({
       join(work, nestDir, 'tsconfig.json'),
       JSON.stringify({
         extends: '../tsconfig.json',
-        compilerOptions: { experimentalDecorators: true, emitDecoratorMetadata: true },
+        compilerOptions: {
+          experimentalDecorators: true,
+          emitDecoratorMetadata: true,
+          paths: { '@hello-app/shared': ['./shared/src/index.ts'] },
+        },
         include: ['**/*.ts', '**/*.tsx'],
         // Overrides the parent's exclude of this folder.
         exclude: [],
