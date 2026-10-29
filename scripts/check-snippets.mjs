@@ -11,7 +11,7 @@ const titleRoots = /^(client|server|shared)\//;
 const titleFolders = /^(recipes|guides)\//;
 const fence = /^```(ts|tsx)\b([^\n]*)\n([\s\S]*?)^```/gm;
 
-/** True when the fence meta carries the `starter` word; a title that contains it does not count. */
+/** True when the fence meta has the `starter` word outside its title. */
 export const isStarterFence = (meta) => /(^|\s)starter(\s|$)/.test(meta.replace(/title="[^"]*"/, ''));
 
 function docFiles(dir) {
@@ -33,14 +33,14 @@ export function checkSnippets({
     const origins = new Map();
     const badTitles = [];
     for (const [fileIndex, file] of docFiles(docsDir).entries()) {
+      const doc = relative(docsDir, file).replaceAll('\\', '/');
       let index = 0;
       const titled = new Set();
       const blocks = [];
       for (const [, lang, meta, body] of readFileSync(file, 'utf8').matchAll(fence)) {
         index++;
         const title = /title="([^"]+)"/.exec(meta)?.[1];
-        const doc = relative(docsDir, file).replaceAll('\\', '/');
-        // Recipes and guides build on the quickstart app, so their file paths use its layout.
+        // Recipes and guides build on the quickstart app, so their file paths use its layout. Runs before the starter skip.
         if (title && titleFolders.test(doc) && !titleRoots.test(title)) badTitles.push(`${doc}: ${title}`);
         // The starter's CI typechecks a `starter` fence.
         if (isStarterFence(meta)) continue;
@@ -52,7 +52,7 @@ export function checkSnippets({
         // The Nest page's titled blocks sit at the project root so the `@hello-app/shared` mapping below resolves.
         const titledName = isNest ? title : `page-${fileIndex}/${title}`;
         const name = (isNest ? `${nestDir}/` : '') + (placed ? titledName : `snippet-${origins.size + blocks.length}.${lang}`);
-        blocks.push({ name, code, origin: `${relative(docsDir, file)} block ${index}` });
+        blocks.push({ name, code, origin: `${doc} block ${index}` });
       }
       for (const { name, code, origin } of blocks) {
         mkdirSync(dirname(join(work, name)), { recursive: true });

@@ -28,5 +28,5 @@ jobs:
       - run: pnpm check
       # CI is set, so a failed clone of the public starter fails the job.
       - run: pnpm check:starter
-      # Typechecks every code block, writes static/verified.json, then builds the site.
+      # Writes static/verified.json, then builds the site.
       - run: pnpm build

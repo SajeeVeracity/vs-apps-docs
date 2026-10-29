@@ -12,11 +12,13 @@ Read `../vector-spaces/CLAUDE.md` under "Build, verify, run" and `../vector-spac
 
 - The Space server listens on port 3000.
 - The Space client listens on port 3001.
-- Set `SERVER_PORT=3101` for the starter. Its client proxies `/api` to `SERVER_PORT`, and port 3001 is taken by the Space client.
+- Set `SERVER_PORT=3101` for the starter. Its client proxies `/api` to `SERVER_PORT`.
 
 ## Register the app
 
 Follow `.agents/staff-registration.md`. Run every step through the user interface, as Vector staff would. Never write SQL. A step that needs SQL is a guide defect: stop and report it to the user.
+
+An existing registration blocks a new one: see "Replace an existing registration" in that file.
 
 ## Local source only
 
