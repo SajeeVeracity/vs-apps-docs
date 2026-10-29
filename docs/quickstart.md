@@ -386,12 +386,13 @@ The space manager decides which spaces hold the app, so this step belongs to tha
 
 ### 5. Share the app with a user (space manager)
 
-A user sees the page only after the space manager shares the app with that user. The space manager who adds the app already has access, so skip this step if you are that person.
+A user sees the page only after the space manager shares the app with that user. The sharing list shows only members of the space, so add the user to the space first. Skip this step if you are the space manager who added the app, because you already have access.
 
-1. On the **Hello app** row, open the row menu. Choose **Access**.
-2. In **Direct access**, choose **Add people, roles or groups…** and pick the user.
+1. Choose **Settings**, **Space**, then **Access**. Under **Members**, choose **Add** and pick the user. Space shows the toast `Member added`.
+2. Choose **Context Hub**, then **Resources**. On the **Hello app** row, open the row menu and choose **Access**.
+3. In **Direct access**, choose **Add people, roles or groups…** and pick the user. Keep the level at **View**, which is enough for the page. Choose **Save changes**.
 
-**Check**: choose the **Hello app** row. On the **Configure Hello app** sheet, the user appears under **Who can use it**.
+**Check**: Space shows the toast `Access saved`. Open the **Access** menu again. **Direct access** lists the user. When that user opens **Apps**, then **Hello app**, the page shows the three lines from step 6, with `Capabilities: hello:view`.
 
 ### 6. Open the page
 
