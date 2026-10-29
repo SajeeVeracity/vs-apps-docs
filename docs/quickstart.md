@@ -2,13 +2,13 @@
 title: Quickstart
 ---
 
-Run a small app inside a [Space](./glossary.md#space) and see it verify the same user token twice: once in the browser and once on your server.
+Run a small app inside a [Space](./glossary.md#space) and see the same user token verified in the browser and on your server.
 
 ## Goal
 
 You clone a working app, run it in the [harness](./glossary.md#harness) on your machine, then ask Vector to register it so you can open it in a real Space. The app has one page, and only users who hold the `hello:view` capability, a permission that Space grants to a user, can see it.
 
-The page matters less than the token behind it. Space signs a short-lived token for the person who opens the page, and your app checks that token before it trusts anything in it. Learn this path once and every page you add later works the same way.
+Space signs a short-lived token for the person who opens the page, and your app checks that token before it trusts anything in it. Learn this path once and every page you add later works the same way.
 
 After Part 1, the page runs in the harness on your machine. After Part 2, the `hello-app` page is open in a Space. It shows your user id and space id from the verified token.
 
