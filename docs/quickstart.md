@@ -98,7 +98,7 @@ hello-app/
 
 ### 2. Read the app definition
 
-Every other file follows from one file, so read it first. The [app definition](./glossary.md#app-definition) is the file that the server and the client share. [App definition](./app-definition.md) explains each field. `CAPABILITY` holds the capability key, so no file repeats the string.
+The server and the client import this file, so both read the same facts. The [app definition](./glossary.md#app-definition) names the app and lists its pages and capabilities. `CAPABILITY` holds the capability key, so no code file repeats the string.
 
 ```ts title="shared/src/index.ts" starter
 import { defineApp } from '@vectoragents/vs-apps';
