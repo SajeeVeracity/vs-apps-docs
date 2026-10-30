@@ -89,6 +89,7 @@
 }
 
 .diagram-frame {
+  --diagram-button-size: 32px;
   position: relative;
   border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: 8px;
@@ -104,13 +105,35 @@
   transform-origin: 0 0;
 }
 
+@media (pointer: coarse) {
+  .diagram-frame {
+    --diagram-button-size: 44px;
+  }
+}
+
+.diagram-viewport:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+.diagram-hint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .diagram-controls {
   position: absolute;
   right: 8px;
   bottom: 8px;
   display: grid;
-  grid-template-columns: repeat(4, 32px);
-  grid-template-rows: repeat(3, 32px);
+  grid-template-columns: repeat(4, var(--diagram-button-size));
+  grid-template-rows: repeat(3, var(--diagram-button-size));
   grid-template-areas:
     '. up . zin'
     'left reset right zout'
@@ -128,6 +151,8 @@
   color: var(--ifm-font-color-base);
   cursor: pointer;
   padding: 0;
+  width: var(--diagram-button-size);
+  height: var(--diagram-button-size);
 }
 
 .diagram-button:hover:not(:disabled) {
@@ -147,11 +172,28 @@
 @media (max-width: 599px) {
   .diagram-controls {
     position: static;
-    grid-template-columns: repeat(7, 32px);
-    grid-template-rows: 32px;
-    grid-template-areas: 'zin zout reset up down left right';
+    display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     padding: 8px;
     border-top: 1px solid var(--ifm-color-emphasis-300);
+  }
+
+  .diagram-button {
+    flex-shrink: 0;
+  }
+}
+
+@media print {
+  .diagram-controls {
+    display: none;
+  }
+
+  .diagram-frame .diagram-viewport {
+    overflow: visible;
+  }
+
+  .diagram-frame .diagram-inner {
+    transform: none !important;
   }
 }
