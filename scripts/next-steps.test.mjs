@@ -14,6 +14,8 @@ const pages = {
   'app-definition.md': ['examples.md', '/category/recipes', '/category/reference'],
 };
 
+const withLead = new Set(['app-definition.md']);
+
 const block = (text) => text.split(/^## /m).slice(1).filter((s) => s.startsWith('Next steps\n'));
 
 for (const [file, targets] of Object.entries(pages)) {
@@ -26,6 +28,7 @@ for (const [file, targets] of Object.entries(pages)) {
 
   test(`${file} Next steps items are a link plus a one-line reason`, () => {
     const items = block(text)[0].split('\n').slice(1).filter((l) => l.trim());
+    if (withLead.has(file)) assert.doesNotMatch(items.shift(), /^- /);
     assert.equal(items.length, targets.length);
     for (const line of items) assert.match(line, /^- \[[^\]]+\]\([^)]+\): [^\n]*\S\.$/);
     const links = items.map((l) => l.match(/\]\(([^)]+)\)/)[1]);
