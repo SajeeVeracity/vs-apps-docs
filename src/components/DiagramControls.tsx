@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { KeyboardEvent, PointerEvent, ReactElement, ReactNode } from 'react';
 import ErrorBoundary from '@docusaurus/ErrorBoundary';
 import {
@@ -13,6 +13,7 @@ import {
   isZoomed,
   pinchView,
   viewForKey,
+  viewportLabel,
   wheelZoom,
   zoomIn,
   zoomOut,
@@ -20,7 +21,6 @@ import {
 import type { DisabledFlags, Point, Size, Touches, View } from './diagramView.ts';
 
 const MERMAID_CONTAINER = '.docusaurus-mermaid-container';
-const HINT_ID = 'diagram-view-hint';
 const WHEEL_LINE_HEIGHT_PX = 16;
 
 interface Control {
@@ -53,7 +53,9 @@ const ICONS = {
 function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
   const frameRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const hintId = useId();
   const [ready, setReady] = useState(false);
+  const [label, setLabel] = useState(viewportLabel(null));
   const [view, setView] = useState<View>(initialView);
   const viewRef = useRef(view);
   viewRef.current = view;
@@ -82,11 +84,15 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
   }, []);
 
   // The Mermaid container is added after hydration, and a theme change replaces its SVG; ready never turns back off.
+  // Mermaid renders `accTitle` as the SVG's `<title>`.
   useEffect(() => {
     const frame = frameRef.current;
     if (!frame) return undefined;
     const detect = () => {
-      if (frame.querySelector(MERMAID_CONTAINER)) setReady(true);
+      const container = frame.querySelector(MERMAID_CONTAINER);
+      if (!container) return;
+      setReady(true);
+      setLabel(viewportLabel(container.querySelector('svg > title')?.textContent));
     };
     detect();
     const observer = new MutationObserver(detect);
@@ -171,8 +177,8 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
         onPointerCancel={onPointerEnd}
         onKeyDown={onKeyDown}
         role={ready ? 'group' : undefined}
-        aria-label={ready ? 'Diagram view' : undefined}
-        aria-describedby={ready ? HINT_ID : undefined}
+        aria-label={ready ? label : undefined}
+        aria-describedby={ready ? hintId : undefined}
       >
         <div
           className="diagram-inner"
@@ -183,7 +189,7 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
       </div>
       {ready && (
         <>
-          <span id={HINT_ID} className="diagram-hint">
+          <span id={hintId} className="diagram-hint">
             Arrow keys pan. Plus and minus zoom. Zero resets.
           </span>
           <div className="diagram-controls" role="group" aria-label="Diagram controls">

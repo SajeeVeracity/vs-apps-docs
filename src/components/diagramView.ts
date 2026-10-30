@@ -157,3 +157,6 @@ export function disabledFlags(view: View, size: Size): DisabledFlags {
     panRight: atMin || view.x <= minOffset(size.width, view.zoom),
   };
 }
+
+/** The viewport's accessible name: the diagram's own `accTitle`, so two diagrams on one page stay distinguishable. */
+export const viewportLabel = (accTitle: string | null | undefined): string => accTitle?.trim() || 'Diagram view';
