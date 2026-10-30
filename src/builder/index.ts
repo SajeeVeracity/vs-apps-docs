@@ -77,6 +77,8 @@ export interface BuildOutput {
 const rules = new Map([...coreFieldRules, ...resourceFieldRules].map((r) => [r.path, r]));
 const matches = (rulePath: string, value: string): boolean => new RegExp(rules.get(rulePath)!.pattern!).test(value);
 const ruleText = (rulePath: string): string => rules.get(rulePath)!.rule;
+// The builder blocks a bad page key itself, so the "Checked by `buildManifests`" note would read as if the error were optional.
+const pageKeyMessage = ruleText('pages[].key').replace(/ Checked by .*$/, '');
 const oneOf = (value: string, options: readonly string[]): boolean => options.includes(value);
 
 function checkUnique(keys: string[], base: string, noun: string, errors: Issue[]): void {
@@ -98,7 +100,7 @@ export function validateDraft(draft: Draft): { errors: Issue[]; warnings: Issue[
   if (draft.pages.length === 0) fail('pages', ruleText('pages'));
   const capabilityKeys = draft.capabilities.map((c) => c.key);
   draft.pages.forEach((page, i) => {
-    if (!matches('pages[].key', page.key)) fail(`pages[${i}].key`, ruleText('pages[].key'));
+    if (!matches('pages[].key', page.key)) fail(`pages[${i}].key`, pageKeyMessage);
     if (!page.label) fail(`pages[${i}].label`, ruleText('pages[].label'));
     if (!page.path.startsWith('/')) fail(`pages[${i}].path`, ruleText('pages[].path'));
     if (page.capability === undefined) return;

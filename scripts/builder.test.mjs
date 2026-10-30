@@ -76,6 +76,17 @@ test('invalid fixtures fail the builder and defineApp alike', () => {
   assert.equal(buildOutput(rich()).ok, true);
 });
 
+test('a bad page key reports its format and uniqueness, not where it is checked', () => {
+  const draft = rich();
+  draft.pages[0].key = 'Home Page';
+  draft.defaultPageKey = 'Home Page';
+  const { errors } = buildOutput(draft);
+  assert.deepEqual(
+    errors.filter((e) => e.path === 'pages[0].key').map((e) => e.message),
+    ['Lower kebab-case. Unique within the app.'],
+  );
+});
+
 test('a page capability that is not declared warns but does not reject', () => {
   const draft = clone(presets.minimal);
   draft.pages[0].capability = 'ghost:view';
