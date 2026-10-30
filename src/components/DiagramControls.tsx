@@ -5,6 +5,7 @@ import { clampView, disabledFlags, initialView, panDown, panLeft, panRight, panU
 import type { Size, View } from './diagramView.ts';
 
 const MERMAID_CONTAINER = '.docusaurus-mermaid-container';
+const HINT_ID = 'diagram-view-hint';
 
 interface Control {
   area: string;
@@ -78,7 +79,14 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
 
   return (
     <div ref={frameRef} className={ready ? 'diagram-frame' : undefined}>
-      <div ref={viewportRef} className="diagram-viewport">
+      <div
+        ref={viewportRef}
+        className="diagram-viewport"
+        tabIndex={0}
+        role="group"
+        aria-label="Diagram view"
+        aria-describedby={HINT_ID}
+      >
         <div
           className="diagram-inner"
           style={view.zoom === 1 ? undefined : { transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})` }}
@@ -86,6 +94,9 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
           {children}
         </div>
       </div>
+      <span id={HINT_ID} className="diagram-hint">
+        Arrow keys pan. Plus and minus zoom. Zero resets.
+      </span>
       {ready && (
         <div className="diagram-controls" role="group" aria-label="Diagram controls">
           {controls.map((control) => (
