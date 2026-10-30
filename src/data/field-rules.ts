@@ -1,21 +1,17 @@
-/** One `defineApp` field and the rule the SDK enforces on it. */
 export interface FieldRule {
   /** Dotted path from the definition root; `[]` marks an array item. */
   path: string;
   required: boolean;
-  /** Markdown text; the app-definition page repeats it verbatim and a test keeps the two equal. */
+  /** Markdown text with no links; the app-definition page repeats it verbatim and a test keeps the two equal. */
   rule: string;
   /** Regular expression source the value must match, when the rule is a pattern. */
   pattern?: string;
 }
 
-/** Model modalities `defineApp` accepts. */
+// The value lists below mirror what `defineApp` accepts.
 export const modalities = ['chat', 'vision', 'embed', 'rerank'] as const;
-/** Model providers `defineApp` accepts for a model slot. */
 export const modelProviders = ['ANTHROPIC', 'AZURE_OPENAI', 'COHERE', 'AZURE_DOCUMENT_INTELLIGENCE'] as const;
-/** Model capabilities `defineApp` accepts as a slot filter. */
 export const modelCapabilities = ['toolCalling', 'structuredOutput', 'reasoningOutput', 'promptCaching', 'streaming'] as const;
-/** Connector providers `defineApp` accepts for a connector slot. */
 export const connectorProviders = [
   'REST',
   'GRAPHQL',
@@ -33,7 +29,6 @@ export const connectorProviders = [
 const code = (values: readonly string[]): string => values.map((v) => `\`${v}\``).join(', ');
 const kebab = '^[a-z][a-z0-9-]*$';
 
-/** Core definition fields. */
 export const coreFieldRules: FieldRule[] = [
   {
     path: 'key',
@@ -46,7 +41,12 @@ export const coreFieldRules: FieldRule[] = [
   { path: 'pages', required: true, rule: 'At least one page. Array order is navigation order.' },
   { path: 'defaultPageKey', required: false, rule: 'When set, must equal a declared page key.' },
   { path: 'capabilities', required: true, rule: 'Array of capabilities. `capabilities: []` is valid.' },
-  { path: 'pages[].key', required: true, rule: 'Lower kebab-case. Unique within the app.', pattern: kebab },
+  {
+    path: 'pages[].key',
+    required: true,
+    rule: 'Lower kebab-case. Unique within the app. Uniqueness is checked by `buildManifests`, not at import.',
+    pattern: kebab,
+  },
   { path: 'pages[].label', required: true, rule: 'Non-empty string.' },
   { path: 'pages[].path', required: true, rule: 'String that starts with `/`.' },
   {
@@ -66,14 +66,11 @@ export const coreFieldRules: FieldRule[] = [
   { path: 'capabilities[].effect', required: true, rule: '`"read"` or `"write"`.' },
 ];
 
-/** `resources` fields: modules, model slots and connector slots. */
 export const resourceFieldRules: FieldRule[] = [
-  { path: 'resources', required: false, rule: 'Object. Unknown keys are rejected.' },
-  { path: 'resources.modules[]', required: false, rule: 'Module requirements. Each needs `key` and `required`.' },
-  { path: 'resources.models[]', required: false, rule: 'Model slots.' },
-  { path: 'resources.connectors[]', required: false, rule: 'Connector slots. A slot takes one connector.' },
+  { path: 'resources', required: false, rule: 'Object. Declares what the app needs from each Space.' },
   { path: 'resources.modules[].key', required: true, rule: 'Non-empty string. Unique within modules.' },
   { path: 'resources.modules[].required', required: true, rule: 'Boolean.' },
+  { path: 'resources.modules[].label', required: false, rule: 'Display label.' },
   { path: 'resources.models[].key', required: true, rule: 'Lower kebab-case slot key.', pattern: kebab },
   {
     path: 'resources.models[].modality',
@@ -87,6 +84,11 @@ export const resourceFieldRules: FieldRule[] = [
   },
   { path: 'resources.models[].label', required: false, rule: 'Display label. Falls back to the slot key.' },
   { path: 'resources.models[].description', required: false, rule: 'String.' },
+  {
+    path: 'resources.models[].models',
+    required: false,
+    rule: 'Exact model identifiers, as the provider names them. At least one when set.',
+  },
   {
     path: 'resources.models[].capabilities',
     required: false,
@@ -104,7 +106,7 @@ export const resourceFieldRules: FieldRule[] = [
   {
     path: 'resources.connectors[].eventHandlers',
     required: false,
-    rule: 'At least one handler when set. Any handler makes `eventsUrl` required in the manifest.',
+    rule: 'At least one handler when set. See the next table.',
   },
   {
     path: 'resources.connectors[].eventHandlers[].key',

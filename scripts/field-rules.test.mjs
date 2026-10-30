@@ -10,7 +10,6 @@ const base = {
   capabilities: [{ key: 'demo:view', label: 'View', effect: 'read' }],
 };
 
-// Builds a definition with `value` placed at the rule's path.
 const place = {
   key: (v) => ({ ...base, key: v }),
   'pages[].key': (v) => ({ ...base, pages: [{ key: v, label: 'Home', path: '/' }] }),
@@ -70,5 +69,11 @@ test('required flags agree with defineApp for core top-level fields', () => {
 test('each rule has a path and a rule sentence', () => {
   for (const rule of [...coreFieldRules, ...resourceFieldRules]) {
     assert.ok(rule.path && rule.rule && typeof rule.required === 'boolean', rule.path);
+  }
+});
+
+test('no rule contains a Markdown link', () => {
+  for (const rule of [...coreFieldRules, ...resourceFieldRules]) {
+    assert.ok(!rule.rule.includes(']('), `${rule.path}: ${rule.rule}`);
   }
 });

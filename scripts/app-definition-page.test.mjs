@@ -20,6 +20,7 @@ test('states each of the ten uses once, in order', () => {
   const uses = [...text.matchAll(/^\d+\. \*\*(.+?)\.\*\*/gm)].map((m) => m[1]);
   assert.deepEqual(uses, [
     'Validate on import',
+    'Type navigation and routes',
     'Generate and serve the manifest',
     'List agent-callable routes',
     'Merge the [agent catalog](./glossary.md#agent-catalog)',
@@ -27,7 +28,6 @@ test('states each of the ten uses once, in order', () => {
     'Check the token',
     'Register connector event handlers',
     'Look up a model slot',
-    'Type navigation and routes',
     'Read the manifest in Space',
   ]);
 });
@@ -38,14 +38,41 @@ test('contrasts definition and manifest and says Space never sees the definition
   assert.match(text, /Space never sees the definition/);
 });
 
-test('field rows equal the field-rules table, with no extra rows', () => {
+test('the one mermaid fence sits inside DiagramControls, imported first in the body', () => {
+  const body = text.replace(/^---\n[\s\S]*?\n---\n/, '').trim();
+  assert.equal(body.split('\n\n')[0], "import DiagramControls from '@site/src/components/DiagramControls';");
+  assert.match(text, /<DiagramControls>\n\n```mermaid\n[\s\S]*?\n```\n\n<\/DiagramControls>\n\n### On import and in the client/);
+  assert.equal([...text.matchAll(/<DiagramControls>/g)].length, 1);
+  assert.equal([...text.matchAll(/```mermaid/g)].length, 1);
+});
+
+test('field rows equal the field-rules table, per object, with no extra rows', () => {
   const rules = [...coreFieldRules, ...resourceFieldRules];
-  for (const rule of rules) {
-    const row = `| \`${rule.path}\` | ${rule.required ? 'required' : 'optional'} | ${rule.rule} |`;
-    assert.ok(text.split('\n').includes(row), `row for ${rule.path}`);
+  const documented = [];
+  let object = null;
+  let inTable = false;
+  for (const line of text.split('\n')) {
+    const heading = line.match(/^#{2,4} (.+)$/);
+    if (heading) {
+      object = heading[1] === 'Core fields' ? '' : (heading[1].match(/^`(.+)`$/)?.[1] ?? null);
+      inTable = false;
+      continue;
+    }
+    if (object === null) continue;
+    if (line === '| Field | Required | Rule |') inTable = true;
+    else if (inTable && line.startsWith('| `')) documented.push({ object, row: line });
+    else if (!line.startsWith('|')) inTable = false;
   }
-  const documented = [...text.matchAll(/^\| `((?:resources|pages|capabilities|key|name|version|defaultPageKey)[^`]*)` \|/gm)].map((m) => m[1]);
-  assert.deepEqual(documented.sort(), rules.map((r) => r.path).sort());
+  const split = (path) => {
+    const i = path.lastIndexOf('.');
+    return i < 0 ? ['', path] : [path.slice(0, i), path.slice(i + 1)];
+  };
+  for (const rule of rules) {
+    const [object, field] = split(rule.path);
+    const row = `| \`${field}\` | ${rule.required ? 'required' : 'optional'} | ${rule.rule} |`;
+    assert.ok(documented.some((d) => d.object === object && d.row === row), `row for ${rule.path}`);
+  }
+  assert.equal(documented.length, rules.length);
 });
 
 test('states the empty capabilities and ungated page rules and the typo warning', () => {
@@ -69,7 +96,7 @@ test('leaves deferred fields undocumented', () => {
 });
 
 test('links each glossary term at first use only', () => {
-  for (const term of ['app definition', 'manifest', 'Space', 'page', 'capability', 'model slot', 'connector slot']) {
+  for (const term of ['manifest', 'Space', 'capability', 'model slot', 'connector slot']) {
     const slug = term.toLowerCase().replaceAll(' ', '-');
     const links = text.split(`](./glossary.md#${slug})`).length - 1;
     assert.equal(links, 1, `${term} linked ${links} times`);

@@ -85,7 +85,7 @@ function checkUnique(keys: string[], base: string, noun: string, errors: Issue[]
   });
 }
 
-/** Errors mirror what `defineApp` rejects. Warnings flag input `defineApp` accepts but that points at nothing. */
+/** Errors are input `defineApp` or `buildManifests` rejects. Warnings flag input `defineApp` accepts that points at nothing. */
 export function validateDraft(draft: Draft): { errors: Issue[]; warnings: Issue[] } {
   const errors: Issue[] = [];
   const warnings: Issue[] = [];
@@ -98,7 +98,7 @@ export function validateDraft(draft: Draft): { errors: Issue[]; warnings: Issue[
   if (draft.pages.length === 0) fail('pages', ruleText('pages'));
   const capabilityKeys = draft.capabilities.map((c) => c.key);
   draft.pages.forEach((page, i) => {
-    if (!matches('pages[].key', page.key)) fail(`pages[${i}].key`, ruleText('pages[].key'));
+    if (!matches('pages[].key', page.key)) fail(`pages[${i}].key`, 'Lower kebab-case. Unique within the app.');
     if (!page.label) fail(`pages[${i}].label`, ruleText('pages[].label'));
     if (!page.path.startsWith('/')) fail(`pages[${i}].path`, ruleText('pages[].path'));
     if (page.capability === undefined) return;
@@ -235,7 +235,6 @@ export function emitFile(draft: Draft): { path: string; code: string } {
   return { path, code };
 }
 
-/** Validates the draft and emits its file; `ok` is false when any error remains. */
 export function buildOutput(draft: Draft): BuildOutput {
   const { errors, warnings } = validateDraft(draft);
   return { ok: errors.length === 0, errors, warnings, file: emitFile(draft) };

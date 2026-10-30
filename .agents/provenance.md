@@ -37,3 +37,11 @@ Rows marked "Starter claim" describe the starter repo. The starter's own CI and 
 | The harness needs three changes beyond the harness page's first steps: `ALLOWED_PARENT_ORIGIN` set to the harness origin, `spaceJwksUrl` set to `/api/__dev/jwks.json`, and server token verification through the dev issuer. | Scratch run on Node 25.9.0 with the installed 0.2.4 SDK, [Research the dev harness against the quickstart code](../.scratch/quickstart-review/issues/01-research-harness-against-quickstart.md). Not run on Node 20.19. |
 | The `client-config` route sends no `tokenIssuer`, so the client uses the SDK default `vector-space`, which matches the Space issuer and the dev issuer. | The default from the 0.2.4 dist, [Research the token path for the diagram](../.scratch/quickstart-review/issues/02-research-token-path.md). The Space issuer value is a statement of the Space code, [Decide the auto-apply manifest request](../.scratch/quickstart-review/issues/11-decide-auto-apply-manifest.md). |
 | The share step: the user joins the space first, **Save changes** commits the share, and a View-level share lets an organization member open the page. | [Verified in a local Space](#verified-in-a-local-space). |
+
+## App definition
+
+| Claim | Rests on |
+| --- | --- |
+| The flowchart hops: `defineApp` validates on import, `buildManifests` builds the manifest at boot, and the server serves it at the manifest route. | The installed 0.2.4 dist, [Decide the ten-uses list](../.scratch/app-definition-review/issues/04-decide-the-ten-uses-list-against-the-3-phase-lifecycle.md). |
+| The SDK does not register handlers from the definition. It acknowledges an unregistered handler as `{ handled: false }` and does not retry it. `buildManifests` sets `eventsUrl` to `<publicBaseUrl>/api/events/<appKey>` unless the definition sets it. | The installed 0.2.4 dist and README, [Decide fixes for defects in the current page](../.scratch/app-definition-review/issues/08-decide-fixes-for-defects-in-the-current-page.md). |
+| `defineApp` does not reject unknown top-level keys. It rejects a malformed page key at import. Duplicate page keys are checked in `buildManifests`, not at import. | The installed 0.2.4 dist (`definitionSchema` is not strict, `appPageSchema` checks the key format, `appManifestSchema` checks duplicates), same ticket. |
