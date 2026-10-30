@@ -3,14 +3,15 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 const text = readFileSync(new URL('../docs/index.mdx', import.meta.url), 'utf8');
-const line = 'New to Vector? Start with [Quickstart](/quickstart).';
+const body = text.replace(/^---\n[\s\S]*?\n---\n/, '');
+const outsideFences = body.replace(/^```[\s\S]*?^```/gm, '');
 
-test('the start line links to Quickstart', () => {
-  assert.ok(text.includes(line));
+test('the page links to Quickstart', () => {
+  assert.ok(text.includes('to="/quickstart"') || text.includes('](/quickstart)'));
 });
 
-test('the start line sits above the goal tracks', () => {
-  assert.ok(text.indexOf(line) < text.indexOf('<TrackList />'));
+test('the page has a single top-level heading', () => {
+  assert.equal(outsideFences.match(/^# /gm).length, 1);
 });
 
 test('the goal tracks stay', () => {

@@ -1,12 +1,41 @@
 ---
 title: Vector Apps docs
 slug: /
+description: 'Build a Vector app with TypeScript, React and Node: start with the Quickstart, then pick a goal.'
+hide_table_of_contents: true
 ---
 
+import Link from '@docusaurus/Link';
 import TrackList from '@site/src/components/TrackList';
 
-New to Vector? Start with [Quickstart](/quickstart).
+# Build apps for Vector Spaces
 
-Select your use case below to get started. Tracks follow a recommended sequence, and your progress is saved.
+A Vector app is a TypeScript package with a React client and a Node server that runs inside a [Space](/glossary#space). One app definition lists the pages and [capabilities](/glossary#capability) of your app. The Space shows a page only to users who hold the page's capability.
+
+<Link className="button button--primary button--lg" to="/quickstart">Start Quickstart</Link>
+
+```ts title="shared/src/index.ts"
+import { defineApp } from '@vectoragents/vs-apps';
+
+export const definition = defineApp({
+  key: 'hello-app',
+  version: '0.1.0',
+  pages: [{ key: 'home', label: 'Home', path: '/', capability: 'hello:view' }],
+  capabilities: [{ key: 'hello:view', label: 'View hello', effect: 'read' }],
+});
+```
+
+Shortened from Quickstart step 2. `defineApp` builds the app definition: one page that the `hello:view` capability gates.
+
+## Pick a goal
 
 <TrackList />
+
+<nav aria-label="Reference">
+  <ul>
+    <li><Link to="/glossary">Glossary</Link></li>
+    <li><Link to="/reference/root">Root reference</Link></li>
+    <li><Link to="/builder">Definition builder</Link></li>
+    <li><Link to="/examples">Example app definitions</Link></li>
+  </ul>
+</nav>

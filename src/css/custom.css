@@ -76,3 +76,12 @@
   padding-left: 0;
   margin-bottom: 0;
 }
+
+nav[aria-label='Reference'] ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  list-style: none;
+  padding-left: 0;
+  margin: 1.5rem 0 0;
+}
