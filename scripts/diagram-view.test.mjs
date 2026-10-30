@@ -10,7 +10,6 @@ import {
   panRight,
   panUp,
   pinchView,
-  reset,
   viewForKey,
   wheelZoom,
   zoomAt,
@@ -54,10 +53,6 @@ test('zoom out clamps the offset so the diagram still covers the viewport', () =
   const out = zoomOut({ zoom: 3, x: -1600, y: -800 }, size);
   assert.equal(out.zoom, 2);
   assert.deepEqual([out.x, out.y], [-800, -400]);
-});
-
-test('reset returns to 1x', () => {
-  assert.deepEqual(reset(), initialView);
 });
 
 test('zoom flags follow the limits', () => {
@@ -224,7 +219,7 @@ test('an arrow key at the diagram edge is still handled above 1x', () => {
 test('plus and minus zoom about the centre and zero resets, at any zoom', () => {
   const view = { zoom: 2, x: -400, y: -200 };
   assert.deepEqual(viewForKey(view, '+', size), zoomIn(view, size));
-  assert.deepEqual(viewForKey(view, '=', size), zoomIn(view, size));
+  assert.equal(viewForKey(view, '=', size), null);
   assert.deepEqual(viewForKey(view, '-', size), zoomOut(view, size));
   assert.deepEqual(viewForKey(view, '0', size), initialView);
   assert.deepEqual(viewForKey(initialView, '+', size), zoomIn(initialView, size));

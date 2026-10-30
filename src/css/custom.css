@@ -169,10 +169,11 @@
 @media (max-width: 599px) {
   .diagram-controls {
     position: static;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(var(--diagram-button-size), 1fr));
     grid-template-rows: var(--diagram-button-size);
     grid-template-areas: 'zin zout reset up down left right';
     padding: 8px;
+    overflow-x: auto;
     border-top: 1px solid var(--ifm-color-emphasis-300);
   }
 

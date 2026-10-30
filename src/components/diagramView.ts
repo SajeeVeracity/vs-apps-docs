@@ -1,3 +1,4 @@
+/** The viewport's client size in px. */
 export interface Size {
   width: number;
   height: number;
@@ -10,6 +11,7 @@ export interface View {
   y: number;
 }
 
+/** True where the matching control has nothing to do: at the zoom limit or at the diagram edge. */
 export interface DisabledFlags {
   zoomIn: boolean;
   zoomOut: boolean;
@@ -20,7 +22,7 @@ export interface DisabledFlags {
   panRight: boolean;
 }
 
-const MIN_ZOOM = 1;
+export const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
 
 /** Factor applied per zoom button press or `+`/`-` key. */
@@ -31,11 +33,14 @@ const PAN_STEP = 0.2;
 
 export const initialView: View = { zoom: MIN_ZOOM, x: 0, y: 0 };
 
+/** True above 1x, where pan and drag have room to move. */
+export const isZoomed = (view: View): boolean => view.zoom > MIN_ZOOM;
+
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
 const minOffset = (length: number, zoom: number): number => length - length * zoom;
 
-/** Re-covers the viewport. */
+/** Clamps the offsets so the scaled content still covers the viewport. */
 export function clampView(view: View, size: Size): View {
   return {
     zoom: view.zoom,
@@ -112,22 +117,19 @@ export const panLeft = (view: View, size: Size): View => panBy(view, size, -size
 
 export const panRight = (view: View, size: Size): View => panBy(view, size, size.width * PAN_STEP, 0);
 
-export const reset = (): View => initialView;
-
 /** The view after a key on the focused viewport, or null when the key is not handled and should keep its default. */
 export function viewForKey(view: View, key: string, size: Size): View | null {
   switch (key) {
     case '+':
-    case '=':
       return zoomIn(view, size);
     case '-':
       return zoomOut(view, size);
     case '0':
-      return reset();
+      return initialView;
     default:
       break;
   }
-  if (view.zoom <= MIN_ZOOM) return null;
+  if (!isZoomed(view)) return null;
   switch (key) {
     case 'ArrowUp':
       return panUp(view, size);
@@ -142,6 +144,7 @@ export function viewForKey(view: View, key: string, size: Size): View | null {
   }
 }
 
+/** Which controls are disabled for `view`. */
 export function disabledFlags(view: View, size: Size): DisabledFlags {
   const atMin = view.zoom <= MIN_ZOOM;
   return {

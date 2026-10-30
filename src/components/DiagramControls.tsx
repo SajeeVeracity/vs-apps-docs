@@ -10,8 +10,8 @@ import {
   panLeft,
   panRight,
   panUp,
+  isZoomed,
   pinchView,
-  reset,
   viewForKey,
   wheelZoom,
   zoomIn,
@@ -111,7 +111,7 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
   const controls: Control[] = [
     { area: 'zin', flag: 'zoomIn', label: 'Zoom in', icon: ICONS.zoomIn, disabled: flags.zoomIn, apply: zoomIn },
     { area: 'zout', flag: 'zoomOut', label: 'Zoom out', icon: ICONS.zoomOut, disabled: flags.zoomOut, apply: zoomOut },
-    { area: 'reset', flag: 'reset', label: 'Reset view', icon: ICONS.reset, disabled: flags.reset, apply: reset },
+    { area: 'reset', flag: 'reset', label: 'Reset view', icon: ICONS.reset, disabled: flags.reset, apply: () => initialView },
     { area: 'up', flag: 'panUp', label: 'Pan up', icon: ICONS.up, disabled: flags.panUp, apply: panUp },
     { area: 'down', flag: 'panDown', label: 'Pan down', icon: ICONS.down, disabled: flags.panDown, apply: panDown },
     { area: 'left', flag: 'panLeft', label: 'Pan left', icon: ICONS.left, disabled: flags.panLeft, apply: panLeft },
@@ -126,7 +126,7 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     const isMouse = event.pointerType === 'mouse';
-    if (isMouse && (event.button !== 0 || viewRef.current.zoom <= 1)) return;
+    if (isMouse && (event.button !== 0 || !isZoomed(viewRef.current))) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     pointers.current.set(event.pointerId, localPoint(event));
     restartGesture();
@@ -159,12 +159,12 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
   };
 
   return (
-    <div ref={frameRef} className={ready ? 'diagram-frame' : undefined}>
+    <div ref={frameRef} className="diagram-frame">
       <div
         ref={viewportRef}
         className="diagram-viewport"
         tabIndex={ready ? 0 : undefined}
-        style={view.zoom > 1 ? { touchAction: 'none', userSelect: 'none' } : { touchAction: 'pan-x pan-y' }}
+        style={isZoomed(view) ? { touchAction: 'none', userSelect: 'none' } : { touchAction: 'pan-x pan-y' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
@@ -176,38 +176,38 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
       >
         <div
           className="diagram-inner"
-          style={view.zoom === 1 ? undefined : { transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})` }}
+          style={!isZoomed(view) ? undefined : { transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})` }}
         >
           {children}
         </div>
       </div>
       {ready && (
-        <span id={HINT_ID} className="diagram-hint">
-          Arrow keys pan. Plus and minus zoom. Zero resets.
-        </span>
-      )}
-      {ready && (
-        <div className="diagram-controls" role="group" aria-label="Diagram controls">
-          {controls.map((control) => (
-            <button
-              key={control.area}
-              type="button"
-              className="diagram-button"
-              style={{ gridArea: control.area }}
-              aria-label={control.label}
-              title={control.label}
-              disabled={control.disabled}
-              onClick={() => {
-                const size = readSize(viewportRef.current);
-                const next = control.apply(viewRef.current, size);
-                commit(next);
-                if (disabledFlags(next, size)[control.flag]) viewportRef.current?.focus();
-              }}
-            >
-              {control.icon}
-            </button>
-          ))}
-        </div>
+        <>
+          <span id={HINT_ID} className="diagram-hint">
+            Arrow keys pan. Plus and minus zoom. Zero resets.
+          </span>
+          <div className="diagram-controls" role="group" aria-label="Diagram controls">
+            {controls.map((control) => (
+              <button
+                key={control.area}
+                type="button"
+                className="diagram-button"
+                style={{ gridArea: control.area }}
+                aria-label={control.label}
+                title={control.label}
+                disabled={control.disabled}
+                onClick={() => {
+                  const size = readSize(viewportRef.current);
+                  const next = control.apply(viewRef.current, size);
+                  commit(next);
+                  if (disabledFlags(next, size)[control.flag]) viewportRef.current?.focus();
+                }}
+              >
+                {control.icon}
+              </button>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
