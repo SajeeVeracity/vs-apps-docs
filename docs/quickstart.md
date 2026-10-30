@@ -298,7 +298,7 @@ export function App() {
 
 ### 6. Run the app in the harness
 
-The harness stands in for Space on your machine, so you can watch the whole path work before anyone registers the app. `npm run dev` starts the server on port 3001 and Vite on port 5173 with the harness values, and it needs no `.env`. Vite serves the client and forwards requests under `/api` to the server.
+The harness stands in for Space on your machine, so you can watch the whole path work before anyone registers the app. `npm run dev` starts the server on port 3101 and Vite on port 5173 with the harness values, and it needs no `.env`. Vite serves the client and forwards requests under `/api` to the server.
 
 ```bash
 npm run dev
