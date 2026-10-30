@@ -10,7 +10,7 @@ import DiagramControls from '@site/src/components/DiagramControls';
 
 You clone a working app, run it in the [harness](./glossary.md#harness) on your machine, then ask Vector to register it so you can open it in a real Space. The app has one page, and only users who hold the `hello:view` capability, a permission that Space grants to a user, can see it.
 
-Space signs a short-lived token for the person who opens the page, and your app checks that token before it trusts anything in it. Learn this path once and every page you add later works the same way.
+Space signs a short-lived token, the user token, for the person who opens the page, and your app checks that token before it trusts anything in it. Learn this path once and every page you add later works the same way.
 
 After Part 1, the page runs in the harness on your machine. After Part 2, the `hello-app` page is open in a Space. It shows your user id and space id from the verified token.
 
@@ -106,14 +106,14 @@ The harness stands in for Space on your machine. It lets you watch the whole pat
 npm run dev
 ```
 
-Open `http://localhost:5173/harness.html`. The harness stands in for Space: it asks your server for a token for a dev user and posts the token to your page. The address `http://localhost:5173` alone stays on `Waiting for Space.`, because only a host sends a token.
+Open `http://localhost:5173/harness.html`. The harness stands in for Space: it asks the [dev issuer](./glossary.md#dev-issuer) in your server for a token for the user `dev-user` and posts the token to your page. The address `http://localhost:5173` alone stays on `Waiting for Space.`, because only the harness or Space sends a token.
 
 <DiagramControls>
 
 ```mermaid
 sequenceDiagram
   accTitle: How the token travels in the harness
-  accDescr: The harness asks the dev issuer in your server for a token and posts it to the client. The client verifies it against the dev key set. The client sends it to the app server, which verifies it with the dev issuer.
+  accDescr: The harness asks the dev issuer in your server for a token and posts it to the client. The client verifies it against the key set of the dev issuer. The client sends it to the app server, which verifies it with the dev issuer.
   participant H as Harness
   participant C as Client (iframe)
   participant S as App server
@@ -130,7 +130,7 @@ sequenceDiagram
 
 </DiagramControls>
 
-Hop 3 produces `Verified in the browser`. Hops 5 and 6 produce `Verified on the server`.
+Step (3) in the diagram produces `Verified in the browser`. Steps (5) and (6) produce `Verified on the server`.
 
 **Check**: the page inside the harness shows three lines.
 
@@ -189,7 +189,7 @@ export const manifests = buildManifests([definition], {
 
 `catalogPath` points at `agent-catalog.json`, the [agent catalog](./glossary.md#agent-catalog) file. The Hello app has no agent pages or actions. The starter ships it empty.
 
-The auth module holds the verifier and the checks that protected routes run. `extractBearer` reads the `Authorization` header, `verifyAppUserToken` verifies the token and returns its claims, and `assertCapability` refuses a token that lacks the capability you name. The verifier reads the Space key set from `SPACE_JWKS_URL`, which Part 2 sets. In harness mode it uses `devIssuer` instead, the signer of the dev tokens that `dev-routes.ts` defines.
+The auth module holds the verifier and the checks that protected routes run. `extractBearer` reads the `Authorization` header, `verifyAppUserToken` verifies the token and returns its claims, and `assertCapability` refuses a token that lacks the capability you name. The verifier reads the Space key set from `SPACE_JWKS_URL`, which Part 2 sets. In harness mode it uses `devIssuer` instead, the dev issuer that `dev-routes.ts` defines.
 
 ```ts title="server/src/auth.ts" starter
 import type { IncomingMessage } from 'node:http';
@@ -276,7 +276,7 @@ export function App() {
 }
 ```
 
-`onToken` is the only way to read the raw token. `token.ts` holds it in a module variable, as the SDK README does.
+`onToken` is the only way to read the raw token. `token.ts` holds it in a module variable, as the package README does.
 
 ```ts title="client/src/token.ts" starter
 let appToken: string | null = null;

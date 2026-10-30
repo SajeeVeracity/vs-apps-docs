@@ -120,7 +120,7 @@ A local stand-in for Space that hosts the app page in a dev shell, for debugging
 
 ### dev issuer
 
-The signer of dev tokens that the app server runs in harness mode. It signs a token on request, verifies tokens it signed and publishes its public key set. In production, Space does these jobs instead.
+The token signer that the app server runs in harness mode. It signs a token on request, verifies tokens it signed and publishes its public key set. In production, Space does these jobs instead.
 
 - Maps to: `createDevIssuer` in `@vectoragents/vs-apps/server`.
 - Owner: SDK.

@@ -68,7 +68,7 @@ test('each mermaid fence sits inside DiagramControls, imported right after the o
   assert.equal(importLine, "import DiagramControls from '@site/src/components/DiagramControls';");
   assert.match(text, /<DiagramControls>\n\n```mermaid\n[\s\S]*?\n```\n\n<\/DiagramControls>\n\nSpace mints the token/);
   assert.equal(count(/<DiagramControls>/g), 2);
-  assert.match(text, /<DiagramControls>\n\n```mermaid\n[\s\S]*?\n```\n\n<\/DiagramControls>\n\nHop 3 produces/);
+  assert.match(text, /<DiagramControls>\n\n```mermaid\n[\s\S]*?\n```\n\n<\/DiagramControls>\n\nStep \(3\) in the diagram produces/);
 });
 
 test('step 2 shows the harness diagram after the dev server fence and before the Check', () => {
@@ -82,7 +82,7 @@ test('step 2 shows the harness diagram after the dev server fence and before the
   assert.match(body, /^\s+accDescr: \S/m);
   assert.equal([...body.matchAll(/^\s+participant \w+ as /gm)].length, 4);
   assert.match(body, /display only/);
-  assert.match(afterBody, /^\n\n<\/DiagramControls>\n\nHop 3 produces `Verified in the browser`\. Hops 5 and 6 produce `Verified on the server`\.\n\n\*\*Check\*\*/);
+  assert.match(afterBody, /^\n\n<\/DiagramControls>\n\nStep \(3\) in the diagram produces `Verified in the browser`\. Steps \(5\) and \(6\) produce `Verified on the server`\.\n\n\*\*Check\*\*/);
 });
 
 test('prerequisites are one app-side checklist and state the baseline once', () => {
@@ -278,10 +278,10 @@ test('the Result summarises the last Check and has no second output block', () =
   assert.match(result, /one token/);
 });
 
-test('links the five glossary terms, the concept page and the harness reference', () => {
+test('links the six glossary terms, the concept page and the harness reference', () => {
   assert.match(text, /\(\.\/app-definition\.md\)/);
   const links = [...text.matchAll(/\]\(\.\/glossary\.md#([\w-]+)\)/g)].map((m) => m[1]);
-  assert.deepEqual([...links].sort(), ['agent-catalog', 'app-definition', 'app-registration', 'harness', 'space']);
+  assert.deepEqual([...links].sort(), ['agent-catalog', 'app-definition', 'app-registration', 'dev-issuer', 'harness', 'space']);
   assert.match(section('Next steps'), /\(\.\/reference\/harness\.md\)/);
 });
 
