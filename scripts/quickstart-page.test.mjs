@@ -61,6 +61,15 @@ test('Goal names both end states and ends with the Mermaid diagram and its capti
   assert.match(goal.split('```mermaid')[1].split(/^```$/m)[1], /Only the server check protects data\./);
 });
 
+test('the one mermaid fence sits inside DiagramControls, imported right after the opening paragraph', () => {
+  const body = text.replace(/^---\n[\s\S]*?\n---\n/, '').trim();
+  const [opening, importLine] = body.split('\n\n');
+  assert.doesNotMatch(opening, /DiagramControls/);
+  assert.equal(importLine, "import DiagramControls from '@site/src/components/DiagramControls';");
+  assert.match(text, /<DiagramControls>\n\n```mermaid\n[\s\S]*?\n```\n\n<\/DiagramControls>\n\nSpace mints the token/);
+  assert.equal(count(/<DiagramControls>/g), 1);
+});
+
 test('prerequisites are one app-side checklist and state the baseline once', () => {
   const prerequisites = section('Prerequisites');
   const items = prerequisites.split('\n').filter((l) => /^- /.test(l));

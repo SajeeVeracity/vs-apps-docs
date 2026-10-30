@@ -87,3 +87,59 @@
 .landing-start {
   margin-bottom: 1.5rem;
 }
+
+.diagram-frame {
+  position: relative;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  background: var(--ifm-background-surface-color);
+  margin-bottom: var(--ifm-leading);
+}
+
+.diagram-frame .diagram-viewport {
+  overflow: hidden;
+}
+
+.diagram-frame .diagram-inner {
+  transform-origin: 0 0;
+}
+
+.diagram-controls {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, 32px);
+  grid-template-rows: repeat(3, 32px);
+  grid-template-areas:
+    '. up . zin'
+    'left reset right zout'
+    '. down . .';
+  gap: 4px;
+}
+
+.diagram-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 6px;
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+  padding: 0;
+}
+
+.diagram-button:hover:not(:disabled) {
+  background: var(--ifm-color-emphasis-200);
+}
+
+.diagram-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.diagram-button:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
