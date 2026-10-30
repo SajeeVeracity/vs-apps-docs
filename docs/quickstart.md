@@ -41,7 +41,7 @@ Space mints the token and posts it to your client. Your client sends it to your 
 
 ## Prerequisites
 
-- [ ] Git, `npm` and Node.js 20.19 or later 20.x, or Node.js 22.12 or later.
+- [ ] Git, `npm` and the current [Node.js LTS](https://nodejs.org/en/download) release.
 - [ ] A GitHub personal access token (classic) with the `read:packages` scope. [Create one](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic).
 
 ## Part 1: Run the app locally

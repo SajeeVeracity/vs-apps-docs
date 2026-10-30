@@ -90,10 +90,10 @@ test('prerequisites are one app-side checklist and state the baseline once', () 
   const items = prerequisites.split('\n').filter((l) => /^- /.test(l));
   assert.ok(items.length >= 2);
   for (const line of items) assert.match(line, /^- \[ \] /);
-  assert.match(prerequisites, /Node\.js 20\.19/);
+  assert.match(prerequisites, /current \[Node\.js LTS\]\(https:\/\/nodejs\.org\/en\/download\) release/);
   assert.match(prerequisites, /`read:packages`/);
   assert.match(prerequisites, /\(classic\)/);
-  assert.equal(count(/20\.19/g), 1);
+  assert.equal(count(/Node\.js LTS/g), 1);
   assert.doesNotMatch(prerequisites, /space manager|published agent|Space server/i);
 });
 
