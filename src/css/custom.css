@@ -50,8 +50,14 @@
 
 .tracks {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.5rem;
+}
+
+@media (max-width: 996px) {
+  .tracks {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .track {
@@ -60,27 +66,24 @@
   padding: 1rem 1.25rem;
 }
 
-.track h2 {
+.track h3 {
   margin-top: 0;
   font-size: 1.25rem;
 }
 
 .track ol {
-  list-style: none;
-  padding-left: 0;
   margin-bottom: 0;
 }
 
-.track-count,
-.tracks-version {
-  font-size: 0.85rem;
+.landing-reference ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  list-style: none;
+  padding-left: 0;
+  margin: 1.5rem 0 0;
 }
 
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+.landing-start {
+  margin-bottom: 1.5rem;
 }
