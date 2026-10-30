@@ -1,4 +1,3 @@
-/** The viewport's client size in px. */
 export interface Size {
   width: number;
   height: number;
@@ -11,7 +10,6 @@ export interface View {
   y: number;
 }
 
-/** True where the matching control has nothing to do: at the zoom limit or at the diagram edge. */
 export interface DisabledFlags {
   zoomIn: boolean;
   zoomOut: boolean;
@@ -33,7 +31,6 @@ const PAN_STEP = 0.2;
 
 export const initialView: View = { zoom: MIN_ZOOM, x: 0, y: 0 };
 
-/** True above 1x, where pan and drag have room to move. */
 export const isZoomed = (view: View): boolean => view.zoom > MIN_ZOOM;
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
@@ -84,7 +81,6 @@ export const wheelZoom = (view: View, deltaY: number, anchor: Point, size: Size)
 export const dragView = (view: View, dx: number, dy: number, size: Size): View =>
   clampView({ zoom: view.zoom, x: view.x + dx, y: view.y + dy }, size);
 
-/** Midpoint and distance of the two touch points of a pinch. */
 export interface Touches {
   centre: Point;
   spread: number;
@@ -144,7 +140,6 @@ export function viewForKey(view: View, key: string, size: Size): View | null {
   }
 }
 
-/** Which controls are disabled for `view`. */
 export function disabledFlags(view: View, size: Size): DisabledFlags {
   const atMin = view.zoom <= MIN_ZOOM;
   return {
@@ -157,3 +152,6 @@ export function disabledFlags(view: View, size: Size): DisabledFlags {
     panRight: atMin || view.x <= minOffset(size.width, view.zoom),
   };
 }
+
+/** The viewport's accessible name: the diagram's own `accTitle`, so two diagrams on one page stay distinguishable. */
+export const viewportLabel = (accTitle: string | null | undefined): string => accTitle?.trim() || 'Diagram view';

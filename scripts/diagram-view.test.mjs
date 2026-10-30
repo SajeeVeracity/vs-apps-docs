@@ -11,6 +11,7 @@ import {
   panUp,
   pinchView,
   viewForKey,
+  viewportLabel,
   wheelZoom,
   zoomAt,
   zoomIn,
@@ -227,4 +228,13 @@ test('plus and minus zoom about the centre and zero resets, at any zoom', () => 
 
 test('other keys are not handled', () => {
   for (const key of ['Tab', 'a', 'Enter', ' ', 'PageDown']) assert.equal(viewForKey({ zoom: 2, x: -400, y: -200 }, key, size), null, key);
+});
+
+test('the viewport label is the diagram accTitle', () => {
+  assert.equal(viewportLabel('How the token travels'), 'How the token travels');
+  assert.equal(viewportLabel('  How the token travels in the harness \n'), 'How the token travels in the harness');
+});
+
+test('the viewport label falls back when the SVG has no accTitle', () => {
+  for (const title of [null, undefined, '', '   ']) assert.equal(viewportLabel(title), 'Diagram view', String(title));
 });

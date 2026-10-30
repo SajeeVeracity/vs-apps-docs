@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { checkFences, checkPageVersions, checkSdkPin, checkTree, installedSdkVersion, main, pageTreePaths } from './starter-sync.mjs';
+import { checkFences, checkPageVersions, checkPorts, checkSdkPin, checkTree, installedSdkVersion, main, pageTreePaths } from './starter-sync.mjs';
 
 const tree = ['hello-app/', '├── .env.example', '├── client/', '│   ├── index.html', '│   └── src/', '│       └── main.tsx', '└── shared/', '    └── src/', '        └── index.ts'].join('\n');
 const page = [
@@ -19,7 +19,13 @@ const page = [
   'anything',
   '```',
   '',
+  '### 2. Run the app in the harness',
+  '',
+  '`npm run dev` starts the server on port 3101 and Vite on port 5173.',
+  '',
 ].join('\n');
+
+const PRESET = "const SERVER_PORT = '3101';\nconst HARNESS = {\n  SERVER_PORT,\n  CLIENT_PORT: '5173',\n};\n";
 
 const write = (root, path, content) => {
   mkdirSync(dirname(join(root, path)), { recursive: true });
@@ -32,6 +38,7 @@ function starter(overrides = {}) {
   const pin = (version) => JSON.stringify({ dependencies: { '@vectoragents/vs-apps': version } });
   const files = {
     '.env.example': '',
+    'scripts/env-preset.mjs': PRESET,
     'client/index.html': '',
     'client/src/main.tsx': '',
     'shared/src/index.ts': "import x;\nexport const CAPABILITY = 'hello:view';\nexport const y = 1;\n",
@@ -122,8 +129,52 @@ test('the real page has a tree that checkTree can read', () => {
   for (const path of ['.env.example', 'client/harness.html', 'server/src/auth.ts', 'shared/src/index.ts']) assert.ok(paths.includes(path), path);
 });
 
-const silent = { log() {}, warn() {}, error() {} };
 const real = readFileSync(new URL('../docs/quickstart.md', import.meta.url), 'utf8');
+const runStep = (text) => ['### 2. Run the app in the harness', '', text, ''].join('\n');
+
+test('ports: passes when the run step names the starter server and client ports', () => {
+  assert.deepEqual(checkPorts(page, starter()), []);
+});
+
+test('ports: fails when the run step names a stale server port', () => {
+  const stale = runStep('`npm run dev` starts the server on port 3001 and Vite on port 5173.');
+  const problems = checkPorts(stale, starter());
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /port 3101/);
+});
+
+test('ports: fails when the run step names a stale client port', () => {
+  const stale = runStep('`npm run dev` starts the server on port 3101 and Vite on port 5174.');
+  assert.match(checkPorts(stale, starter())[0], /port 5173/);
+});
+
+test('ports: only the run step counts, wherever it sits and however it is numbered', () => {
+  const elsewhere = ['## Goal', 'Port 3101 and port 5173 appear here only.', '', '### Run the app in the harness', 'Nothing here.', '', '### Next', 'port 3101 port 5173'].join('\n');
+  assert.equal(checkPorts(elsewhere, starter()).length, 2);
+  const moved = ['### 1. Run the app in the harness', 'Server on port 3101, Vite on port 5173.', '', '### 2. Read the app definition', 'Port 9999.'].join('\n');
+  assert.deepEqual(checkPorts(moved, starter()), []);
+});
+
+test('ports: a longer number that starts with the port is not a match', () => {
+  const stale = runStep('`npm run dev` starts the server on port 31011 and Vite on port 5173.');
+  assert.match(checkPorts(stale, starter())[0], /port 3101/);
+});
+
+test('ports: a comment line inside a fence does not end the run step', () => {
+  const fenced = ['### 2. Run the app in the harness', '', '```bash', '# start the dev servers', 'npm run dev', '```', '', 'Server on port 3101, Vite on port 5173.', '', '### 3. Next', ''].join('\n');
+  assert.deepEqual(checkPorts(fenced, starter()), []);
+});
+
+test('ports: fails when the starter preset lacks a port', () => {
+  const root = starter({ 'scripts/env-preset.mjs': 'export const x = 1;\n' });
+  assert.match(checkPorts(page, root)[0], /SERVER_PORT/);
+});
+
+test('ports: the real page run step names the starter ports', () => {
+  assert.deepEqual(checkPorts(real, starter()), []);
+});
+
+const silent = { log() {}, warn() {}, error() {} };
 const failingClone = () => {
   throw new Error('fatal: unable to access');
 };
@@ -172,6 +223,11 @@ test('page versions: fails for each string that names another version', () => {
 
 test('page versions: the real quickstart and harness pages name the installed version', () => {
   assert.deepEqual(checkPageVersions(undefined, installedSdkVersion()), []);
+});
+
+test('main: a page with a stale port exits 1', async () => {
+  const stale = page.replace('port 3101', 'port 3001');
+  assert.equal(await main({ env: { STARTER_DIR: starter() }, page: stale, sdkVersion: '0.2.4', ...silent }), 1);
 });
 
 test('main: a page with a stale SDK version exits 1', async () => {

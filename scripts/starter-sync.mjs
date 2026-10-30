@@ -98,10 +98,37 @@ export function checkTree(pageText, starterDir) {
     .map((path) => `${path} is listed in the page tree but missing from the starter`);
 }
 
+const RUN_STEP_HEADING = /^#{2,4} (?:\d+\. )?Run the app in the harness\s*$/m;
+
+/** The text up to the first heading outside a fenced block, so a `# comment` in a fence does not end it. */
+function sliceToHeading(text) {
+  const lines = text.split('\n');
+  let inFence = false;
+  const end = lines.findIndex((line) => {
+    if (line.startsWith('```')) inFence = !inFence;
+    return !inFence && /^#{1,4} /.test(line);
+  });
+  return (end === -1 ? lines : lines.slice(0, end)).join('\n');
+}
+
+/** Fails when the run step lacks `port N` for the `SERVER_PORT` or `CLIENT_PORT` in the starter's env preset. */
+export function checkPorts(pageText, starterDir) {
+  const start = RUN_STEP_HEADING.exec(pageText);
+  const step = sliceToHeading(pageText.slice(start.index + start[0].length));
+  const presetPath = join(starterDir, 'scripts/env-preset.mjs');
+  const preset = readFileSync(presetPath, 'utf8');
+  const problems = [];
+  for (const name of ['SERVER_PORT', 'CLIENT_PORT']) {
+    const port = new RegExp(`\\b${name}\\b\\s*[:=]\\s*'(\\d+)'`).exec(preset)?.[1];
+    if (!port) problems.push(`scripts/env-preset.mjs sets no ${name}`);
+    else if (!new RegExp(`port ${port}(?!\\d)`).test(step)) problems.push(`the run step does not contain \`port ${port}\` (${name} in the starter)`);
+  }
+  return problems;
+}
+
 // The page clones the default branch, so the check reads main and not a tag.
 const gitClone = (url, dir) => execFileSync('git', ['clone', '--depth', '1', '--branch', 'main', url, dir], { stdio: 'pipe' });
 
-/** Returns the process exit code. */
 export async function main({
   env = process.env,
   clone = gitClone,
@@ -131,7 +158,7 @@ export async function main({
     dir = temp;
   }
   try {
-    const problems = [...checkSdkPin(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir)];
+    const problems = [...checkSdkPin(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir), ...checkPorts(page, dir)];
     for (const problem of problems) error(`starter-sync: ${problem}`);
     if (problems.length === 0) log(`starter-sync: ok (SDK ${sdkVersion}, ${STARTER_URL})`);
     return problems.length === 0 ? 0 : 1;
