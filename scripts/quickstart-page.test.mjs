@@ -50,24 +50,39 @@ test('Goal names both end states and ends with the Mermaid diagram and its capti
   assert.match(goal, /harness/);
   assert.match(goal, /open in a Space/);
   const diagrams = fences.filter((f) => f.lang === 'mermaid');
-  assert.equal(diagrams.length, 1);
+  assert.equal(diagrams.length, 2);
   const [{ body }] = diagrams;
   assert.match(body, /^sequenceDiagram$/m);
   assert.match(body, /^\s+accTitle: \S/m);
   assert.match(body, /^\s+accDescr: \S/m);
-  assert.equal(count(/^\s+participant \w+ as /gm), 4);
+  assert.equal([...body.matchAll(/^\s+participant \w+ as /gm)].length, 4);
   assert.match(body, /display only/);
   assert.ok(goal.includes('```mermaid'));
   assert.match(goal.split('```mermaid')[1].split(/^```$/m)[1], /Only the server check protects data\./);
 });
 
-test('the one mermaid fence sits inside DiagramControls, imported right after the opening paragraph', () => {
+test('each mermaid fence sits inside DiagramControls, imported right after the opening paragraph', () => {
   const body = text.replace(/^---\n[\s\S]*?\n---\n/, '').trim();
   const [opening, importLine] = body.split('\n\n');
   assert.doesNotMatch(opening, /DiagramControls/);
   assert.equal(importLine, "import DiagramControls from '@site/src/components/DiagramControls';");
   assert.match(text, /<DiagramControls>\n\n```mermaid\n[\s\S]*?\n```\n\n<\/DiagramControls>\n\nSpace mints the token/);
-  assert.equal(count(/<DiagramControls>/g), 1);
+  assert.equal(count(/<DiagramControls>/g), 2);
+  assert.match(text, /<DiagramControls>\n\n```mermaid\n[\s\S]*?\n```\n\n<\/DiagramControls>\n\nHop 3 produces/);
+});
+
+test('step 2 shows the harness diagram after the dev server fence and before the Check', () => {
+  const run = steps(part1)[1];
+  assert.equal(run.split('```mermaid').length, 2);
+  const [beforeFence, afterFence] = run.split('```mermaid');
+  assert.match(beforeFence, /```bash\nnpm run dev\n```\n\nOpen `http:\/\/localhost:5173\/harness\.html`[^\n]*\n\n<DiagramControls>\n\n$/);
+  const [body, afterBody] = afterFence.split(/^```$/m);
+  assert.match(body, /^sequenceDiagram$/m);
+  assert.match(body, /^\s+accTitle: \S/m);
+  assert.match(body, /^\s+accDescr: \S/m);
+  assert.equal([...body.matchAll(/^\s+participant \w+ as /gm)].length, 4);
+  assert.match(body, /display only/);
+  assert.match(afterBody, /^\n\n<\/DiagramControls>\n\nHop 3 produces `Verified in the browser`\. Hops 5 and 6 produce `Verified on the server`\.\n\n\*\*Check\*\*/);
 });
 
 test('prerequisites are one app-side checklist and state the baseline once', () => {
