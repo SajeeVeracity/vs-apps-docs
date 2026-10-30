@@ -20,7 +20,7 @@ An app attached to one space. It snapshots the manifest's grantable capabilities
 
 ### Check
 
-A line in a quickstart step that starts with `**Check**` and tells the reader what to run or look at and what the result is. The quickstart has two: `npm ls` in step 1 and the harness output in the run step ([ADR 0002](adr/0002-quickstart-clones-a-starter-repo.md)). A tour step has none.
+A line in a quickstart step that starts with `**Check**` and tells the reader what to run or look at and what the result is. Part 1 has two: `npm ls` in step 1 and the harness output in the run step ([ADR 0002](adr/0002-quickstart-clones-a-starter-repo.md)). A tour step has none. Each step of Part 2 has one.
 
 - Maps to: no SDK symbol. The `Checks` assertion in `scripts/quickstart-page.test.mjs`.
 - Owner: docs.
@@ -30,13 +30,6 @@ A line in a quickstart step that starts with `**Check**` and tells the reader wh
 A block of code in a docs page, opened and closed by three backticks. The text after the opening backticks names the language, such as `ts` or `mermaid`. A `starter` fence also carries `title="path"` and must be a verbatim copy of text in that file of the starter repo. `scripts/starter-sync.mjs` checks this. A `mermaid` fence is a diagram: the page test counts them, and `DiagramControls` wraps each one.
 
 - Maps to: no SDK symbol. `fences` in `scripts/quickstart-page.test.mjs` and `checkFences` in `scripts/starter-sync.mjs`.
-- Owner: docs.
-
-### pin
-
-An assertion in `scripts/quickstart-page.test.mjs` or `scripts/starter-sync.mjs` that fixes a piece of page text or structure. A change to pinned text needs a test change in the same hand-off.
-
-- Maps to: no SDK symbol.
 - Owner: docs.
 
 ### Space Page
