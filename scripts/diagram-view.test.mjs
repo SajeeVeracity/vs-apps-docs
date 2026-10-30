@@ -3,12 +3,17 @@ import { test } from 'node:test';
 import {
   clampView,
   disabledFlags,
+  dragView,
   initialView,
   panDown,
   panLeft,
   panRight,
   panUp,
+  pinchView,
   reset,
+  viewForKey,
+  wheelZoom,
+  zoomAt,
   zoomIn,
   zoomOut,
 } from '../src/components/diagramView.ts';
@@ -120,4 +125,111 @@ test('clampView re-covers the viewport after it shrinks, and keeps a valid view'
     x: -400,
     y: -200,
   });
+});
+
+test('zoomAt keeps the content point under the anchor fixed', () => {
+  const view = { zoom: 2, x: -400, y: -200 };
+  assert.deepEqual(zoomAt(view, 1.5, { x: 100, y: 50 }, size), { zoom: 3, x: -650, y: -325 });
+  assert.deepEqual(zoomAt(initialView, 1.5, { x: 800, y: 400 }, size), { zoom: 1.5, x: -400, y: -200 });
+});
+
+test('zoomAt clamps the zoom to 4x and then re-covers the viewport', () => {
+  const view = { zoom: 2, x: -400, y: -200 };
+  assert.deepEqual(zoomAt(view, 3, { x: 100, y: 50 }, size), { zoom: 4, x: -900, y: -450 });
+  assert.deepEqual(zoomAt(view, 1 / 3, { x: 100, y: 50 }, size), initialView);
+});
+
+test('zoomAt about the viewport centre matches the zoom buttons', () => {
+  const centre = { x: size.width / 2, y: size.height / 2 };
+  assert.deepEqual(zoomAt(initialView, 1.5, centre, size), zoomIn(initialView, size));
+});
+
+test('wheel up zooms in and wheel down zooms out about the pointer', () => {
+  const view = { zoom: 2, x: -400, y: -200 };
+  const anchor = { x: 100, y: 50 };
+  const up = wheelZoom(view, -20, anchor, size);
+  const down = wheelZoom(view, 20, anchor, size);
+  assert.ok(up.zoom > 2 && down.zoom < 2);
+  assert.ok(Math.abs((anchor.x - up.x) / up.zoom - 250) < 1e-9);
+  assert.ok(Math.abs((anchor.y - up.y) / up.zoom - 125) < 1e-9);
+  assert.deepEqual(wheelZoom(view, 0, anchor, size), view);
+});
+
+test('one wheel event never zooms by more than the capped step', () => {
+  const view = { zoom: 2, x: -400, y: -200 };
+  const anchor = { x: 100, y: 50 };
+  assert.deepEqual(wheelZoom(view, -5000, anchor, size), wheelZoom(view, -50, anchor, size));
+  assert.ok(wheelZoom(view, -5000, anchor, size).zoom < 2 * 2);
+});
+
+test('drag moves the content with the pointer and stops at the diagram edge', () => {
+  const view = { zoom: 2, x: -400, y: -200 };
+  assert.deepEqual(dragView(view, 100, -50, size), { zoom: 2, x: -300, y: -250 });
+  assert.deepEqual(dragView(view, 500, -500, size), { zoom: 2, x: 0, y: -400 });
+});
+
+test('drag at 1x changes nothing', () => {
+  assert.deepEqual(dragView(initialView, 120, -80, size), initialView);
+});
+
+test('pinch spreading the fingers zooms about their midpoint', () => {
+  const start = { zoom: 2, x: -400, y: -200 };
+  const from = { centre: { x: 400, y: 200 }, spread: 100 };
+  assert.deepEqual(pinchView(start, from, { centre: from.centre, spread: 150 }, size), { zoom: 3, x: -800, y: -400 });
+  assert.deepEqual(
+    pinchView(initialView, from, { centre: from.centre, spread: 150 }, size),
+    { zoom: 1.5, x: -200, y: -100 },
+  );
+});
+
+test('pinch moving the midpoint pans the content with the fingers', () => {
+  const start = { zoom: 2, x: -400, y: -200 };
+  const from = { centre: { x: 400, y: 200 }, spread: 100 };
+  const to = { centre: { x: 350, y: 200 }, spread: 100 };
+  assert.deepEqual(pinchView(start, from, to, size), { zoom: 2, x: -450, y: -200 });
+});
+
+test('pinch clamps the zoom to 1x-4x and re-covers the viewport', () => {
+  const start = { zoom: 2, x: -400, y: -200 };
+  const from = { centre: { x: 400, y: 200 }, spread: 100 };
+  assert.equal(pinchView(start, from, { centre: from.centre, spread: 1000 }, size).zoom, 4);
+  assert.deepEqual(pinchView(start, from, { centre: from.centre, spread: 10 }, size), initialView);
+});
+
+test('a pinch that starts with the fingers together does not change the zoom', () => {
+  const start = { zoom: 2, x: -400, y: -200 };
+  const from = { centre: { x: 400, y: 200 }, spread: 0 };
+  assert.deepEqual(pinchView(start, from, { centre: from.centre, spread: 80 }, size), start);
+});
+
+test('arrow keys pan above 1x', () => {
+  const view = { zoom: 2, x: -400, y: -200 };
+  assert.deepEqual(viewForKey(view, 'ArrowRight', size), panRight(view, size));
+  assert.deepEqual(viewForKey(view, 'ArrowLeft', size), panLeft(view, size));
+  assert.deepEqual(viewForKey(view, 'ArrowUp', size), panUp(view, size));
+  assert.deepEqual(viewForKey(view, 'ArrowDown', size), panDown(view, size));
+});
+
+test('arrow keys are left to the page at 1x', () => {
+  for (const key of ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown']) {
+    assert.equal(viewForKey(initialView, key, size), null, key);
+  }
+});
+
+test('an arrow key at the diagram edge is still handled above 1x', () => {
+  const edge = { zoom: 2, x: 0, y: -200 };
+  assert.deepEqual(viewForKey(edge, 'ArrowLeft', size), edge);
+});
+
+test('plus and minus zoom about the centre and zero resets, at any zoom', () => {
+  const view = { zoom: 2, x: -400, y: -200 };
+  assert.deepEqual(viewForKey(view, '+', size), zoomIn(view, size));
+  assert.deepEqual(viewForKey(view, '=', size), zoomIn(view, size));
+  assert.deepEqual(viewForKey(view, '-', size), zoomOut(view, size));
+  assert.deepEqual(viewForKey(view, '0', size), initialView);
+  assert.deepEqual(viewForKey(initialView, '+', size), zoomIn(initialView, size));
+});
+
+test('other keys are not handled', () => {
+  for (const key of ['Tab', 'a', 'Enter', ' ', 'PageDown']) assert.equal(viewForKey({ zoom: 2, x: -400, y: -200 }, key, size), null, key);
 });

@@ -40,23 +40,59 @@ export function clampView(view: View, size: Size): View {
   };
 }
 
-/** Zooms about the viewport centre; the result is clamped so the diagram covers the viewport. */
-function zoomTo(view: View, zoom: number, size: Size): View {
-  const next = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+/** A point in viewport coordinates, in px from its top-left corner. */
+export interface Point {
+  x: number;
+  y: number;
+}
+
+/** Multiplies the zoom by `factor` (clamped to the range) keeping the content under `anchor` fixed, then re-covers the viewport. */
+export function zoomAt(view: View, factor: number, anchor: Point, size: Size): View {
+  const next = clamp(view.zoom * factor, MIN_ZOOM, MAX_ZOOM);
   const ratio = next / view.zoom;
   return clampView(
-    {
-      zoom: next,
-      x: size.width / 2 - (size.width / 2 - view.x) * ratio,
-      y: size.height / 2 - (size.height / 2 - view.y) * ratio,
-    },
+    { zoom: next, x: anchor.x - (anchor.x - view.x) * ratio, y: anchor.y - (anchor.y - view.y) * ratio },
     size,
   );
 }
 
-export const zoomIn = (view: View, size: Size): View => zoomTo(view, view.zoom * ZOOM_STEP, size);
+const centreOf = (size: Size): Point => ({ x: size.width / 2, y: size.height / 2 });
 
-export const zoomOut = (view: View, size: Size): View => zoomTo(view, view.zoom / ZOOM_STEP, size);
+export const zoomIn = (view: View, size: Size): View => zoomAt(view, ZOOM_STEP, centreOf(size), size);
+
+export const zoomOut = (view: View, size: Size): View => zoomAt(view, 1 / ZOOM_STEP, centreOf(size), size);
+
+/** Pixels of `deltaY` per e-fold of zoom; the cap keeps one coarse mouse-wheel notch from jumping the zoom. */
+const WHEEL_PIXELS_PER_E_FOLD = 100;
+const WHEEL_MAX_DELTA = 50;
+
+/** Wheel up (negative `deltaY`) zooms in about the pointer. */
+export const wheelZoom = (view: View, deltaY: number, anchor: Point, size: Size): View =>
+  zoomAt(view, Math.exp(-clamp(deltaY, -WHEEL_MAX_DELTA, WHEEL_MAX_DELTA) / WHEEL_PIXELS_PER_E_FOLD), anchor, size);
+
+/** The content follows the pointer by (`dx`, `dy`) px; at 1x the clamp leaves nothing to move. */
+export const dragView = (view: View, dx: number, dy: number, size: Size): View =>
+  clampView({ zoom: view.zoom, x: view.x + dx, y: view.y + dy }, size);
+
+/** Midpoint and distance of the two touch points of a pinch. */
+export interface Touches {
+  centre: Point;
+  spread: number;
+}
+
+/** Scales by the change in spread and keeps the content that was under `from.centre` under `to.centre`. */
+export function pinchView(start: View, from: Touches, to: Touches, size: Size): View {
+  const zoom = clamp(start.zoom * (from.spread > 0 ? to.spread / from.spread : 1), MIN_ZOOM, MAX_ZOOM);
+  const ratio = zoom / start.zoom;
+  return clampView(
+    {
+      zoom,
+      x: to.centre.x - (from.centre.x - start.x) * ratio,
+      y: to.centre.y - (from.centre.y - start.y) * ratio,
+    },
+    size,
+  );
+}
 
 /** The arrow moves the view window, so the content offset moves the opposite way. */
 function panBy(view: View, size: Size, dx: number, dy: number): View {
@@ -72,6 +108,34 @@ export const panLeft = (view: View, size: Size): View => panBy(view, size, -size
 export const panRight = (view: View, size: Size): View => panBy(view, size, size.width * PAN_STEP, 0);
 
 export const reset = (): View => initialView;
+
+/** The view after a key on the focused viewport, or null when the key is not handled and should keep its default. */
+export function viewForKey(view: View, key: string, size: Size): View | null {
+  switch (key) {
+    case '+':
+    case '=':
+      return zoomIn(view, size);
+    case '-':
+      return zoomOut(view, size);
+    case '0':
+      return reset();
+    default:
+      break;
+  }
+  if (view.zoom <= MIN_ZOOM) return null;
+  switch (key) {
+    case 'ArrowUp':
+      return panUp(view, size);
+    case 'ArrowDown':
+      return panDown(view, size);
+    case 'ArrowLeft':
+      return panLeft(view, size);
+    case 'ArrowRight':
+      return panRight(view, size);
+    default:
+      return null;
+  }
+}
 
 export function disabledFlags(view: View, size: Size): DisabledFlags {
   const atMin = view.zoom <= MIN_ZOOM;
