@@ -20,10 +20,14 @@ export interface DisabledFlags {
   panRight: boolean;
 }
 
-export const MIN_ZOOM = 1;
-export const MAX_ZOOM = 4;
-export const ZOOM_STEP = 1.5;
-export const PAN_STEP = 0.2;
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 4;
+
+/** Factor applied per zoom button press or `+`/`-` key. */
+const ZOOM_STEP = 1.5;
+
+/** Fraction of the viewport size a pan button or arrow key moves. */
+const PAN_STEP = 0.2;
 
 export const initialView: View = { zoom: MIN_ZOOM, x: 0, y: 0 };
 
@@ -31,7 +35,7 @@ const clamp = (value: number, min: number, max: number): number => Math.min(max,
 
 const minOffset = (length: number, zoom: number): number => length - length * zoom;
 
-/** Re-covers the viewport; also used after the viewport resizes. */
+/** Re-covers the viewport. */
 export function clampView(view: View, size: Size): View {
   return {
     zoom: view.zoom,
@@ -62,8 +66,9 @@ export const zoomIn = (view: View, size: Size): View => zoomAt(view, ZOOM_STEP, 
 
 export const zoomOut = (view: View, size: Size): View => zoomAt(view, 1 / ZOOM_STEP, centreOf(size), size);
 
-/** Pixels of `deltaY` per e-fold of zoom; the cap keeps one coarse mouse-wheel notch from jumping the zoom. */
+// Pixels of `deltaY` per e-fold of zoom.
 const WHEEL_PIXELS_PER_E_FOLD = 100;
+// Caps one coarse mouse-wheel notch so it cannot jump the zoom.
 const WHEEL_MAX_DELTA = 50;
 
 /** Wheel up (negative `deltaY`) zooms in about the pointer. */

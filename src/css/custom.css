@@ -111,11 +111,6 @@
   }
 }
 
-.diagram-viewport:focus-visible {
-  outline: 2px solid var(--ifm-color-primary);
-  outline-offset: 2px;
-}
-
 .diagram-hint {
   position: absolute;
   width: 1px;
@@ -165,6 +160,7 @@
   cursor: default;
 }
 
+.diagram-viewport:focus-visible,
 .diagram-button:focus-visible {
   outline: 2px solid var(--ifm-color-primary);
   outline-offset: 2px;
@@ -173,15 +169,15 @@
 @media (max-width: 599px) {
   .diagram-controls {
     position: static;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: var(--diagram-button-size);
+    grid-template-areas: 'zin zout reset up down left right';
     padding: 8px;
     border-top: 1px solid var(--ifm-color-emphasis-300);
   }
 
   .diagram-button {
-    flex-shrink: 0;
+    width: 100%;
   }
 }
 

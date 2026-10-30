@@ -21,6 +21,7 @@ import type { DisabledFlags, Point, Size, Touches, View } from './diagramView.ts
 
 const MERMAID_CONTAINER = '.docusaurus-mermaid-container';
 const HINT_ID = 'diagram-view-hint';
+const WHEEL_LINE_HEIGHT_PX = 16;
 
 interface Control {
   area: string;
@@ -73,8 +74,7 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
       if (!event.ctrlKey && !event.metaKey) return;
       event.preventDefault();
       const rect = viewport.getBoundingClientRect();
-      const lineHeightPx = 16;
-      const deltaY = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * lineHeightPx : event.deltaY;
+      const deltaY = event.deltaMode === WheelEvent.DOM_DELTA_LINE ? event.deltaY * WHEEL_LINE_HEIGHT_PX : event.deltaY;
       commit(wheelZoom(viewRef.current, deltaY, { x: event.clientX - rect.left, y: event.clientY - rect.top }, readSize(viewport)));
     };
     viewport.addEventListener('wheel', onWheel, { passive: false });
@@ -94,7 +94,6 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
     return () => observer.disconnect();
   }, []);
 
-  // A resize changes the viewport size the offsets are clamped against.
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return undefined;
@@ -119,7 +118,6 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
     { area: 'right', flag: 'panRight', label: 'Pan right', icon: ICONS.right, disabled: flags.panRight, apply: panRight },
   ];
 
-  // The gesture restarts from the current view whenever a pointer joins or leaves.
   const restartGesture = () => {
     // Array.from, not spread: Docusaurus compiles with Babel preset-env `loose`, which turns `[...iterator]` into `[iterator]`.
     const points = Array.from(pointers.current.values());
@@ -165,16 +163,16 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
       <div
         ref={viewportRef}
         className="diagram-viewport"
-        tabIndex={0}
+        tabIndex={ready ? 0 : undefined}
         style={view.zoom > 1 ? { touchAction: 'none', userSelect: 'none' } : { touchAction: 'pan-x pan-y' }}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
         onPointerCancel={onPointerEnd}
         onKeyDown={onKeyDown}
-        role="group"
-        aria-label="Diagram view"
-        aria-describedby={HINT_ID}
+        role={ready ? 'group' : undefined}
+        aria-label={ready ? 'Diagram view' : undefined}
+        aria-describedby={ready ? HINT_ID : undefined}
       >
         <div
           className="diagram-inner"
@@ -183,9 +181,11 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
           {children}
         </div>
       </div>
-      <span id={HINT_ID} className="diagram-hint">
-        Arrow keys pan. Plus and minus zoom. Zero resets.
-      </span>
+      {ready && (
+        <span id={HINT_ID} className="diagram-hint">
+          Arrow keys pan. Plus and minus zoom. Zero resets.
+        </span>
+      )}
       {ready && (
         <div className="diagram-controls" role="group" aria-label="Diagram controls">
           {controls.map((control) => (
