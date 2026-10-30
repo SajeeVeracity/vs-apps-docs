@@ -160,6 +160,25 @@ test('ports: only the run step counts, wherever it sits and however it is number
   assert.deepEqual(checkPorts(moved, starter()), []);
 });
 
+test('ports: a longer number that starts with the port is not a match', () => {
+  const stale = runStep('`npm run dev` starts the server on port 31011 and Vite on port 5173.');
+  assert.match(checkPorts(stale, starter())[0], /port 3101/);
+});
+
+test('ports: a port followed by punctuation is a match', () => {
+  assert.deepEqual(checkPorts(runStep('Server on port 3101. Vite on port 5173, ready.'), starter()), []);
+});
+
+test('ports: a comment line inside a fence does not end the run step', () => {
+  const fenced = ['### 2. Run the app in the harness', '', '```bash', '# start the dev servers', 'npm run dev', '```', '', 'Server on port 3101, Vite on port 5173.', '', '### 3. Next', ''].join('\n');
+  assert.deepEqual(checkPorts(fenced, starter()), []);
+});
+
+test('ports: a heading after a closed fence still ends the run step', () => {
+  const ended = ['### 2. Run the app in the harness', '', '```bash', '# comment', '```', '', '### 3. Next', 'port 3101 and port 5173'].join('\n');
+  assert.equal(checkPorts(ended, starter()).length, 2);
+});
+
 test('ports: fails when the page has no run step', () => {
   assert.match(checkPorts('### 1. Something else\nport 3101 port 5173', starter())[0], /run step/);
 });

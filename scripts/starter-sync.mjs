@@ -100,13 +100,22 @@ export function checkTree(pageText, starterDir) {
 
 const RUN_STEP_HEADING = /^#{2,4} (?:\d+\. )?Run the app in the harness\s*$/m;
 
+/** The text up to the first heading outside a fenced block, so a `# comment` in a fence does not end it. */
+function sliceToHeading(text) {
+  const lines = text.split('\n');
+  let inFence = false;
+  const end = lines.findIndex((line) => {
+    if (line.startsWith('```')) inFence = !inFence;
+    return !inFence && /^#{1,4} /.test(line);
+  });
+  return (end === -1 ? lines : lines.slice(0, end)).join('\n');
+}
+
 /** Fails when the run step lacks `port N` for the `SERVER_PORT` or `CLIENT_PORT` in the starter's env preset. */
 export function checkPorts(pageText, starterDir) {
   const start = RUN_STEP_HEADING.exec(pageText);
   if (!start) return ['the page has no run step headed "Run the app in the harness"'];
-  const rest = pageText.slice(start.index + start[0].length);
-  const end = rest.search(/^#{1,4} /m);
-  const step = end === -1 ? rest : rest.slice(0, end);
+  const step = sliceToHeading(pageText.slice(start.index + start[0].length));
   const presetPath = join(starterDir, 'scripts/env-preset.mjs');
   if (!existsSync(presetPath)) return ['scripts/env-preset.mjs is missing from the starter'];
   const preset = readFileSync(presetPath, 'utf8');
@@ -114,7 +123,7 @@ export function checkPorts(pageText, starterDir) {
   for (const name of ['SERVER_PORT', 'CLIENT_PORT']) {
     const port = new RegExp(`\\b${name}\\b\\s*[:=]\\s*'(\\d+)'`).exec(preset)?.[1];
     if (!port) problems.push(`scripts/env-preset.mjs sets no ${name}`);
-    else if (!step.includes(`port ${port}`)) problems.push(`the run step does not contain \`port ${port}\` (${name} in the starter)`);
+    else if (!new RegExp(`port ${port}(?!\\d)`).test(step)) problems.push(`the run step does not contain \`port ${port}\` (${name} in the starter)`);
   }
   return problems;
 }
