@@ -108,6 +108,30 @@ npm run dev
 
 Open `http://localhost:5173/harness.html`. The harness stands in for Space: it asks your server for a token for a dev user and posts the token to your page. The address `http://localhost:5173` alone stays on `Waiting for Space.`, because only a host sends a token.
 
+<DiagramControls>
+
+```mermaid
+sequenceDiagram
+  accTitle: How the token travels in the harness
+  accDescr: The harness asks the dev issuer in your server for a token and posts it to the client. The client verifies it against the dev key set. The client sends it to the app server, which verifies it with the dev issuer.
+  participant H as Harness
+  participant C as Client (iframe)
+  participant S as App server
+  participant D as Dev issuer (in your server)
+  H->>D: (1) POST /api/__dev/token
+  D-->>H: signed token
+  H-->>C: (2) apps:token (postMessage)
+  C->>D: (3) GET /api/__dev/jwks.json, verify (display only)
+  C->>S: (4) Authorization: Bearer token
+  S->>D: (5) verify
+  S->>S: (6) assertCapability
+  S-->>C: response
+```
+
+</DiagramControls>
+
+Hop 3 produces `Verified in the browser`. Hops 5 and 6 produce `Verified on the server`.
+
 **Check**: the page inside the harness shows three lines.
 
 ```text
