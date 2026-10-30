@@ -1,4 +1,3 @@
-/** One `defineApp` field and the rule the SDK enforces on it. */
 export interface FieldRule {
   /** Dotted path from the definition root; `[]` marks an array item. */
   path: string;
@@ -9,13 +8,10 @@ export interface FieldRule {
   pattern?: string;
 }
 
-/** Model modalities `defineApp` accepts. */
+// The value lists below mirror what `defineApp` accepts.
 export const modalities = ['chat', 'vision', 'embed', 'rerank'] as const;
-/** Model providers `defineApp` accepts for a model slot. */
 export const modelProviders = ['ANTHROPIC', 'AZURE_OPENAI', 'COHERE', 'AZURE_DOCUMENT_INTELLIGENCE'] as const;
-/** Model capabilities `defineApp` accepts as a slot filter. */
 export const modelCapabilities = ['toolCalling', 'structuredOutput', 'reasoningOutput', 'promptCaching', 'streaming'] as const;
-/** Connector providers `defineApp` accepts for a connector slot. */
 export const connectorProviders = [
   'REST',
   'GRAPHQL',
@@ -33,7 +29,6 @@ export const connectorProviders = [
 const code = (values: readonly string[]): string => values.map((v) => `\`${v}\``).join(', ');
 const kebab = '^[a-z][a-z0-9-]*$';
 
-/** Core definition fields. */
 export const coreFieldRules: FieldRule[] = [
   {
     path: 'key',
@@ -49,7 +44,7 @@ export const coreFieldRules: FieldRule[] = [
   {
     path: 'pages[].key',
     required: true,
-    rule: 'Lower kebab-case. Unique within the app. Checked by `buildManifests`, not at import.',
+    rule: 'Lower kebab-case. Unique within the app. Uniqueness is checked by `buildManifests`, not at import.',
     pattern: kebab,
   },
   { path: 'pages[].label', required: true, rule: 'Non-empty string.' },
@@ -71,7 +66,6 @@ export const coreFieldRules: FieldRule[] = [
   { path: 'capabilities[].effect', required: true, rule: '`"read"` or `"write"`.' },
 ];
 
-/** `resources` fields: modules, model slots and connector slots. */
 export const resourceFieldRules: FieldRule[] = [
   { path: 'resources', required: false, rule: 'Object. Declares what the app needs from each Space.' },
   { path: 'resources.modules[].key', required: true, rule: 'Non-empty string. Unique within modules.' },
@@ -93,7 +87,7 @@ export const resourceFieldRules: FieldRule[] = [
   {
     path: 'resources.models[].models',
     required: false,
-    rule: 'Exact model ids, as the provider names them. At least one when set.',
+    rule: 'Exact model identifiers, as the provider names them. At least one when set.',
   },
   {
     path: 'resources.models[].capabilities',

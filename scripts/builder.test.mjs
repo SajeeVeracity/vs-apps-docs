@@ -136,7 +136,6 @@ test('emitted files typecheck and run through the real defineApp', async () => {
       assert.deepEqual(exported, toDefinition(draft), name);
     }
 
-    // The same pipeline rejects an invalid draft at import time.
     const bad = join(work, 'bad.ts');
     writeFileSync(bad, emitFile(invalid['bad app key'](rich())).code);
     await assert.rejects(import(pathToFileURL(bad).href));

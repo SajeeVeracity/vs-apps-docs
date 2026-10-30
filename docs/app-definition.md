@@ -113,7 +113,7 @@ To fill in a definition from a form instead, use the [definition builder](/build
 
 | Field | Required | Rule |
 | --- | --- | --- |
-| `key` | required | Lower kebab-case. Unique within the app. Checked by `buildManifests`, not at import. |
+| `key` | required | Lower kebab-case. Unique within the app. Uniqueness is checked by `buildManifests`, not at import. |
 | `label` | required | Non-empty string. |
 | `path` | required | String that starts with `/`. |
 | `capability` | optional | One capability key. A page without a capability has no gate. |
@@ -197,7 +197,7 @@ export const definition = defineApp({
 | `providers` | required | At least one of `ANTHROPIC`, `AZURE_OPENAI`, `COHERE`, `AZURE_DOCUMENT_INTELLIGENCE`. |
 | `label` | optional | Display label. Falls back to the slot key. |
 | `description` | optional | String. |
-| `models` | optional | Exact model ids, as the provider names them. At least one when set. |
+| `models` | optional | Exact model identifiers, as the provider names them. At least one when set. |
 | `capabilities` | optional | Each one of `toolCalling`, `structuredOutput`, `reasoningOutput`, `promptCaching`, `streaming`. |
 | `required` | required | Boolean. |
 
@@ -227,20 +227,20 @@ Any handler makes `eventsUrl` required in the manifest. `buildManifests` sets it
 
 ## How it reflects in Space
 
-Vector registers your manifest URL in Space. Space stores the served manifest, never the definition file. After that:
+Vector registers your manifest URL in Space. After that:
 
 - The page shows in the Space navigation, for users who hold the page's capability.
 - A space manager grants the declared capabilities. Only declared capabilities can be granted.
 - A space manager picks a model for each model slot and attaches one connector to each connector slot. If no one sets a slot, the app cannot use it.
 - A manifest change waits as a pending review. Vector applies it before it goes live, unless auto-apply is on for the [app registration](./glossary.md#app-registration).
 
-Space reads the manifest again when Vector triggers a pull and when the app announces that it started.
+Space reads the manifest again when Vector asks it to and when the app announces that it started.
 
 ### SDK guarantees
 
-- `defineApp` rejects a malformed definition at import.
-- `buildManifests` builds the manifest from the definition and the server serves it at `GET /api/manifest/:appKey`.
-- The SDK refuses a model slot that the manifest does not declare. If no one sets a slot, the SDK refuses it too.
+- Import check: [use 1](#on-import-and-in-the-client).
+- Manifest build and serving: [use 3](#in-your-server).
+- Model slot lookup: [use 9](#in-your-server).
 
 ### Space-side
 
