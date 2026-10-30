@@ -245,6 +245,18 @@ test('Part 2 click paths and Checks', () => {
   assert.doesNotMatch(steps(part2)[1], /Auto-apply/);
 });
 
+test('Part 2 says each provisioning fact once, where the reader meets it, and makes no 404 claim', () => {
+  const [, register, , addApp] = steps(part2);
+  const once = (re) => assert.equal((part2.match(re) ?? []).length, 1, String(re));
+  once(/`serviceSecret`/g);
+  once(/`requireProvisioning`/g);
+  once(/a reply that is not OK/g);
+  assert.match(register, /`requireProvisioning`/);
+  assert.match(addApp, /`serviceSecret`/);
+  assert.match(addApp, /a reply that is not OK/);
+  assert.doesNotMatch(text, /\b404\b/);
+});
+
 test('the Result summarises the last Check and has no second output block', () => {
   assert.doesNotMatch(result, /^```/m);
   assert.match(result, /same three lines as the last Check/);
