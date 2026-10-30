@@ -83,8 +83,7 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
     return () => viewport.removeEventListener('wheel', onWheel);
   }, []);
 
-  // The Mermaid container is added after hydration, and a theme change replaces its SVG; ready never turns back off.
-  // Mermaid renders `accTitle` as the SVG's `<title>`.
+  // The Mermaid container is added after hydration, and a theme change replaces its SVG; ready never turns back off. The label is the SVG's `<title>`, which Mermaid renders from `accTitle`.
   useEffect(() => {
     const frame = frameRef.current;
     if (!frame) return undefined;
