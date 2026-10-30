@@ -98,9 +98,31 @@ hello-app/
         └── index.ts
 ```
 
-### 2. Read the app definition
+### 2. Run the app in the harness
 
-The server and the client import this file, so both read the same facts. The [app definition](./glossary.md#app-definition) names the app and lists its pages and capabilities. `CAPABILITY` holds the capability key, so no code file repeats the string.
+The harness stands in for Space on your machine. It lets you watch the whole path work before anyone registers the app. `npm run dev` starts the server on port 3101 and Vite on port 5173 with the harness values, and it needs no `.env`. Vite serves the client and forwards requests under `/api` to the server.
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:5173/harness.html`. The harness stands in for Space: it asks your server for a token for a dev user and posts the token to your page. The address `http://localhost:5173` alone stays on `Waiting for Space.`, because only a host sends a token.
+
+**Check**: the page inside the harness shows three lines.
+
+```text
+Verified in the browser: user dev-user in space 1.
+Capabilities: hello:view
+Verified on the server: space 1, user dev-user
+```
+
+The run proves your page and your server, but not your registration or Space access. Part 2 covers those.
+
+### 3. Read the app definition
+
+The three lines in the Check come from three parts of the app. Steps 3 to 5 read one part each and name the line it explains.
+
+This step explains `Capabilities: hello:view`. The [app definition](./glossary.md#app-definition) names the app and lists its pages and capabilities. The server check and the page both import `CAPABILITY`. They use one capability key, `hello:view`.
 
 ```ts title="shared/src/index.ts" starter
 import { defineApp } from '@vectoragents/vs-apps';
@@ -125,9 +147,11 @@ export const definition = defineApp({
 
 `capability` on the page must match a capability `key` exactly.
 
-### 3. Serve the manifest and client config
+### 4. Verify the token on the server
 
-Space and your client need facts about your app before any user token exists, so the server answers two routes first. `buildManifests` turns the definition into a manifest, a JSON document that tells Space what your app contains. The server serves it to Space at `GET /api/manifest/hello-app`, and Space sends a provisioning token with the request.
+The line `Verified on the server` comes from a check that runs before your server answers. The server trusts no token until it passes that check.
+
+Space and your client need facts about your app before any user token exists. The server answers two routes for them first. `buildManifests` turns the definition into a manifest, a JSON document that tells Space what your app contains. The server serves it to Space at `GET /api/manifest/hello-app`. Space sends a provisioning token, which proves the request comes from Space.
 
 ```ts title="server/src/manifests.ts" starter
 import { buildManifests } from '@vectoragents/vs-apps/server';
@@ -139,25 +163,9 @@ export const manifests = buildManifests([definition], {
 });
 ```
 
-`GET /api/client-config` tells the client which parent origin and which key set to trust. In harness mode, `devIssuer` is set and the key set comes from `DEV_JWKS_PATH`, which `dev-routes.ts` defines. Otherwise it is `SPACE_JWKS_URL`, which Part 2 sets. The manifest route calls `requireProvisioning`, which step 4 defines.
+`catalogPath` points at `agent-catalog.json`, the [agent catalog](./glossary.md#agent-catalog) file. The Hello app has no agent pages or actions. The starter ships it empty.
 
-```ts title="server/src/main.ts" starter
-const routes: Record<string, Route> = {
-  '/api/client-config': async () => ({
-    allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN,
-    spaceJwksUrl: devIssuer ? DEV_JWKS_PATH : process.env.SPACE_JWKS_URL,
-  }),
-  '/api/manifest/hello-app': async (req) => {
-    await requireProvisioning(req);
-    return manifests['hello-app'];
-  },
-```
-
-### 4. Verify the token on the server
-
-The server check is the one that protects data, so the server trusts no token until it verifies the token. The auth module holds the verifier and the checks that protected routes run. `extractBearer` reads the `Authorization` header, `verifyAppUserToken` verifies the user token and returns its claims, and `assertCapability` refuses a token that lacks the capability you name.
-
-The verifier reads the Space key set from `SPACE_JWKS_URL`. In harness mode it uses the signing key of the harness instead.
+The auth module holds the verifier and the checks that protected routes run. `extractBearer` reads the `Authorization` header, `verifyAppUserToken` verifies the token and returns its claims, and `assertCapability` refuses a token that lacks the capability you name. The verifier reads the Space key set from `SPACE_JWKS_URL`, which Part 2 sets. In harness mode it uses `devIssuer` instead, the signer of the dev tokens that `dev-routes.ts` defines.
 
 ```ts title="server/src/auth.ts" starter
 import type { IncomingMessage } from 'node:http';
@@ -183,9 +191,18 @@ export function requireProvisioning(req: IncomingMessage) {
 }
 ```
 
-`GET /api/hello` returns the claims of a verified user token. Space calls `POST /api/provision` and `POST /api/deprovision` when a space manager, the person who adds apps to a Space, adds or removes the app. Those two routes verify the provisioning token. They ignore the `serviceSecret` that Space sends, because this app makes no server-to-server calls.
+The `routes` object maps each path to a handler.
 
 ```ts title="server/src/main.ts" starter
+const routes: Record<string, Route> = {
+  '/api/client-config': async () => ({
+    allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN,
+    spaceJwksUrl: devIssuer ? DEV_JWKS_PATH : process.env.SPACE_JWKS_URL,
+  }),
+  '/api/manifest/hello-app': async (req) => {
+    await requireProvisioning(req);
+    return manifests['hello-app'];
+  },
   '/api/hello': async (req) => {
     const claims = await requireCapability(req, CAPABILITY);
     return { sub: claims.sub, spaceId: claims.spaceId };
@@ -198,30 +215,44 @@ export function requireProvisioning(req: IncomingMessage) {
     await requireProvisioning(req);
     return { ok: true };
   },
+};
 ```
 
-Without the two provisioning routes, Space gets a `404` when a space manager adds the app. The request handler turns a failed check into an `AppAuthError`, which carries the HTTP status. `handleDevRoute` serves the harness routes in harness mode and does nothing otherwise.
+`GET /api/client-config` tells the client which parent origin and which key set to trust. In harness mode the key set comes from `DEV_JWKS_PATH`, the route where `devIssuer` publishes its public keys. Otherwise it comes from `SPACE_JWKS_URL`. A check that fails throws an `AppAuthError`. The server replies with status 401 when the token is missing or invalid, and 403 when the token is for another space or app or lacks the capability.
 
-```ts title="server/src/main.ts" starter
-createServer(async (req, res) => {
-  const { pathname } = new URL(req.url ?? '/', 'http://localhost');
-  const route = routes[pathname];
-  try {
-    if (await handleDevRoute(req, res, manifests)) return;
-    if (!route) return send(res, 404, { error: 'Not found' });
-    send(res, 200, await route(req));
-  } catch (error) {
-    if (error instanceof AppAuthError) return send(res, error.status, { error: error.message });
-    send(res, 500, { error: 'Server error' });
-  }
-}).listen(Number(process.env.SERVER_PORT));
-```
+`GET /api/hello` returns the claims of a verified user token. Space calls `POST /api/provision` and `POST /api/deprovision` when a space manager, the person who adds apps to a Space, adds or removes the app. The harness run does not call them.
 
 ### 5. Read the token in the page
 
-The page needs the token to call your server, so the client keeps the token Space sends. `loadAppClientConfig` fetches `GET /api/client-config`. `AppProvider` starts the iframe bridge, verifies each token Space sends and exposes the claims. `BootGate` holds the page back until the first verified token arrives.
+The page needs the token to call your server. It also shows the lines `Verified in the browser` and `Capabilities` of the Check from that token. `loadAppClientConfig` fetches `GET /api/client-config`. `AppProvider` starts the iframe bridge, the channel on which Space sends tokens, verifies each token Space sends and exposes the claims. `BootGate` shows `fallback` and does not show the page until the first verified token arrives.
 
-`token.ts` keeps the verified token in memory for server calls.
+```tsx title="client/src/App.tsx" starter
+import { loadAppClientConfig } from '@vectoragents/vs-apps/client';
+import { AppProvider, BootGate } from '@vectoragents/vs-apps/react';
+import { HelloPage } from './HelloPage';
+import { setAppToken } from './token';
+
+const config = loadAppClientConfig();
+
+export function App() {
+  return (
+    <AppProvider
+      config={config}
+      navigate={(path) => window.history.replaceState(null, '', path)}
+      onToken={setAppToken}
+      onTheme={(theme) => {
+        document.documentElement.dataset.theme = theme;
+      }}
+    >
+      <BootGate fallback={<p>Waiting for Space.</p>}>
+        <HelloPage />
+      </BootGate>
+    </AppProvider>
+  );
+}
+```
+
+`onToken` is the only way to read the raw token. `token.ts` holds it in a module variable, as the SDK README does.
 
 ```ts title="client/src/token.ts" starter
 let appToken: string | null = null;
@@ -239,7 +270,7 @@ export async function fetchHello(): Promise<{ sub?: string; spaceId: number }> {
 }
 ```
 
-The page reads the claims with `useApp`. `RequireCapability` hides the content from a user who lacks `hello:view`. This client check is display only, because anyone can change what runs in a browser. The server check from step 4 decides.
+The page reads the claims with `useApp`. `RequireCapability` hides the content from a user who lacks `hello:view`. This client check is display only. The server check from step 4 decides.
 
 ```tsx title="client/src/HelloPage.tsx" starter
 import { useEffect, useState } from 'react';
@@ -269,56 +300,6 @@ export function HelloPage() {
   );
 }
 ```
-
-`App.tsx` wraps the page in the provider and the boot gate. `main.tsx` mounts `App`, and `index.html` loads `main.tsx`.
-
-```tsx title="client/src/App.tsx" starter
-import { loadAppClientConfig } from '@vectoragents/vs-apps/client';
-import { AppProvider, BootGate } from '@vectoragents/vs-apps/react';
-import { HelloPage } from './HelloPage';
-import { setAppToken } from './token';
-
-const config = loadAppClientConfig();
-
-export function App() {
-  return (
-    <AppProvider
-      config={config}
-      navigate={(path) => window.history.replaceState(null, '', path)}
-      onToken={setAppToken}
-      onTheme={(theme) => {
-        document.documentElement.dataset.theme = theme;
-      }}
-    >
-      <BootGate fallback={<p>Waiting for Space.</p>}>
-        <HelloPage />
-      </BootGate>
-    </AppProvider>
-  );
-}
-```
-
-### 6. Run the app in the harness
-
-The harness stands in for Space on your machine, so you can watch the whole path work before anyone registers the app. `npm run dev` starts the server on port 3101 and Vite on port 5173 with the harness values, and it needs no `.env`. Vite serves the client and forwards requests under `/api` to the server.
-
-```bash
-npm run dev
-```
-
-The server prints a warning that begins with `agent-catalog file not found`. The Hello app needs no catalog, so ignore it.
-
-Open `http://localhost:5173/harness.html`. The harness plays the Space host: it signs a token for a dev user and posts it to your page. The address `http://localhost:5173` alone stays on `Waiting for Space.`, because only a host sends a token.
-
-**Check**: the page inside the harness shows three lines.
-
-```text
-Verified in the browser: user dev-user in space 1.
-Capabilities: hello:view
-Verified on the server: space 1, user dev-user
-```
-
-The harness signs its own tokens, so it proves your page and server but not your registration or Space access. Part 2 covers those.
 
 ## Part 2: Add the app to a Space
 
