@@ -5,14 +5,13 @@ export interface TrackStep {
 }
 
 export interface Track {
-  /** Stable slug that also forms the heading `id`. */
   id: string;
   title: string;
   goal: string;
   steps: TrackStep[];
 }
 
-/** The goal tracks on the landing page, in card order. Steps are page titles in prerequisite order. */
+/** The goal tracks on the landing page. Steps are page titles in prerequisite order. */
 export const tracks: Track[] = [
   {
     id: 'first-app-in-space',
