@@ -37,18 +37,18 @@ sequenceDiagram
 
 </DiagramControls>
 
-Space mints the token and posts it to your client. Your client sends it to your server, and the server verifies it against the Space key set. Only the server check protects data. Anyone can change what runs in a browser.
+Space mints the token and posts it to your client. Your client sends it to your server, and the server verifies it against the Space key set, the public keys that Space publishes. Only the server check protects data. Anyone can change what runs in a browser.
 
 ## Prerequisites
 
-- [ ] Git, Node.js 20.19 or later, and `npm`.
-- [ ] A GitHub token with `read:packages` access to `@vectoragents/vs-apps`.
+- [ ] Git, `npm` and Node.js 20.19 or later 20.x, or Node.js 22.12 or later.
+- [ ] A GitHub personal access token (classic) with the `read:packages` scope. [Create one](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic).
 
 ## Part 1: Run the app locally
 
 ### 1. Clone the starter and install
 
-The starter is a working app, so you start from running code instead of an empty project. Clone it, export your package token and install the dependencies. `.npmrc` reads the token from the `GITHUB_PACKAGES_TOKEN` environment variable during install, so the token is never committed to git.
+The starter is a working app. You start from running code instead of an empty project. Clone it, export your package token and install the dependencies. `.npmrc` reads the token from the `GITHUB_PACKAGES_TOKEN` environment variable during install. The token is never committed to git.
 
 ```bash
 git clone https://github.com/SajeeVeracity/vector-app-quickstart.git hello-app
@@ -56,6 +56,8 @@ cd hello-app
 export GITHUB_PACKAGES_TOKEN=YOUR_GITHUB_PACKAGES_TOKEN
 npm install
 ```
+
+In PowerShell, run `$env:GITHUB_PACKAGES_TOKEN = "YOUR_GITHUB_PACKAGES_TOKEN"` instead of the `export` line.
 
 **Check**: run `npm ls @vectoragents/vs-apps`. The command exits with 0 and shows the package in all three workspaces.
 
@@ -69,7 +71,7 @@ hello-app@0.1.0 /path/to/hello-app
   └── @vectoragents/vs-apps@0.2.4 deduped
 ```
 
-The clone holds these files. The steps below visit each one.
+The clone holds these files. The tour reads the ones that carry the token path.
 
 ```text
 hello-app/
