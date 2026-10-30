@@ -137,7 +137,7 @@ export const manifests = buildManifests([definition], {
 });
 ```
 
-`GET /api/client-config` tells the client which parent origin and which key set to trust. In harness mode the key set comes from the harness. Otherwise it is `SPACE_JWKS_URL`, which Part 2 sets.
+`GET /api/client-config` tells the client which parent origin and which key set to trust. In harness mode, `devIssuer` is set and the key set comes from `DEV_JWKS_PATH`, which `dev-routes.ts` defines. Otherwise it is `SPACE_JWKS_URL`, which Part 2 sets. The manifest route calls `requireProvisioning`, which step 4 defines.
 
 ```ts title="server/src/main.ts" starter
 const routes: Record<string, Route> = {
