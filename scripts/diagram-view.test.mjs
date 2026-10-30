@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { disabledFlags, initialView, reset, zoomIn, zoomOut } from '../src/components/diagramView.ts';
+import {
+  clampView,
+  disabledFlags,
+  initialView,
+  panDown,
+  panLeft,
+  panRight,
+  panUp,
+  reset,
+  zoomIn,
+  zoomOut,
+} from '../src/components/diagramView.ts';
 
 const size = { width: 800, height: 400 };
 const panKeys = ['panUp', 'panDown', 'panLeft', 'panRight'];
@@ -72,4 +83,41 @@ test('pan flags: all disabled at 1x, each disabled only at its own edge', () => 
     [bottomRight.panUp, bottomRight.panLeft, bottomRight.panDown, bottomRight.panRight],
     [false, false, true, true],
   );
+});
+
+test('a pan arrow moves the view window 20% of the visible size in its direction', () => {
+  const view = { zoom: 2, x: -400, y: -200 };
+  assert.deepEqual(panRight(view, size), { zoom: 2, x: -560, y: -200 });
+  assert.deepEqual(panLeft(view, size), { zoom: 2, x: -240, y: -200 });
+  assert.deepEqual(panDown(view, size), { zoom: 2, x: -400, y: -280 });
+  assert.deepEqual(panUp(view, size), { zoom: 2, x: -400, y: -120 });
+});
+
+test('a pan press stops at the diagram edge', () => {
+  assert.deepEqual(panLeft({ zoom: 2, x: -100, y: -200 }, size), { zoom: 2, x: 0, y: -200 });
+  assert.deepEqual(panRight({ zoom: 2, x: -700, y: -200 }, size), { zoom: 2, x: -800, y: -200 });
+  assert.deepEqual(panUp({ zoom: 2, x: -400, y: -50 }, size), { zoom: 2, x: -400, y: 0 });
+  assert.deepEqual(panDown({ zoom: 2, x: -400, y: -380 }, size), { zoom: 2, x: -400, y: -400 });
+});
+
+test('panning at 1x changes nothing', () => {
+  for (const pan of [panUp, panDown, panLeft, panRight]) assert.deepEqual(pan(initialView, size), initialView);
+});
+
+test('repeated pans reach the edge and a pressed arrow ends disabled', () => {
+  let view = { zoom: 2, x: 0, y: 0 };
+  for (let i = 0; i < 6; i += 1) view = panRight(view, size);
+  assert.equal(view.x, -800);
+  assert.equal(disabledFlags(view, size).panRight, true);
+  assert.equal(disabledFlags(view, size).panLeft, false);
+});
+
+test('clampView re-covers the viewport after it shrinks, and keeps a valid view', () => {
+  const valid = { zoom: 2, x: -400, y: -200 };
+  assert.deepEqual(clampView(valid, size), valid);
+  assert.deepEqual(clampView({ zoom: 2, x: -800, y: -400 }, { width: 400, height: 200 }), {
+    zoom: 2,
+    x: -400,
+    y: -200,
+  });
 });

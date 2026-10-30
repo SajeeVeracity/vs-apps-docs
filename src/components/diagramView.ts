@@ -23,6 +23,7 @@ export interface DisabledFlags {
 export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 4;
 export const ZOOM_STEP = 1.5;
+export const PAN_STEP = 0.2;
 
 export const initialView: View = { zoom: MIN_ZOOM, x: 0, y: 0 };
 
@@ -30,7 +31,8 @@ const clamp = (value: number, min: number, max: number): number => Math.min(max,
 
 const minOffset = (length: number, zoom: number): number => length - length * zoom;
 
-function clampOffsets(view: View, size: Size): View {
+/** Re-covers the viewport; also used after the viewport resizes. */
+export function clampView(view: View, size: Size): View {
   return {
     zoom: view.zoom,
     x: clamp(view.x, minOffset(size.width, view.zoom), 0),
@@ -42,7 +44,7 @@ function clampOffsets(view: View, size: Size): View {
 function zoomTo(view: View, zoom: number, size: Size): View {
   const next = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
   const ratio = next / view.zoom;
-  return clampOffsets(
+  return clampView(
     {
       zoom: next,
       x: size.width / 2 - (size.width / 2 - view.x) * ratio,
@@ -55,6 +57,19 @@ function zoomTo(view: View, zoom: number, size: Size): View {
 export const zoomIn = (view: View, size: Size): View => zoomTo(view, view.zoom * ZOOM_STEP, size);
 
 export const zoomOut = (view: View, size: Size): View => zoomTo(view, view.zoom / ZOOM_STEP, size);
+
+/** The arrow moves the view window, so the content offset moves the opposite way. */
+function panBy(view: View, size: Size, dx: number, dy: number): View {
+  return clampView({ zoom: view.zoom, x: view.x - dx, y: view.y - dy }, size);
+}
+
+export const panUp = (view: View, size: Size): View => panBy(view, size, 0, -size.height * PAN_STEP);
+
+export const panDown = (view: View, size: Size): View => panBy(view, size, 0, size.height * PAN_STEP);
+
+export const panLeft = (view: View, size: Size): View => panBy(view, size, -size.width * PAN_STEP, 0);
+
+export const panRight = (view: View, size: Size): View => panBy(view, size, size.width * PAN_STEP, 0);
 
 export const reset = (): View => initialView;
 

@@ -143,3 +143,15 @@
   outline: 2px solid var(--ifm-color-primary);
   outline-offset: 2px;
 }
+
+@media (max-width: 599px) {
+  .diagram-controls {
+    position: static;
+    grid-template-columns: repeat(7, 32px);
+    grid-template-rows: 32px;
+    grid-template-areas: 'zin zout reset up down left right';
+    justify-content: center;
+    padding: 8px;
+    border-top: 1px solid var(--ifm-color-emphasis-300);
+  }
+}
