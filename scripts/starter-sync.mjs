@@ -114,10 +114,8 @@ function sliceToHeading(text) {
 /** Fails when the run step lacks `port N` for the `SERVER_PORT` or `CLIENT_PORT` in the starter's env preset. */
 export function checkPorts(pageText, starterDir) {
   const start = RUN_STEP_HEADING.exec(pageText);
-  if (!start) return ['the page has no run step headed "Run the app in the harness"'];
   const step = sliceToHeading(pageText.slice(start.index + start[0].length));
   const presetPath = join(starterDir, 'scripts/env-preset.mjs');
-  if (!existsSync(presetPath)) return ['scripts/env-preset.mjs is missing from the starter'];
   const preset = readFileSync(presetPath, 'utf8');
   const problems = [];
   for (const name of ['SERVER_PORT', 'CLIENT_PORT']) {
@@ -131,7 +129,6 @@ export function checkPorts(pageText, starterDir) {
 // The page clones the default branch, so the check reads main and not a tag.
 const gitClone = (url, dir) => execFileSync('git', ['clone', '--depth', '1', '--branch', 'main', url, dir], { stdio: 'pipe' });
 
-/** Returns the process exit code. */
 export async function main({
   env = process.env,
   clone = gitClone,
