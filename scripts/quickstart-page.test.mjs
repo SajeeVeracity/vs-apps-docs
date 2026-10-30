@@ -77,6 +77,7 @@ test('prerequisites are one app-side checklist and state the baseline once', () 
   for (const line of items) assert.match(line, /^- \[ \] /);
   assert.match(prerequisites, /Node\.js 20\.19/);
   assert.match(prerequisites, /`read:packages`/);
+  assert.match(prerequisites, /\(classic\)/);
   assert.equal(count(/20\.19/g), 1);
   assert.doesNotMatch(prerequisites, /space manager|published agent|Space server/i);
 });
@@ -143,6 +144,7 @@ test('commands run in the step that needs them', () => {
   assert.equal(count(/export GITHUB_PACKAGES_TOKEN=/g), 1);
   assert.match(list[0], /^export GITHUB_PACKAGES_TOKEN=/m);
   assert.match(list[0], /^npm install$/m);
+  assert.match(list[0], /^In PowerShell, run `\$env:GITHUB_PACKAGES_TOKEN = "YOUR_GITHUB_PACKAGES_TOKEN"` instead of the `export` line\.$/m);
   assert.match(list[0], /^\*\*Check\*\*: run `npm ls @vectoragents\/vs-apps`/m);
   assert.doesNotMatch(text, /_authToken=[A-Za-z0-9_]{20,}/);
   assert.match(list[5], /^npm run dev$/m);
