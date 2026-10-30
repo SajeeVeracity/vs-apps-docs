@@ -375,6 +375,8 @@ Only Vector registers an app and allows it in an organization license, so you se
 - The iframe URL: `http://localhost:` followed by `CLIENT_PORT`. It is the client origin, not the server origin.
 - The name of your organization.
 
+Space fetches the manifest with a provisioning token. The manifest route calls `requireProvisioning`, which verifies that token.
+
 Contact your Vector representative. Vector creates the [app registration](./glossary.md#app-registration), enables it and allows it in your organization license.
 
 **Check**: wait for Vector to confirm. In step 4, **Hello app** appears in the **Add an app** dialog.
@@ -394,6 +396,8 @@ The space manager decides which spaces hold the app, so this step belongs to tha
 
 1. Choose **Settings**, **Space**, **Context Hub**, then **Resources**.
 2. Choose **Add resource**, then **App**. In the **Add an app** dialog, choose **Add** next to **Hello app**.
+
+When you choose **Add**, Space calls `POST /api/provision` on your server. The body holds `serviceSecret`, a secret that Space creates for each pair of app and space. Your server uses it to prove its identity when it calls Space. Space reads a reply that is not OK, meaning a status outside 200 to 299, as a failure, and the add fails.
 
 **Check**: Space shows the toast `App enabled`. **Resources** lists a **Hello app** row with type **App** and status **Active**. The **Configure Hello app** sheet opens. Close it.
 
