@@ -48,7 +48,7 @@ Space mints the token and posts it to your client. Your client sends it to your 
 
 ### 1. Clone the starter and install
 
-The starter holds a working app, so you start from running code instead of an empty workspace. Clone it, export your package token and install. `.npmrc` reads the token from `GITHUB_PACKAGES_TOKEN` at install, so the token never enters the repository.
+The starter is a working app, so you start from running code instead of an empty project. Clone it, export your package token and install the dependencies. `.npmrc` reads the token from the `GITHUB_PACKAGES_TOKEN` environment variable during install, so the token is never committed to git.
 
 ```bash
 git clone https://github.com/SajeeVeracity/vector-app-quickstart.git hello-app
