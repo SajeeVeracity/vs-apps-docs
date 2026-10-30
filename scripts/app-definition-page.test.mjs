@@ -38,6 +38,14 @@ test('contrasts definition and manifest and says Space never sees the definition
   assert.match(text, /Space never sees the definition/);
 });
 
+test('the one mermaid fence sits inside DiagramControls, imported first in the body', () => {
+  const body = text.replace(/^---\n[\s\S]*?\n---\n/, '').trim();
+  assert.equal(body.split('\n\n')[0], "import DiagramControls from '@site/src/components/DiagramControls';");
+  assert.match(text, /<DiagramControls>\n\n```mermaid\n[\s\S]*?\n```\n\n<\/DiagramControls>\n\n### On import and in the client/);
+  assert.equal([...text.matchAll(/<DiagramControls>/g)].length, 1);
+  assert.equal([...text.matchAll(/```mermaid/g)].length, 1);
+});
+
 test('field rows equal the field-rules table, per object, with no extra rows', () => {
   const rules = [...coreFieldRules, ...resourceFieldRules];
   const documented = [];

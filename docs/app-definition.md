@@ -2,6 +2,8 @@
 title: App definition
 ---
 
+import DiagramControls from '@site/src/components/DiagramControls';
+
 ## What an app definition is
 
 An app definition is one TypeScript object, built with `defineApp`, that describes your app to [Space](./glossary.md#space).
@@ -46,8 +48,10 @@ Space never sees the definition. It reads only the manifest the server builds fr
 
 One definition is used in ten places, in three groups: on import and in the client, in your server and in Space.
 
+<DiagramControls>
+
 ```mermaid
-flowchart LR
+flowchart TB
   accTitle: Where the app definition is used
   accDescr: Your client and your server import the app definition. The server builds a manifest from it. Space reads the manifest over HTTP and never reads the definition.
   D["App definition<br/>(defineApp)"]
@@ -60,6 +64,8 @@ flowchart LR
   S -- buildManifests --> M
   M -- "GET /api/manifest/:appKey" --> P
 ```
+
+</DiagramControls>
 
 ### On import and in the client
 
