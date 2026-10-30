@@ -28,7 +28,7 @@ for (const [file, targets] of Object.entries(pages)) {
 
   test(`${file} Next steps items are a link plus a one-line reason`, () => {
     const items = block(text)[0].split('\n').slice(1).filter((l) => l.trim());
-    if (withLead.has(file)) assert.doesNotMatch(items.shift(), /^- /);
+    if (withLead.has(file)) assert.match(items.shift(), /^[^-.!?][^.!?]*\.$/, 'lead is one non-bullet sentence');
     assert.equal(items.length, targets.length);
     for (const line of items) assert.match(line, /^- \[[^\]]+\]\([^)]+\): [^\n]*\S\.$/);
     const links = items.map((l) => l.match(/\]\(([^)]+)\)/)[1]);

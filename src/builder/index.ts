@@ -77,7 +77,7 @@ export interface BuildOutput {
 const rules = new Map([...coreFieldRules, ...resourceFieldRules].map((r) => [r.path, r]));
 const matches = (rulePath: string, value: string): boolean => new RegExp(rules.get(rulePath)!.pattern!).test(value);
 const ruleText = (rulePath: string): string => rules.get(rulePath)!.rule;
-// The builder blocks a bad page key itself, so the "Checked by `buildManifests`" note would read as if the error were optional.
+// Drops the `buildManifests` note: the builder reports a bad page key itself.
 const pageKeyMessage = ruleText('pages[].key').replace(/ Checked by .*$/, '');
 const oneOf = (value: string, options: readonly string[]): boolean => options.includes(value);
 
@@ -87,7 +87,7 @@ function checkUnique(keys: string[], base: string, noun: string, errors: Issue[]
   });
 }
 
-/** Errors mirror what `defineApp` rejects. Warnings flag input `defineApp` accepts but that points at nothing. */
+/** Errors are input `defineApp` or `buildManifests` rejects. Warnings flag input `defineApp` accepts that points at nothing. */
 export function validateDraft(draft: Draft): { errors: Issue[]; warnings: Issue[] } {
   const errors: Issue[] = [];
   const warnings: Issue[] = [];
@@ -166,7 +166,6 @@ export function validateDraft(draft: Draft): { errors: Issue[]; warnings: Issue[
 const nonEmpty = <T>(value: T[] | undefined): T[] | undefined => (value && value.length > 0 ? value : undefined);
 const blank = (value: string | undefined): string | undefined => (value ? value : undefined);
 
-/** Drops empty optional fields and nests `resources` only when a slot exists. */
 export function toDefinition(draft: Draft): Record<string, unknown> {
   const { modules, models, connectors } = draft.resources;
   const resources = {
@@ -237,7 +236,6 @@ export function emitFile(draft: Draft): { path: string; code: string } {
   return { path, code };
 }
 
-/** Validates the draft and emits its file; `ok` is false when any error remains. */
 export function buildOutput(draft: Draft): BuildOutput {
   const { errors, warnings } = validateDraft(draft);
   return { ok: errors.length === 0, errors, warnings, file: emitFile(draft) };
