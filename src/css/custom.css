@@ -141,11 +141,12 @@
   gap: 4px;
 }
 
+/* Emphasis 600 is the lightest step that keeps the border at 3:1 on the surface in both themes. */
 .diagram-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--ifm-color-emphasis-300);
+  border: 1px solid var(--ifm-color-emphasis-600);
   border-radius: 6px;
   background: var(--ifm-background-surface-color);
   color: var(--ifm-font-color-base);

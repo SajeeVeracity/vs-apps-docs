@@ -121,7 +121,8 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
 
   // The gesture restarts from the current view whenever a pointer joins or leaves.
   const restartGesture = () => {
-    const points = [...pointers.current.values()];
+    // Array.from, not spread: Docusaurus compiles with Babel preset-env `loose`, which turns `[...iterator]` into `[iterator]`.
+    const points = Array.from(pointers.current.values());
     gesture.current = points.length === 0 ? null : { start: viewRef.current, from: touchesOf(points) };
   };
 
@@ -137,7 +138,7 @@ function DiagramFrame({ children }: { children: ReactNode }): ReactElement {
     if (!pointers.current.has(event.pointerId) || !gesture.current) return;
     pointers.current.set(event.pointerId, localPoint(event));
     const { start, from } = gesture.current;
-    const points = [...pointers.current.values()];
+    const points = Array.from(pointers.current.values());
     const size = readSize(viewportRef.current);
     if (points.length === 1) {
       commit(dragView(start, points[0].x - from.centre.x, points[0].y - from.centre.y, size));
