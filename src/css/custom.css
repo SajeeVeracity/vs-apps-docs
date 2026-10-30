@@ -87,3 +87,111 @@
 .landing-start {
   margin-bottom: 1.5rem;
 }
+
+.diagram-frame {
+  --diagram-button-size: 32px;
+  position: relative;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  background: var(--ifm-background-surface-color);
+  margin-bottom: var(--ifm-leading);
+}
+
+.diagram-frame .diagram-viewport {
+  overflow: hidden;
+}
+
+.diagram-frame .diagram-inner {
+  transform-origin: 0 0;
+}
+
+@media (pointer: coarse) {
+  .diagram-frame {
+    --diagram-button-size: 44px;
+  }
+}
+
+.diagram-hint {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.diagram-controls {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, var(--diagram-button-size));
+  grid-template-rows: repeat(3, var(--diagram-button-size));
+  grid-template-areas:
+    '. up . zin'
+    'left reset right zout'
+    '. down . .';
+  gap: 4px;
+}
+
+/* Emphasis 600 is the lightest step that keeps the border at 3:1 on the surface in both themes. */
+.diagram-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ifm-color-emphasis-600);
+  border-radius: 6px;
+  background: var(--ifm-background-surface-color);
+  color: var(--ifm-font-color-base);
+  cursor: pointer;
+  padding: 0;
+  width: var(--diagram-button-size);
+  height: var(--diagram-button-size);
+}
+
+.diagram-button:hover:not(:disabled) {
+  background: var(--ifm-color-emphasis-200);
+}
+
+.diagram-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.diagram-viewport:focus-visible,
+.diagram-button:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 2px;
+}
+
+@media (max-width: 599px) {
+  .diagram-controls {
+    position: static;
+    grid-template-columns: repeat(7, minmax(var(--diagram-button-size), 1fr));
+    grid-template-rows: var(--diagram-button-size);
+    grid-template-areas: 'zin zout reset up down left right';
+    padding: 8px;
+    overflow-x: auto;
+    border-top: 1px solid var(--ifm-color-emphasis-300);
+  }
+
+  .diagram-button {
+    width: 100%;
+  }
+}
+
+@media print {
+  .diagram-controls {
+    display: none;
+  }
+
+  .diagram-frame .diagram-viewport {
+    overflow: visible;
+  }
+
+  .diagram-frame .diagram-inner {
+    transform: none !important;
+  }
+}
