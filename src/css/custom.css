@@ -83,3 +83,7 @@ nav[aria-label='Reference'] ul {
   padding-left: 0;
   margin: 1.5rem 0 0;
 }
+
+.markdown > .button + .theme-code-block {
+  margin-top: 1.5rem;
+}
