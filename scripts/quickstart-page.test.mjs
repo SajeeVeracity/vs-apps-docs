@@ -82,15 +82,14 @@ test('prerequisites are one app-side checklist and state the baseline once', () 
   assert.doesNotMatch(prerequisites, /space manager|published agent|Space server/i);
 });
 
-test('Part 1 has the six steps, numbered from 1', () => {
+test('Part 1 has the five steps, numbered from 1, with the run second', () => {
   const list = steps(part1);
   assert.deepEqual(list.map(title), [
     '1. Clone the starter and install',
-    '2. Read the app definition',
-    '3. Serve the manifest and client config',
+    '2. Run the app in the harness',
+    '3. Read the app definition',
     '4. Verify the token on the server',
     '5. Read the token in the page',
-    '6. Run the app in the harness',
   ]);
 });
 
@@ -115,8 +114,8 @@ test('Part 2 has Before you start, then six steps with roles only on steps 3, 4 
   assert.doesNotMatch(text, /Each step names the role/);
 });
 
-test('Checks sit in Part 1 steps 1 and 6 and in every Part 2 step', () => {
-  assert.deepEqual(steps(part1).map(hasCheck), [true, false, false, false, false, true]);
+test('Checks sit in Part 1 steps 1 and 2 and in every Part 2 step', () => {
+  assert.deepEqual(steps(part1).map(hasCheck), [true, true, false, false, false]);
   for (const step of steps(part2)) assert.ok(hasCheck(step), title(step));
 });
 
@@ -147,9 +146,9 @@ test('commands run in the step that needs them', () => {
   assert.match(list[0], /^In PowerShell, run `\$env:GITHUB_PACKAGES_TOKEN = "YOUR_GITHUB_PACKAGES_TOKEN"` instead of the `export` line\.$/m);
   assert.match(list[0], /^\*\*Check\*\*: run `npm ls @vectoragents\/vs-apps`/m);
   assert.doesNotMatch(text, /_authToken=[A-Za-z0-9_]{20,}/);
-  assert.match(list[5], /^npm run dev$/m);
-  assert.match(list[5], /http:\/\/localhost:5173\/harness\.html/);
-  assert.match(list[5], /^Waiting for Space\.$|Waiting for Space\./m);
+  assert.match(list[1], /^npm run dev$/m);
+  assert.match(list[1], /http:\/\/localhost:5173\/harness\.html/);
+  assert.match(list[1], /^Waiting for Space\.$|Waiting for Space\./m);
   const space = steps(part2)[0];
   assert.match(space, /^cp \.env\.example \.env$/m);
   assert.match(space, /^npm run dev:space$/m);
@@ -164,14 +163,14 @@ test('commands run in the step that needs them', () => {
 });
 
 test('the harness Check shows three lines and a limits sentence follows it', () => {
-  const step = steps(part1)[5];
+  const step = steps(part1)[1];
   const [, afterCheck] = step.split(/^\*\*Check\*\*/m);
   assert.match(
     afterCheck,
     /^Verified in the browser: user dev-user in space 1\.\nCapabilities: hello:view\nVerified on the server: space 1, user dev-user$/m,
   );
   const afterBlock = afterCheck.split(/^```$/m).at(-1);
-  assert.match(afterBlock, /The harness signs its own tokens, so it proves your page and server but not your registration or Space access\./);
+  assert.match(afterBlock, /The run proves your page and your server, but not your registration or Space access\./);
   assert.match(afterBlock, /Part 2 covers those\./);
 });
 
@@ -252,10 +251,10 @@ test('the Result summarises the last Check and has no second output block', () =
   assert.match(result, /one token/);
 });
 
-test('links the four glossary terms, the concept page and the harness reference', () => {
+test('links the five glossary terms, the concept page and the harness reference', () => {
   assert.match(text, /\(\.\/app-definition\.md\)/);
   const links = [...text.matchAll(/\]\(\.\/glossary\.md#([\w-]+)\)/g)].map((m) => m[1]);
-  assert.deepEqual([...links].sort(), ['app-definition', 'app-registration', 'harness', 'space']);
+  assert.deepEqual([...links].sort(), ['agent-catalog', 'app-definition', 'app-registration', 'harness', 'space']);
   assert.match(section('Next steps'), /\(\.\/reference\/harness\.md\)/);
 });
 
