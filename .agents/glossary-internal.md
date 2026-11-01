@@ -25,6 +25,13 @@ A line in a quickstart step that starts with `**Check**` and tells the reader wh
 - Maps to: no SDK symbol. The `Checks` assertion in `scripts/quickstart-page.test.mjs`.
 - Owner: docs.
 
+### Role
+
+A line under a quickstart step heading that names who does the step: `**Role**: space manager.` It carries the role name and no persona. Steps 3, 4 and 5 of Part 2 have one each. It mirrors the `**Check**` line.
+
+- Maps to: no SDK symbol. `scripts/quickstart-page.test.mjs` pins it.
+- Owner: docs.
+
 ### fence
 
 A block of code in a docs page, opened and closed by three backticks. The text after the opening backticks names the language, such as `ts` or `mermaid`. A `starter` fence also carries `title="path"` and must be a verbatim copy of text in that file of the starter repo. `scripts/starter-sync.mjs` checks this. A `mermaid` fence is a diagram: the page test counts them, and `DiagramControls` wraps each one.

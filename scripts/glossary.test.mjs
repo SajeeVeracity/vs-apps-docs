@@ -62,3 +62,9 @@ test('harness entry does not mention the quickstart and lists no limits', () => 
 test('glossary defines no workspace term', () => {
   assert.ok(!entries.some((e) => /workspace/i.test(e.name)));
 });
+
+test('Space and space manager entries open with the quickstart hand-off text', () => {
+  const first = (name) => entries.find((e) => e.name === name).body.trim().split('\n')[0];
+  assert.equal(first('Space'), 'A Vector workspace. A space manager adds apps, shares capabilities and sets slots in it. It embeds each app page in an iframe.');
+  assert.equal(first('space manager'), 'A member of a space at Edit level, or an Organization admin. They add apps, grant capabilities and choose the models and connectors for the slots.');
+});
