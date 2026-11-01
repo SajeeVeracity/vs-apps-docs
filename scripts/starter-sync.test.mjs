@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { checkFences, checkPageVersions, checkPorts, checkSdkPin, checkTree, installedSdkVersion, main, pageTreePaths } from './starter-sync.mjs';
+import { checkEnvExamples, checkFences, checkPageVersions, checkPorts, checkSdkPin, checkTree, installedSdkVersion, main, pageTreePaths } from './starter-sync.mjs';
 
 const tree = ['hello-app/', '├── .env.example', '├── client/', '│   ├── index.html', '│   └── src/', '│       └── main.tsx', '└── shared/', '    └── src/', '        └── index.ts'].join('\n');
 const page = [
@@ -172,6 +172,32 @@ test('ports: fails when the starter preset lacks a port', () => {
 
 test('ports: the real page run step names the starter ports', () => {
   assert.deepEqual(checkPorts(real, starter()), []);
+});
+
+const ENV_EXAMPLE = 'ALLOWED_PARENT_ORIGIN=https://space.example.com\nPUBLIC_BASE_URL=https://hello-app.example.com\n';
+const envPage = 'For example `https://space.example.com` and `https://hello-app.example.com`.';
+
+test('env example: passes when each example origin on the page is in the starter .env.example', () => {
+  assert.deepEqual(checkEnvExamples(envPage, starter({ '.env.example': ENV_EXAMPLE })), []);
+});
+
+test('env example: fails for each page origin the starter .env.example lacks', () => {
+  const problems = checkEnvExamples(envPage, starter({ '.env.example': 'PUBLIC_BASE_URL=https://hello-app.example.com\n' }));
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /https:\/\/space\.example\.com/);
+});
+
+test('env example: fails when the starter has no .env.example', () => {
+  assert.equal(checkEnvExamples(envPage, starter({ '.env.example': null })).length, 2);
+});
+
+test('env example: a page with no example origin passes', () => {
+  assert.deepEqual(checkEnvExamples(page, starter()), []);
+});
+
+test('env example: the real page origins are in the starter example', () => {
+  assert.deepEqual(checkEnvExamples(real, starter({ '.env.example': ENV_EXAMPLE })), []);
+  assert.ok(real.includes('https://space.example.com') && real.includes('https://hello-app.example.com'));
 });
 
 const silent = { log() {}, warn() {}, error() {} };
