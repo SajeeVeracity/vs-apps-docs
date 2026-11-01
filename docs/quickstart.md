@@ -10,7 +10,7 @@ import DiagramControls from '@site/src/components/DiagramControls';
 
 You clone a working app, run it in the [harness](./glossary.md#harness) on your machine, then ask Vector to register it so you can open it in a real Space. The app has one page, and only users who hold the `hello:view` capability, a permission that Space grants to a user, can see it.
 
-Space signs a short-lived token, the user token, for the person who opens the page, and your app checks that token before it trusts anything in it. Learn this path once and every page you add later works the same way.
+Space signs a short-lived token, the user token, for the person who opens the page, and your app checks that token before it trusts anything in it.
 
 After Part 1, the page runs in the harness on your machine. After Part 2, the `hello-app` page is open in a Space. It shows your user id and space id from the verified token.
 
@@ -37,7 +37,7 @@ sequenceDiagram
 
 </DiagramControls>
 
-Space mints the token and posts it to your client. Your client sends it to your server, and the server verifies it against the Space key set, the public keys that Space publishes. Only the server check protects data. Anyone can change what runs in a browser.
+Space mints the token and posts it to your client. Your client sends it to your server, and the server verifies it against the Space key set, the public keys that Space publishes.
 
 ## Prerequisites
 
@@ -48,7 +48,7 @@ Space mints the token and posts it to your client. Your client sends it to your 
 
 ### 1. Clone the starter and install
 
-The starter is a working app. You start from running code instead of an empty project. Clone it, export your package token and install the dependencies. `.npmrc` reads the token from the `GITHUB_PACKAGES_TOKEN` environment variable during install. The token is never committed to git.
+Clone the starter, export your package token and install the dependencies. `.npmrc` reads the token from the `GITHUB_PACKAGES_TOKEN` environment variable during install.
 
 ```bash
 git clone https://github.com/SajeeVeracity/vector-app-quickstart.git hello-app
@@ -100,7 +100,7 @@ hello-app/
 
 ### 2. Run the app in the harness
 
-The harness stands in for Space on your machine. It lets you watch the whole path work before anyone registers the app. `npm run dev` starts the server on port 3101 and Vite on port 5173 with the harness values, and it needs no `.env`. Vite serves the client and forwards requests under `/api` to the server.
+The harness stands in for Space on your machine. `npm run dev` starts the server on port 3101 and Vite on port 5173 with the harness values, and it needs no `.env`. Vite serves the client and forwards requests under `/api` to the server.
 
 ```bash
 npm run dev
@@ -173,7 +173,7 @@ export const definition = defineApp({
 
 ### 4. Verify the token on the server
 
-The line `Verified on the server` comes from a check that runs before your server answers. The server trusts no token until it passes that check.
+The line `Verified on the server` comes from a check that runs before your server answers.
 
 Space and your client need facts about your app before any user token exists. The server answers two routes for them first. `buildManifests` turns the definition into a manifest, a JSON document that tells Space what your app contains. The server serves it to Space at `GET /api/manifest/hello-app`. Space sends a provisioning token, which proves the request comes from Space.
 
@@ -392,8 +392,6 @@ Space shows "No spaces yet" until the agent of a space has a published version, 
 
 ### 4. Add the app to a space (space manager)
 
-The space manager decides which spaces hold the app, so this step belongs to that role.
-
 1. Choose **Settings**, **Space**, **Context Hub**, then **Resources**.
 2. Choose **Add resource**, then **App**. In the **Add an app** dialog, choose **Add** next to **Hello app**.
 
@@ -422,8 +420,6 @@ Verified in the browser: user <id> in space <id>.
 Capabilities: hello:view
 Verified on the server: space <id>, user <id>
 ```
-
-The browser line is display only. The server line comes from the check that protects data.
 
 ## Result
 

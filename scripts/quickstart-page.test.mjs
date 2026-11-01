@@ -58,7 +58,7 @@ test('Goal names both end states and ends with the Mermaid diagram and its capti
   assert.equal([...body.matchAll(/^\s+participant \w+ as /gm)].length, 4);
   assert.match(body, /display only/);
   assert.ok(goal.includes('```mermaid'));
-  assert.match(goal.split('```mermaid')[1].split(/^```$/m)[1], /Only the server check protects data\./);
+  assert.match(goal.split('```mermaid')[1].split(/^```$/m)[1], /Space mints the token/);
 });
 
 test('each mermaid fence sits inside DiagramControls, imported right after the opening paragraph', () => {
