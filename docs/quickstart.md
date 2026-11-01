@@ -144,9 +144,13 @@ The run proves your page and your server, but not your registration or Space acc
 
 ### 3. Read the app definition
 
-The three lines in the Check come from three parts of the app. Steps 3 to 5 read one part each and name the line it explains.
+The page in step 2 shows three lines. Steps 3 to 5 read the part of the app behind each line:
 
-This step explains `Capabilities: hello:view`. The [app definition](./glossary.md#app-definition) names the app and lists its pages and capabilities. The server check and the page both import `CAPABILITY`. They use one capability key, `hello:view`.
+- Step 3, the app definition: declares `hello:view`, the capability in `Capabilities: hello:view`.
+- Step 4, the server: produces `Verified on the server`.
+- Step 5, the page: produces `Verified in the browser` and `Capabilities`.
+
+The [app definition](./glossary.md#app-definition) names the app and lists its pages and capabilities. The server check and the page both import `CAPABILITY`. They use one capability key, `hello:view`.
 
 ```ts title="shared/src/index.ts" starter
 import { defineApp } from '@vectoragents/vs-apps';
@@ -173,9 +177,7 @@ export const definition = defineApp({
 
 ### 4. Verify the token on the server
 
-The line `Verified on the server` comes from a check that runs before your server answers.
-
-Space and your client need facts about your app before any user token exists. The server answers two routes for them first. `buildManifests` turns the definition into a manifest, a JSON document that tells Space what your app contains. The server serves it to Space at `GET /api/manifest/hello-app`. Space sends a provisioning token, which proves the request comes from Space.
+Before any user token exists, Space and your client need facts about your app. The server answers two routes for them first. `buildManifests` turns the definition into a manifest, a JSON document that tells Space what your app contains. The server serves it to Space at `GET /api/manifest/hello-app`. Space sends a provisioning token, which proves the request comes from Space.
 
 ```ts title="server/src/manifests.ts" starter
 import { buildManifests } from '@vectoragents/vs-apps/server';
@@ -248,7 +250,7 @@ const routes: Record<string, Route> = {
 
 ### 5. Read the token in the page
 
-The page needs the token to call your server. It also shows the lines `Verified in the browser` and `Capabilities` of the Check from that token. `loadAppClientConfig` fetches `GET /api/client-config`. `AppProvider` starts the iframe bridge, the channel on which Space sends tokens, verifies each token Space sends and exposes the claims. `BootGate` shows `fallback` and does not show the page until the first verified token arrives.
+The page needs the token to call your server. It also reads the claims from that token to show the browser lines. `loadAppClientConfig` fetches `GET /api/client-config`. `AppProvider` starts the iframe bridge, the channel on which Space sends tokens, verifies each token Space sends and exposes the claims. `BootGate` shows `fallback` and does not show the page until the first verified token arrives.
 
 ```tsx title="client/src/App.tsx" starter
 import { loadAppClientConfig } from '@vectoragents/vs-apps/client';
