@@ -244,9 +244,9 @@ const routes: Record<string, Route> = {
 };
 ```
 
-`GET /api/client-config` tells the client which parent origin and which key set to trust. In harness mode the key set comes from `DEV_JWKS_PATH`, the route where `devIssuer` publishes its public keys. Otherwise it comes from `SPACE_JWKS_URL`. A check that fails throws an `AppAuthError`. The server replies with status 401 when the token is missing or invalid, and 403 when the token is for another space or app or lacks the capability.
+`GET /api/client-config` tells the client which parent origin and which key set to trust. In harness mode the key set comes from `DEV_JWKS_PATH`, the route where `devIssuer` publishes its public keys. Otherwise it comes from `SPACE_JWKS_URL`. A check that fails throws an `AppAuthError`. The server replies with status 401 when the token is missing or invalid, and 403 when the token lacks the capability.
 
-`GET /api/hello` returns the claims of a verified user token. Space calls `POST /api/provision` and `POST /api/deprovision` when a space manager, the person who adds apps to a Space, adds or removes the app. The harness run does not call them.
+`GET /api/hello` returns the claims of a verified user token. Space calls `POST /api/provision` and `DELETE /api/deprovision` when a space manager, the person who adds apps to a Space, adds or removes the app. The harness run does not call them.
 
 ### 5. Read the token in the page
 
@@ -329,29 +329,30 @@ export function HelloPage() {
 
 ## Part 2: Add the app to a Space
 
-Part 2 puts the app in a real Space and needs a registration from Vector, so stop after Part 1 if you have no Space access. Steps 3, 4, 5 and 6 run in the Space UI.
+Part 2 puts the app in a real Space. Only Vector can register the app. You send the request in step 2 and cannot start step 4 until Vector confirms. Stop after Part 1 if you have no Space access. Steps 3, 4, 5 and 6 run in the Space UI.
 
 ### Before you start
 
-A real Space needs three things in place, so check them before step 1.
+A real Space needs these things in place. Check them before step 1.
 
-- [ ] A space manager is ready to do steps 3, 4 and 5. You can be that person.
-- [ ] Your space has a published agent, or you publish it in [step 3](#3-publish-the-space-agent-space-manager). Without one, Space shows "No spaces yet".
-- [ ] The Space server can reach your server. A Space on another machine needs a public URL, for example from a tunnel.
+- [ ] A Vector representative to send the registration request to.
+- [ ] A space to add the app to.
+- [ ] A space manager to do [steps 3, 4 and 5](#3-publish-the-space-agent). Anyone with Edit level on the space, and any Organization admin, is a space manager.
+- [ ] The Space server can reach your server. It needs a public URL that forwards to port `3101` (`SERVER_PORT`). Keep the URL the same until Vector confirms the registration.
 
 ### 1. Point the app at your Space
 
-Space reaches your server over the network, so the server needs real addresses instead of the harness values. Stop the harness with Ctrl-C. Copy the example file, then replace the example values with your own.
+Space reaches your server over the network. The server needs real addresses instead of the harness values. Stop the harness with Ctrl-C. Copy the example file, then replace the example values with your own.
 
 ```bash
 cp .env.example .env
 ```
 
 - `SPACE_JWKS_URL` is the address of the Space key set. The server uses it to check that a token comes from Space. It is the origin of the Space API followed by `/api/.well-known/apps/jwks.json`.
-- `ALLOWED_PARENT_ORIGIN` is the origin of the Space web client that embeds your page. The client accepts messages from this origin only.
-- `PUBLIC_BASE_URL` is the origin where the Space server reaches your server. The server writes it into each `{publicBaseUrl}` placeholder in the manifest.
+- `ALLOWED_PARENT_ORIGIN` is the origin of the Space web client that embeds your page, for example `https://space.example.com`. Write it with no trailing slash and no path: the client accepts messages from an exact match only.
+- `PUBLIC_BASE_URL` is the origin where the Space server reaches your server, for example `https://hello-app.example.com`. The server writes it into each `{publicBaseUrl}` placeholder in the manifest. The Hello app has no placeholder. You reuse this origin in step 2 for the manifest URL.
 - `SERVER_PORT` is the port your server listens on.
-- `CLIENT_PORT` is the port Vite serves the client on. The iframe URL you send to Vector in step 2 uses the same value.
+- `CLIENT_PORT` is the port Vite serves the client on.
 
 `npm run dev:space` reads `.env` and turns the harness routes off.
 
@@ -359,51 +360,65 @@ cp .env.example .env
 npm run dev:space
 ```
 
-**Check**: in a second terminal, run this command to fetch the key set. The output is `{"keys":[`. A web page that starts with `<` means the `/api` prefix is missing.
+**Check**: in a second terminal, run this command. It prints the HTTP status and the first 9 characters of the response.
 
 ```bash
-node --env-file=.env -e "fetch(process.env.SPACE_JWKS_URL).then((r) => r.text()).then((t) => console.log(t.slice(0, 9)))"
+node --env-file=.env -e "fetch(process.env.SPACE_JWKS_URL).then((r) => r.text().then((t) => console.log(r.status, t.slice(0, 9))))"
 ```
 
 ```text
-{"keys":[
+200 {"keys":[
 ```
+
+`200 <!doctype` means `SPACE_JWKS_URL` lacks the `/api` prefix. `404` means the path is wrong. `fetch failed` means nothing listens at that address.
 
 ### 2. Ask Vector to register the app
 
-Only Vector registers an app and allows it in an organization license, so you send a request and wait for the answer. Your server must be reachable at `PUBLIC_BASE_URL` from the Space server. Send Vector this information:
+Only Vector registers an app and allows it in an organization license. Send the request now, then do step 3 while you wait. Keep `npm run dev:space` running. Space fetches the manifest when Vector registers the app. Send Vector this information:
 
-- The manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`.
-- The iframe URL: `http://localhost:` followed by `CLIENT_PORT`. It is the client origin, not the server origin.
+- The manifest URL: `PUBLIC_BASE_URL` followed by `/api/manifest/hello-app`. The Space server fetches it, so it must work from the Space server's network.
+- The iframe URL: `http://localhost:` followed by `CLIENT_PORT`. Your browser loads it, so `localhost` is your own machine. It is the client origin, not the server origin.
 - The name of your organization.
 
 Space fetches the manifest with a provisioning token. The manifest route calls `requireProvisioning`, which verifies that token.
 
 Contact your Vector representative. Vector creates the [app registration](./glossary.md#app-registration), enables it and allows it in your organization license.
 
-**Check**: wait for Vector to confirm. In step 4, **Hello app** appears in the **Add an app** dialog.
+**Check**: wait for Vector to confirm, then continue at step 4. **Hello app** appears in the **Add an app** dialog there.
 
-### 3. Publish the space agent (space manager)
+### 3. Publish the space agent
 
-Space shows "No spaces yet" until the agent of a space has a published version, so a new space hides your app. A new space holds a draft agent that you publish as it is.
+**Role**: space manager.
+
+The space switcher lists a space only when its agent has a published version. Until then Space shows "No spaces yet" and you cannot reach your app. A new space holds a draft agent that you publish as it is.
+
+Skip this step if the canvas already shows **Published** and has no **Publish All** button.
 
 1. Choose **Settings**, **Space**, **Agent Studio**, then **Canvas**.
 2. Choose **Publish All**. In the **Review Changes Before Publishing** dialog, choose **Publish All**.
 
-**Check**: Space shows the toast `All published`. The canvas shows **Published** and the date. If the canvas already shows **Published** and has no **Publish All** button, skip this step.
+**Check**: Space shows the toast `All published`. The canvas shows **Published** and the date.
 
-### 4. Add the app to a space (space manager)
+### 4. Add the app to a space
+
+**Role**: space manager.
+
+Adding the app makes Space call your server. Your server must accept that call.
 
 1. Choose **Settings**, **Space**, **Context Hub**, then **Resources**.
 2. Choose **Add resource**, then **App**. In the **Add an app** dialog, choose **Add** next to **Hello app**.
 
-When you choose **Add**, Space calls `POST /api/provision` on your server. The body holds `serviceSecret`, a secret that Space creates for each pair of app and space. Your server uses it to prove its identity when it calls Space. Space reads a reply that is not OK, meaning a status outside 200 to 299, as a failure, and the add fails.
+The call is `POST /api/provision`. The body holds `serviceSecret`, a secret that Space creates for each pair of app and space. Your server uses it to prove its identity when it calls Space. Space treats a status outside 200 to 299, no reply within 10 seconds, or a network error as a failure, and the add fails.
 
 **Check**: Space shows the toast `App enabled`. **Resources** lists a **Hello app** row with type **App** and status **Active**. The **Configure Hello app** sheet opens. Close it.
 
-### 5. Share the app with a user (space manager)
+If the toast starts with `App secret provisioning failed`, the add failed. A number after it is the status your server sent: check that the manifest URL Vector registered is the one from step 2. No number means Space did not reach your server: check that `npm run dev:space` still runs and that the public URL still points to port `3101`.
 
-A user sees the page only after the space manager shares the app with that user. **Direct access** lists only members of the space, so add the user to the space first. Skip this step if you are the space manager who added the app, because you already have access.
+### 5. Share the app with a user
+
+**Role**: space manager.
+
+A user sees the page only after the space manager shares the app with that user. **Direct access** lists only members of the space. Add the user to the space first. Skip this step if you are the space manager who added the app. You already have access.
 
 1. Choose **Settings**, **Space**, then **Access**. Under **Members**, choose **Add** and pick the user.
 2. Choose **Context Hub**, then **Resources**. On the **Hello app** row, open the row menu and choose **Access**.
@@ -413,7 +428,7 @@ A user sees the page only after the space manager shares the app with that user.
 
 ### 6. Open the page
 
-Space renders the page in an iframe at the iframe URL and sends a user token over `postMessage`, so the page can show what the token and your server say. Open the Space. Expand the **Apps** group in the sidebar and choose **Hello app**.
+Space renders the page in an iframe at the iframe URL. It sends a user token over `postMessage`. The page shows what the token and your server say. Open the Space. Expand the **Apps** group in the sidebar and choose **Hello app**.
 
 **Check**: the page shows three lines, also for a user you shared the app with at the **View** level. The two user ids are equal, and the two space ids are equal.
 
@@ -423,9 +438,11 @@ Capabilities: hello:view
 Verified on the server: space <id>, user <id>
 ```
 
+If the page stays on `Waiting for Space.`, check three things. `ALLOWED_PARENT_ORIGIN` must be the exact origin of the Space web client, as in step 1. The iframe URL that Vector registered must be your client origin from step 2. Open the page from the **Apps** group in Space, not by its address. If the browser console shows `[apps] token verification failed`, check `SPACE_JWKS_URL`.
+
 ## Result
 
-The `hello-app` page is open in a Space. It shows the same three lines as the last Check. Both user ids come from the one token that Space sends, and your server verified that token against the Space key set before it answered.
+The `hello-app` page is open in a Space. It shows the same three lines as the last Check. Both user ids come from the one token that Space sends. Your server verified that token against the Space key set before it answered.
 
 ## Next steps
 
