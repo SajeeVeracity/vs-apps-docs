@@ -4,4 +4,6 @@
 if ! git -c core.quotePath=false diff --cached --name-only --no-renames | grep -qvE '^(\.agents/|CLAUDE\.md$|README\.md$)'; then
   exit 0
 fi
+# Each ticket branch passes the gate before it merges; the end gate covers the merged result.
+git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0
 exec pnpm check
