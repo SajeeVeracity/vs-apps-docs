@@ -27,3 +27,4 @@ Language rules for `docs/`: simple English, defined abbreviations, numeric limit
 - Sibling repos: `../vector-spaces` (the Space, owns its start commands) and `../vector-app-quickstart` (the starter the quickstart clones).
 - Commit gate: `pnpm check`, run by `.githooks/pre-commit` and CI. Recipe and guide snippet titles start with `client/`, `server/` or `shared/`.
 - Page tests import shared helpers (`section`, `snippetsOf`, `titledSnippets`, `codeOf`, `linksOf`, `nextLinks`) from `scripts/page-helpers.mjs`.
+- `STARTER_DIR=<path> pnpm check:starter` checks the pages against a local starter checkout instead of cloning main.
