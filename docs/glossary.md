@@ -153,6 +153,13 @@ Model Context Protocol. An open protocol that connects a model to tools and data
 - Maps to: `provider: 'MCP'` in `resources.connectors[]`.
 - Owner: SDK declares it. Space attaches the connector.
 
+### A2A
+
+Agent2Agent. An open protocol that lets one agent find another through an agent card and call it with JSON-RPC. An app that declares an agent publishes the card and answers `message/send` and `message/stream`.
+
+- Maps to: `agents[]` in the definition, and `buildAppAgentCard` and `createA2aRequestHandler` in `@vectoragents/vs-apps/server`.
+- Owner: SDK declares it. Space calls it.
+
 ### monorepo
 
 One repository that holds the client, the server and the shared package, each as its own package.

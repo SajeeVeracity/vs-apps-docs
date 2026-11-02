@@ -52,6 +52,13 @@ test('the Nest section lists the connector-events guide after the open-route gui
   assert.equal(idOf(nest.items[2]), 'nest/handle-connector-events');
 });
 
+test('the Guides and Nest sections each list a call-a-model guide', () => {
+  for (const [label, id] of [['Guides', 'guides/call-a-model-from-your-server'], ['Nest', 'nest/call-a-model-from-your-server']]) {
+    const category = categories.find((c) => c.label === label);
+    assert.ok(category.items.map(idOf).includes(id), label);
+  }
+});
+
 test('Recipes, Guides, Nest and Reference open on a generated-index page with a description', () => {
   for (const label of ['Recipes', 'Guides', 'Nest', 'Reference']) {
     const { link } = categories.find((category) => category.label === label);
@@ -59,4 +66,15 @@ test('Recipes, Guides, Nest and Reference open on a generated-index page with a 
     assert.ok(link.description?.length > 0, label);
     assert.equal(link.slug, `/category/${label.toLowerCase()}`, label);
   }
+});
+
+test('the Nest section lists the Call Space guide and the Guides section lists its plain twin', () => {
+  const ids = (label) => categories.find((category) => category.label === label).items.map(idOf);
+  assert.ok(ids('Nest').includes('nest/call-space-from-your-server'));
+  assert.ok(ids('Guides').includes('guides/call-space-from-your-server'));
+});
+
+test('the Guides section lists the A2A guide', () => {
+  const guides = categories.find((category) => category.label === 'Guides').items.map(idOf);
+  assert.ok(guides.includes('guides/expose-app-as-a2a-agent'));
 });
