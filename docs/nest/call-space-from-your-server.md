@@ -53,13 +53,13 @@ export class SpaceCallsController {
   ) {}
 
   @Post('agent')
-  @RequireCapability('hello:view')
+  @RequireCapability('lead:manage')
   startConversation(@Req() req: AppRequest, @Body() body: { message: string }) {
     return this.actions.agentInvoke(req, { message: body.message });
   }
 
   @Get('connectors')
-  @RequireCapability('hello:view')
+  @RequireCapability('lead:manage')
   async listConnectors(@Req() req: AppRequest) {
     const { claims } = appCaller(req);
     const token = await this.s2s.getToken(claims.appId, claims.spaceId);

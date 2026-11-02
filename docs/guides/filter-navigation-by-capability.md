@@ -6,35 +6,37 @@ Advanced configuration of the app navigation: build your own [page](../glossary.
 
 ## Goal
 
-End with a navigation component that lists the pages of the SDR definition that the verified user may open.
+End with a navigation component that lists the pages of the `hello-app` definition that the verified user may open.
 
 ## Prerequisites
 
-- The definition from [add a page and a capability](../recipes/add-page-and-capability.md).
+- The app from [`expose-agent-actions`](../recipes/expose-agent-actions.md), which starts from the `recipes/leads-app/` folder of the starter. Its definition declares the `leads` page and the `lead:manage` and `icp:manage` capabilities.
 - Background: [`appPages`](../reference/root.md#apppages), and the [quickstart](../quickstart.md).
 
 ## Steps
 
-### 1. Declare a default page and pages with and without a capability
+### 1. Declare a default page and gate each page
 
-`defaultPageKey` must name a declared page. A page without `capability` is ungated.
+`defaultPageKey` must name a declared page. A page without `capability` is ungated. Leave `home` ungated, gate `leads` and `icp`, and replace the definition in `shared/src/index.ts`. `CAPABILITY` stays an export, because the starter server and `HelloPage.tsx` use it. It now holds `lead:manage`.
 
 ```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
 
+export const CAPABILITY = 'lead:manage';
+
 export const definition = defineApp({
-  key: 'sdr',
-  name: 'SDR',
-  version: '0.2.0',
-  defaultPageKey: 'sdr-dashboard',
+  key: 'hello-app',
+  name: 'Hello app',
+  version: '0.1.0',
+  defaultPageKey: 'home',
   pages: [
-    { key: 'sdr-dashboard', label: 'Dashboard', path: '/dashboard' },
-    { key: 'sdr-leads', label: 'Leads', path: '/leads', capability: 'lead:manage' },
-    { key: 'sdr-icp', label: 'ICP Library', path: '/icp', capability: 'icp:manage' },
+    { key: 'home', label: 'Home', path: '/' },
+    { key: 'leads', label: 'Leads', path: '/leads', capability: CAPABILITY },
+    { key: 'icp', label: 'ICP', path: '/icp', capability: 'icp:manage' },
   ],
   capabilities: [
-    { key: 'lead:manage', label: 'Manage Leads', effect: 'write' },
-    { key: 'icp:manage', label: 'Manage ICPs', effect: 'write' },
+    { key: CAPABILITY, label: 'Manage Leads', effect: 'write' },
+    { key: 'icp:manage', label: 'Manage ICP', effect: 'write' },
   ],
 });
 ```
@@ -70,7 +72,7 @@ Mount `AppNav` under `BootGate`. Before the handshake `claims` is `null` and the
 
 ## Result
 
-The navigation lists the dashboard for every member, and Leads and ICP Library only for members who hold their capabilities. The list shapes the UI only, so enforce each capability on the server.
+The navigation lists Home for every member, and Leads and ICP only for members who hold their capabilities. The list shapes the UI only, so enforce each capability on the server.
 
 ## Next step
 

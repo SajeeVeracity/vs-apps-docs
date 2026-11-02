@@ -8,7 +8,7 @@ The adapter is the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary
 
 ## Goal
 
-End with a NestJS server that does what the quickstart server does: it serves the [manifest](../glossary.md#manifest), verifies each user token and refuses a token that lacks the `hello:view` [capability](../glossary.md#capability).
+End with a NestJS server that does what the quickstart server does: it serves the [manifest](../glossary.md#manifest), verifies each user token and refuses a token that lacks the `lead:manage` [capability](../glossary.md#capability).
 
 ## Prerequisites
 
@@ -44,12 +44,12 @@ The `dev` script in `server/package.json` runs `src/main.ts`, so it needs no cha
 
 ### 2. Serve the manifest
 
-The definition and the manifest builder are the starter files, unchanged. They are repeated so that the module below has its input. `AppPlatformModule` serves the result.
+The manifest builder is the starter file, unchanged. The definition replaces the starter page and capability with the shared `leads` page and `lead:manage` capability. `CAPABILITY` stays an export, because the starter client and server import it. `AppPlatformModule` serves the result.
 
 ```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
 
-export const CAPABILITY = 'hello:view';
+export const CAPABILITY = 'lead:manage';
 
 export const definition = defineApp({
   key: 'hello-app',
@@ -57,13 +57,13 @@ export const definition = defineApp({
   version: '0.1.0',
   pages: [
     {
-      key: 'home',
-      label: 'Home',
+      key: 'leads',
+      label: 'Leads',
       path: '/',
       capability: CAPABILITY,
     },
   ],
-  capabilities: [{ key: CAPABILITY, label: 'View hello', effect: 'read' }],
+  capabilities: [{ key: CAPABILITY, label: 'Manage Leads', effect: 'write' }],
 });
 ```
 
@@ -113,7 +113,7 @@ import type { UserTokenClaims } from '@vectoragents/vs-apps';
 @Controller('hello')
 export class HelloController {
   @Get()
-  @RequireCapability('hello:view')
+  @RequireCapability('lead:manage')
   hello(@CurrentUser() user: UserTokenClaims) {
     return { sub: user.sub, spaceId: user.spaceId };
   }

@@ -346,7 +346,7 @@ test('both Call Space guides use only the shared capability keys', () => {
   for (const text of Object.values(callSpace)) {
     const keys = [...text.matchAll(/'([a-z]+:[a-z]+)'/g)].map((m) => m[1]).filter((k) => !k.startsWith('node:'));
     assert.ok(keys.length >= 1);
-    assert.deepEqual(keys.filter((k) => !['hello:view', 'lead:manage', 'icp:manage'].includes(k)), []);
+    assert.deepEqual(keys.filter((k) => !['lead:manage', 'icp:manage'].includes(k)), []);
   }
 });
 
@@ -558,4 +558,46 @@ test('the A2A guide checks the card and a refused call, and ends with one relate
   const links = linksOf(section(a2a, 'Next step'));
   assert.equal(links.length, 1);
   assert.ok(existsSync(join(docs, 'guides', links[0].split('#')[0])), links[0]);
+});
+
+const trees = guides.find((r) => r.name === 'agent-action-trees');
+const filterNav = guides.find((r) => r.name === 'filter-navigation-by-capability');
+const nestAdapter = nest.find((r) => r.name === nestRecipe);
+const sharedKeys = (text) => [...snippetsOf(text).matchAll(/\b(?:key|capability|pageId): '([^']+)'/g)].map(([, key]) => key);
+
+test('the plain guides that predate the recipe chain name expose-agent-actions as prerequisite and use no sdr key', () => {
+  for (const page of [trees, filterNav]) {
+    assert.match(section(page.text, 'Prerequisites'), /\]\(\.\.\/recipes\/expose-agent-actions\.md\)/, page.name);
+    assert.doesNotMatch(page.text, /sdr/i, page.name);
+  }
+});
+
+test('agent-action-trees uses the leads page and the shared action ids', () => {
+  assert.deepEqual(sharedKeys(trees.text), ['leads']);
+  assert.match(trees.text, /`leads\.export_leads`/);
+  assert.match(trees.text, /dispatch\('leads\.open_lead_list'/);
+  assert.doesNotMatch(trees.text, /sdr-leads/);
+});
+
+test('filter-navigation-by-capability snippets use only the shared page and capability keys', () => {
+  const allowed = ['hello-app', 'home', 'leads', 'icp', 'lead:manage', 'icp:manage'];
+  assert.deepEqual(sharedKeys(filterNav.text).filter((k) => !allowed.includes(k)), []);
+  assert.doesNotMatch(filterNav.text, /hello:view/);
+  for (const key of ['leads', 'icp', 'lead:manage', 'icp:manage']) assert.ok(snippetsOf(filterNav.text).includes(`'${key}'`), key);
+});
+
+test('the Nest pages gate with the shared lead:manage capability and name no hello:view', () => {
+  for (const { name, text } of nest) assert.doesNotMatch(text, /hello:view/, name);
+  assert.match(nestAdapter.text, /refuses a token that lacks the `lead:manage` \[capability\]/);
+  assert.match(snippetsOf(nestAdapter.text), /@RequireCapability\('lead:manage'\)/);
+  assert.match(snippetsOf(nestAdapter.text), /export const CAPABILITY = 'lead:manage';/);
+  assert.deepEqual(sharedKeys(nestAdapter.text).filter((k) => !['hello-app', 'leads', 'lead:manage'].includes(k)), []);
+});
+
+test('the guides that predate the recipe chain each end with one related Next step that resolves', () => {
+  for (const page of [trees, filterNav]) {
+    const links = linksOf(section(page.text, 'Next step'));
+    assert.equal(links.length, 1, page.name);
+    assert.ok(existsSync(join(docs, 'guides', links[0].split('#')[0])), links[0]);
+  }
 });
