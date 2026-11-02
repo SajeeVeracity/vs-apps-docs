@@ -8,6 +8,7 @@ const docs = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs');
 const recipeNames = ['gate-by-capability', 'read-app-context', 'list-members', 'expose-agent-actions', 'add-page-and-capability'];
 const nestRecipe = 'nest-adapter';
 const openRouteGuide = 'open-route-and-read-caller';
+const connectorGuide = 'handle-connector-events';
 const pagesIn = (dir) =>
   readdirSync(join(docs, dir))
     .filter((name) => name.endsWith('.md'))
@@ -18,10 +19,11 @@ const guides = existsSync(join(docs, 'guides')) ? pagesIn('guides') : [];
 const nest = existsSync(join(docs, 'nest')) ? pagesIn('nest') : [];
 const all = [...recipes, ...nest, ...guides];
 
-test('has one recipe per ranked task, the Nest recipe and the open-route guide in the Nest folder and at least one guide', () => {
+test('has one recipe per ranked task, the Nest recipe and the Nest guides in the Nest folder and at least one guide', () => {
   assert.deepEqual(recipes.map((r) => r.name).sort(), [...recipeNames].sort());
   assert.ok(nest.some((page) => page.name === nestRecipe));
   assert.ok(nest.some((page) => page.name === openRouteGuide));
+  assert.ok(nest.some((page) => page.name === connectorGuide));
   assert.ok(guides.length >= 1);
 });
 
@@ -189,6 +191,48 @@ test('the open-route guide checks that the open route answers 200 and the caller
 test('the open-route guide next step links one related page', () => {
   const next = section(guide(), 'Next step');
   const links = [...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
+  assert.equal(links.length, 1);
+  assert.ok(existsSync(join(docs, 'nest', links[0].split('#')[0])), links[0]);
+});
+
+const connector = () => nest.find((r) => r.name === connectorGuide)?.text ?? '';
+const connectorCode = () =>
+  [...connector().matchAll(/^```tsx?\s+title="(server\/[^"]+|shared\/[^"]+)"\n([\s\S]*?)^```/gm)].map(([, , body]) => body).join('\n');
+
+test('the connector-events guide names nest-adapter as its prerequisite', () => {
+  assert.match(section(connector(), 'Prerequisites'), /\]\(\.\/nest-adapter\.md\)/);
+});
+
+test('the connector-events guide says in one line why it has no plain twin', () => {
+  const lines = connector().split('\n').filter((line) => /no plain twin/.test(line));
+  assert.equal(lines.length, 1);
+  assert.match(lines[0], /`assertSpaceEvents`/);
+  assert.match(lines[0], /`\/server`/);
+});
+
+test('the connector-events guide registers a handler with ConnectorEventsService and checks a ConnectorExecuteResult', () => {
+  const body = connectorCode();
+  assert.match(body, /\bimport \{[^}]*\bConnectorEventsService\b[^}]*\} from '@vectoragents\/vs-apps\/nest'/);
+  assert.match(body, /\.on\(\s*\{[^}]*\bappKey\b[^}]*\bslot\b[^}]*\bhandler\b/);
+  assert.match(body, /\bimport type \{[^}]*\bConnectorExecuteResult\b[^}]*\} from '@vectoragents\/vs-apps'/);
+  assert.match(body, /\bPromise<ConnectorExecuteResult>/);
+  assert.match(body, /\.status\b/);
+});
+
+test('the connector-events guide declares the slot with a handler key that the code registers', () => {
+  const declared = [...connector().matchAll(/^\s+key: '([\w-]+)',\n\s+label: '[^']+',\n\s+defaultEventTypes/gm)].map((m) => m[1]);
+  assert.equal(declared.length, 1);
+  assert.match(connectorCode(), new RegExp(`handler: '${declared[0]}'`));
+});
+
+test('the connector-events guide checks that the events route refuses a request with no token', () => {
+  const steps = section(connector(), 'Steps');
+  assert.equal([...steps.matchAll(/^curl .*localhost:<SERVER_PORT>\/api\/events\/hello-app$/gm)].length, 1);
+  assert.match(steps, /\*\*Check\*\*:[^\n]*`401`/);
+});
+
+test('the connector-events guide next step links one related page', () => {
+  const links = [...section(connector(), 'Next step').matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
   assert.equal(links.length, 1);
   assert.ok(existsSync(join(docs, 'nest', links[0].split('#')[0])), links[0]);
 });
