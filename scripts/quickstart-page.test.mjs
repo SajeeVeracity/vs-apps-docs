@@ -170,7 +170,7 @@ test('commands run in the step that needs them', () => {
   const space = steps(part2)[0];
   assert.match(space, /^cp \.env\.example \.env$/m);
   assert.match(space, /^npm run dev:space$/m);
-  for (const name of ['SPACE_JWKS_URL', 'ALLOWED_PARENT_ORIGIN', 'PUBLIC_BASE_URL', 'SERVER_PORT', 'CLIENT_PORT']) {
+  for (const name of ['SPACE_JWKS_URL', 'SPACE_API_URL', 'ALLOWED_PARENT_ORIGIN', 'PUBLIC_BASE_URL', 'SERVER_PORT', 'CLIENT_PORT']) {
     assert.match(space, new RegExp(`^- \`${name}\``, 'm'), name);
   }
   assert.match(space, /^200 \{"keys":\[$/m);
@@ -178,6 +178,28 @@ test('commands run in the step that needs them', () => {
   for (const dropped of ['dev:server', 'dev:client', 'check:server', 'SPACE_BASE_URL']) {
     assert.doesNotMatch(text, new RegExp(dropped));
   }
+});
+
+test('Part 2 defines SPACE_API_URL with its exact shape and says what the boot ping shows', () => {
+  const env = steps(part2)[0];
+  const bullet = env.split('\n').find((l) => l.startsWith('- `SPACE_API_URL`'));
+  assert.ok(bullet);
+  assert.match(bullet, /origin of the Space API followed by `\/api`/);
+  assert.match(bullet, /`https:\/\/space-api\.example\.com\/api`/);
+  assert.match(bullet, /no trailing slash/);
+  assert.match(env, /`npm run dev` clears `SPACE_API_URL`/);
+  assert.match(env, /pings Space/);
+  assert.match(env, /prints nothing when the ping works/);
+  assert.match(env, /manifest ping for "hello-app" got/);
+  assert.match(env, /server keeps running/);
+});
+
+test('the main.ts excerpts show spaceApiUrl in client-config and the boot ping', () => {
+  const mains = fences.filter((f) => /title="server\/src\/main\.ts"/.test(f.meta));
+  assert.equal(mains.length, 2);
+  assert.match(mains[0].body, /spaceApiUrl: process\.env\.SPACE_API_URL,/);
+  assert.match(mains[1].body, /if \(process\.env\.SPACE_API_URL\) \{/);
+  assert.match(mains[1].body, /void pingSpaceManifests\(\{ spaceBaseUrl, manifests \}\);/);
 });
 
 test('the harness Check shows three lines and a limits sentence follows it', () => {

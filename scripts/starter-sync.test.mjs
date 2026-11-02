@@ -224,7 +224,7 @@ test('ports: the real page run step names the starter ports', () => {
   assert.deepEqual(checkPorts(real, starter()), []);
 });
 
-const ENV_EXAMPLE = 'ALLOWED_PARENT_ORIGIN=https://space.example.com\nPUBLIC_BASE_URL=https://hello-app.example.com\n';
+const ENV_EXAMPLE = 'SPACE_API_URL=https://space-api.example.com/api\nALLOWED_PARENT_ORIGIN=https://space.example.com\nPUBLIC_BASE_URL=https://hello-app.example.com\n';
 const envPage = 'For example `https://space.example.com` and `https://hello-app.example.com`.';
 
 test('env example: passes when each example origin on the page is in the starter .env.example', () => {
@@ -247,7 +247,7 @@ test('env example: a page with no example origin passes', () => {
 
 test('env example: the real page origins are in the starter example', () => {
   assert.deepEqual(checkEnvExamples(real, starter({ '.env.example': ENV_EXAMPLE })), []);
-  assert.ok(real.includes('https://space.example.com') && real.includes('https://hello-app.example.com'));
+  assert.ok(['https://space.example.com', 'https://hello-app.example.com', 'https://space-api.example.com'].every((origin) => real.includes(origin)));
 });
 
 const silent = { log() {}, warn() {}, error() {} };
