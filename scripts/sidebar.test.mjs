@@ -22,10 +22,10 @@ test('every page in the docs folder appears exactly once', () => {
   assert.deepEqual([...listed].sort(), [...pageIds].sort());
 });
 
-test('sections run Get started, Guides, Recipes, Reference', () => {
+test('sections run Get started, Recipes, Guides, Nest, Reference', () => {
   assert.deepEqual(
     categories.map((category) => category.label),
-    ['Get started', 'Guides', 'Recipes', 'Reference'],
+    ['Get started', 'Recipes', 'Guides', 'Nest', 'Reference'],
   );
 });
 
@@ -34,11 +34,16 @@ test('Quickstart is the first docs item after the landing page', () => {
 });
 
 test('Glossary is the last Reference item', () => {
-  assert.equal(idOf(categories[3].items.at(-1)), 'glossary');
+  assert.equal(idOf(categories.at(-1).items.at(-1)), 'glossary');
 });
 
-test('Guides, Recipes and Reference open on a generated-index page with a description', () => {
-  for (const label of ['Guides', 'Recipes', 'Reference']) {
+test('the Nest section holds the nest-adapter recipe first', () => {
+  const nest = categories.find((category) => category.label === 'Nest');
+  assert.equal(idOf(nest.items[0]), 'nest/nest-adapter');
+});
+
+test('Recipes, Guides, Nest and Reference open on a generated-index page with a description', () => {
+  for (const label of ['Recipes', 'Guides', 'Nest', 'Reference']) {
     const { link } = categories.find((category) => category.label === label);
     assert.equal(link?.type, 'generated-index', label);
     assert.ok(link.description?.length > 0, label);

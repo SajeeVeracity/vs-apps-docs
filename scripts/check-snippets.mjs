@@ -5,10 +5,9 @@ import { fileURLToPath } from 'node:url';
 import { fileMeta, readEmbedded } from '../src/plugins/embed-file.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const nestPage = 'recipes/nest-adapter.md';
 const nestDir = 'nest';
 const titleRoots = /^(client|server|shared)\//;
-const titleFolders = /^(recipes|guides)\//;
+const titleFolders = /^(recipes|guides|nest)\//;
 const fence = /^```(ts|tsx)\b([^\n]*)\n([\s\S]*?)^```/gm;
 
 /** True when the fence meta has the `starter` word outside its title. */
@@ -40,7 +39,7 @@ export function checkSnippets({
       for (const [, lang, meta, body] of readFileSync(file, 'utf8').matchAll(fence)) {
         index++;
         const title = /title="([^"]+)"/.exec(meta)?.[1];
-        // Recipes and guides build on the quickstart app, so their file paths use its layout. Runs before the starter skip.
+        // Recipes, guides and Nest pages build on the quickstart app, so their file paths use its layout. Runs before the starter skip.
         if (title && titleFolders.test(doc) && !titleRoots.test(title)) badTitles.push(`${doc}: ${title}`);
         // The starter's CI typechecks a `starter` fence.
         if (isStarterFence(meta)) continue;
@@ -48,8 +47,8 @@ export function checkSnippets({
         // A titled block is written at its title path so relative imports between a page's blocks resolve.
         const placed = title && !titled.has(title);
         if (placed) titled.add(title);
-        const isNest = doc === nestPage;
-        // The Nest page's titled blocks sit at the project root so the `@hello-app/shared` mapping below resolves.
+        const isNest = doc.startsWith(`${nestDir}/`);
+        // A Nest page's titled blocks sit at the project root so the `@hello-app/shared` mapping below resolves.
         const titledName = isNest ? title : `page-${fileIndex}/${title}`;
         const name = (isNest ? `${nestDir}/` : '') + (placed ? titledName : `snippet-${origins.size + blocks.length}.${lang}`);
         blocks.push({ name, code, origin: `${doc} block ${index}` });

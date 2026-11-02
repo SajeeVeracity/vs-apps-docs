@@ -73,7 +73,7 @@ export function listLeads(claims: UserTokenClaims) {
 }
 ```
 
-In `server/src/main.ts`, import `listLeads` and add this entry to the `routes` map: `'/api/leads': async (req) => listLeads(await requireCapability(req, 'lead:manage')),`. The existing `catch` block turns the `403` into the response. For the decorator form, see the [framework adapter page](./nest-adapter.md).
+In `server/src/main.ts`, import `listLeads` and add this entry to the `routes` map: `'/api/leads': async (req) => listLeads(await requireCapability(req, 'lead:manage')),`. The existing `catch` block turns the `403` into the response. For the decorator form, see the [framework adapter page](../nest/nest-adapter.md).
 
 ### 4. Check both gates
 

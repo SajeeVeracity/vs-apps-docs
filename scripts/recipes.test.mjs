@@ -5,7 +5,8 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const docs = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs');
-const recipeNames = ['gate-by-capability', 'read-app-context', 'list-members', 'expose-agent-actions', 'add-page-and-capability', 'nest-adapter'];
+const recipeNames = ['gate-by-capability', 'read-app-context', 'list-members', 'expose-agent-actions', 'add-page-and-capability'];
+const nestRecipe = 'nest-adapter';
 const pagesIn = (dir) =>
   readdirSync(join(docs, dir))
     .filter((name) => name.endsWith('.md'))
@@ -13,10 +14,12 @@ const pagesIn = (dir) =>
 
 const recipes = existsSync(join(docs, 'recipes')) ? pagesIn('recipes') : [];
 const guides = existsSync(join(docs, 'guides')) ? pagesIn('guides') : [];
-const all = [...recipes, ...guides];
+const nest = existsSync(join(docs, 'nest')) ? pagesIn('nest') : [];
+const all = [...recipes, ...nest, ...guides];
 
-test('has one recipe per ranked task and at least one guide', () => {
+test('has one recipe per ranked task, the Nest recipe in the Nest folder and at least one guide', () => {
   assert.deepEqual(recipes.map((r) => r.name).sort(), [...recipeNames].sort());
+  assert.ok(nest.some((page) => page.name === nestRecipe));
   assert.ok(guides.length >= 1);
 });
 
@@ -56,7 +59,7 @@ test('never uses the csr-agents page and uses SDR examples', () => {
     assert.doesNotMatch(text, /csr-agents|csr:agents|csr\.agents/i, name);
   }
   // nest-adapter mirrors the quickstart hello-app, which has no SDR example.
-  assert.ok(recipes.filter((r) => r.name !== 'nest-adapter').every((r) => /sdr|lead|icp/i.test(r.text)));
+  assert.ok(recipes.every((r) => /sdr|lead|icp/i.test(r.text)));
 });
 
 test('follows the writing standard', () => {
@@ -93,8 +96,34 @@ test('no page names a script the starter lacks or the old Part 2 anchor', () => 
 });
 
 test('nest-adapter checks the server with dev:space and two curl lines', () => {
-  const { text } = recipes.find((r) => r.name === 'nest-adapter');
+  const { text } = nest.find((r) => r.name === nestRecipe);
   assert.match(text, /npm run dev:space/);
   assert.match(text, /curl .*localhost:<SERVER_PORT>\/api\/client-config/);
   assert.match(text, /curl .*localhost:<SERVER_PORT>\/api\/manifest\/hello-app/);
+});
+
+test('nest-adapter claims no bodyParser setting and warns that the credential store is in memory', () => {
+  const { text } = nest.find((r) => r.name === nestRecipe);
+  assert.doesNotMatch(text, /bodyParser/);
+  const warning = text.split('\n').filter((line) => /in memory/.test(line) && /loses them on restart/.test(line));
+  assert.equal(warning.length, 1);
+  assert.match(warning[0], /`AppCredentialStore`/);
+  assert.match(warning[0], /your own storage/);
+});
+
+test('nest-adapter next step links quickstart Part 2 only', () => {
+  const { text } = nest.find((r) => r.name === nestRecipe);
+  const next = text.split(/^## /m).at(-1);
+  assert.match(next, /^Next step\n/);
+  assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]), ['../quickstart.md#part-2-add-the-app-to-a-space']);
+});
+
+test('every link to nest-adapter points at its Nest folder location', () => {
+  for (const path of docFiles(docs)) {
+    const text = readFileSync(path, 'utf8');
+    for (const [, target] of text.matchAll(/\]\(([^)#]*nest-adapter\.md)/g)) {
+      assert.match(target, /(^|\/)nest\/nest-adapter\.md$|^\.\/nest-adapter\.md$/, `${path}: ${target}`);
+      assert.ok(existsSync(join(dirname(path), target)), `${path}: ${target}`);
+    }
+  }
 });

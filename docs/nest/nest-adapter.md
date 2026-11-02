@@ -77,7 +77,7 @@ export const manifests = buildManifests([definition], {
 });
 ```
 
-The module calls a credential store when Space provisions the app. The store below keeps the secrets in memory, so a restart loses them. Use a database for anything beyond a first run.
+The module calls a credential store when Space provisions the app. The store below keeps the secrets in memory and loses them on restart. `AppCredentialStore` is the one interface you implement over your own storage.
 
 ```ts title="server/src/credential-store.ts"
 import { Injectable } from '@nestjs/common';
@@ -154,7 +154,7 @@ export class AppModule {}
 
 ### 4. Start the server
 
-The file below replaces the starter's `server/src/main.ts`, which the `dev` script runs. Set `bodyParser: false`. The platform endpoints read the raw request body. The `api` prefix gives the manifest its `/api/manifest/:appKey` path.
+The file below replaces the starter's `server/src/main.ts`, which the `dev` script runs. The `api` prefix gives the manifest its `/api/manifest/:appKey` path.
 
 ```ts title="server/src/main.ts"
 import 'reflect-metadata';
@@ -162,7 +162,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bodyParser: false });
+  const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
   await app.listen(Number(process.env.SERVER_PORT));
 }

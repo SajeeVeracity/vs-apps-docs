@@ -11,8 +11,8 @@ The published docs and their examples assume TypeScript 5 with `strict`, Node 20
 
 ## Consequences
 
-- One optional recipe page maps each plain step to the `/nest` adapter. It is the only published page allowed to name Nest.
-- A guard test bans `Nest`, `NestJS`, `Vite`, `Express`, `Fastify`, `pnpm`, `yarn` and their config in published pages. `.agents/` files are exempt. The quickstart may name Vite, and the Nest page may name Nest.
+- One folder, `docs/nest/`, is the only place a published page may name Nest. Its first page, the `nest-adapter` recipe, maps each plain step to the `/nest` adapter. Every page outside the folder stays plain `node:http`.
+- A guard test bans `Nest`, `NestJS`, `Vite`, `Express`, `Fastify`, `pnpm`, `yarn` and their config in published pages. `.agents/` files are exempt. The quickstart may name Vite, and pages in the Nest folder may name Nest.
 - Node 20.19+ is the oldest version that Vite 8 supports, and it is newer than 20.6, where `--env-file` starts to work. The SDK declares no `engines` field, so the number has no SDK source.
 - The harness dev routes exist only as a Nest controller in the SDK, so the harness page ships a hand-written `node:http` handler until the SDK has a framework-free one.
 - The quickstart starter repo is an npm-workspaces monorepo with `client/`, `server/` and `shared/`, and the reader clones it ([ADR 0002](0002-quickstart-clones-a-starter-repo.md)). Other pages show single files and make no layout claim.
