@@ -21,33 +21,24 @@ End with two routes on the server from [`expose-agent-actions`](../recipes/expos
 
 An entry in `agents` tells Space where to find the card. `cardUrlTemplate` is an absolute URL with two tokens. `buildManifests` replaces `{publicBaseUrl}` with the `PUBLIC_BASE_URL` of your server. Space replaces `{spaceId}` with the id of each space.
 
-`key` is a lowercase name with hyphens that stays the same across versions. Replace `shared/src/index.ts` with this file.
+`key` is a lowercase name with hyphens that stays the same across versions. Replace `shared/src/index.ts` with this file. `CAPABILITY` stays an export, because the starter server and `HelloPage.tsx` use it. It now holds `lead:manage`.
 
 ```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
 
-export const CAPABILITY = 'hello:view';
+export const CAPABILITY = 'lead:manage';
 
 export const definition = defineApp({
   key: 'hello-app',
   name: 'Hello app',
   version: '0.1.0',
   pages: [
-    {
-      key: 'home',
-      label: 'Home',
-      path: '/',
-      capability: CAPABILITY,
-    },
-    {
-      key: 'leads',
-      label: 'Leads',
-      path: '/leads',
-    },
+    { key: 'home', label: 'Home', path: '/' },
+    { key: 'leads', label: 'Leads', path: '/leads', capability: CAPABILITY },
+    { key: 'icp', label: 'ICP', path: '/icp', capability: 'icp:manage' },
   ],
   capabilities: [
-    { key: CAPABILITY, label: 'View hello', effect: 'read' },
-    { key: 'lead:manage', label: 'Manage Leads', effect: 'write' },
+    { key: CAPABILITY, label: 'Manage Leads', effect: 'write' },
     { key: 'icp:manage', label: 'Manage ICP', effect: 'write' },
   ],
   agents: [

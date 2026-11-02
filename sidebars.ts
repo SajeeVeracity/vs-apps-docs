@@ -18,8 +18,8 @@ const sidebars: SidebarsConfig = {
       },
       items: [
         'recipes/add-page-and-capability',
-        'recipes/read-app-context',
         'recipes/gate-by-capability',
+        'recipes/read-app-context',
         'recipes/list-members',
         'recipes/expose-agent-actions',
       ],

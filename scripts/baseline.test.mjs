@@ -10,6 +10,7 @@ const quickstartPage = 'quickstart.md';
 const banned = [
   { re: /\bNest(JS)?\b/, allow: nestFolder },
   { re: /@nestjs\//, allow: nestFolder },
+  { re: /@vectoragents\/vs-apps\/nest\b/, allow: nestFolder },
   { re: /\bVite\b/, allow: quickstartPage },
   { re: /\bExpress\b/ },
   { re: /\bFastify\b/ },
@@ -43,6 +44,7 @@ test('the Nest folder is published and its first page uses Nest terms', () => {
 
 test('the Nest allowance covers Nest terms and no other', () => {
   assert.deepEqual(bannedIn('uses NestJS and @nestjs/core', nestPage), []);
+  assert.deepEqual(bannedIn("import from '@vectoragents/vs-apps/nest'", nestPage), []);
   assert.deepEqual(bannedIn('uses Vite with Nest', nestPage), ['/\\bVite\\b/']);
   assert.deepEqual(bannedIn('uses pnpm', nestPage), ['/\\bpnpm\\b/']);
 });
@@ -55,7 +57,7 @@ test('the Nest allowance covers every page in the Nest folder and no page outsid
 });
 
 test('guard flags each banned term and allows npm', () => {
-  for (const term of ['Nest', 'NestJS', 'Vite', 'Express', 'Fastify', 'pnpm', 'yarn', 'import.meta.env', '@Injectable', '@Controller', 'experimentalDecorators']) {
+  for (const term of ['Nest', 'NestJS', 'Vite', 'Express', 'Fastify', 'pnpm', 'yarn', 'import.meta.env', '@Injectable', '@Controller', 'experimentalDecorators', '@vectoragents/vs-apps/nest']) {
     assert.notDeepEqual(bannedIn(`uses ${term} here`), [], term);
   }
   assert.deepEqual(bannedIn('run npm install; nested; express the idea'), []);

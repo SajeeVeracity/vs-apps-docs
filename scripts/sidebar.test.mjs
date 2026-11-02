@@ -78,3 +78,14 @@ test('the Guides section lists the A2A guide', () => {
   const guides = categories.find((category) => category.label === 'Guides').items.map(idOf);
   assert.ok(guides.includes('guides/expose-app-as-a2a-agent'));
 });
+
+test('the Recipes section lists the five client recipes in the Next-step chain order', () => {
+  const recipes = categories.find((category) => category.label === 'Recipes').items.map(idOf);
+  assert.deepEqual(recipes, [
+    'recipes/add-page-and-capability',
+    'recipes/gate-by-capability',
+    'recipes/read-app-context',
+    'recipes/list-members',
+    'recipes/expose-agent-actions',
+  ]);
+});
