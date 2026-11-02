@@ -75,7 +75,7 @@ Scope: `docs/recipes/`, and `docs/nest/nest-adapter.md`.
 - **R5 Steps.** Numbered `###` headings, each a verb phrase (H2). Snippet titles start with `client/`, `server/` or `shared/`. Show the diff against the start state, not the whole file.
 - **R6 Shared toy app.** Use the app `hello-app`, pages `leads` and `icp`, and capabilities `lead:manage` and `icp:manage`.
 - **R7 Result.** One paragraph that says what now works, in the present tense.
-- **R8 Next step.** One link. Recipes form a chain, so the link is the next recipe or guide. `nest-adapter` first links quickstart Part 2.
+- **R8 Next step.** One link. Recipes form a chain, so the link is the next recipe or guide. `nest-adapter` has two: quickstart Part 2, then the open-route guide.
 
 ## Guide page
 
