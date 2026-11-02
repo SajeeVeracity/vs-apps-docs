@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { section } from './page-helpers.mjs';
 
 const read = (name) => {
   const url = new URL(`../docs/reference/${name}.md`, import.meta.url);
   return existsSync(url) ? readFileSync(url, 'utf8') : '';
 };
-const section = (text, title) => text.split(/^## /m).find((s) => s.startsWith(title)) ?? '';
 
 test('root and agent-react prerequisites pin zod 3 and give the install command', () => {
   for (const name of ['root', 'agent-react']) {

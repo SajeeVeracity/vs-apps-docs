@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { section } from './page-helpers.mjs';
 import { checkFences } from './starter-sync.mjs';
 import { STARTER_URL } from './starter-url.mjs';
 import { voiceViolations } from './voice.mjs';
@@ -8,12 +9,11 @@ import { voiceViolations } from './voice.mjs';
 const text = readFileSync(new URL('../docs/quickstart.md', import.meta.url), 'utf8');
 const sections = text.split(/^## /m).slice(1);
 const titles = sections.map((s) => s.split('\n')[0]);
-const section = (prefix) => sections.find((s) => s.startsWith(prefix));
 const fences = [...text.matchAll(/^```(\w+)([^\n]*)\n([\s\S]*?)^```/gm)].map(([, lang, meta, body]) => ({ lang, meta, body }));
-const part1 = section('Part 1');
-const part2 = section('Part 2');
-const goal = section('Goal');
-const result = section('Result');
+const part1 = section(text, 'Part 1');
+const part2 = section(text, 'Part 2');
+const goal = section(text, 'Goal');
+const result = section(text, 'Result');
 const subsections = (part) => part.split(/^### /m).slice(1);
 const steps = (part) => subsections(part).filter((s) => /^\d+\. /.test(s));
 const title = (step) => step.split('\n')[0];
@@ -86,7 +86,7 @@ test('step 2 shows the harness diagram after the dev server fence and before the
 });
 
 test('prerequisites are one app-side checklist and state the baseline once', () => {
-  const prerequisites = section('Prerequisites');
+  const prerequisites = section(text, 'Prerequisites');
   const items = prerequisites.split('\n').filter((l) => /^- /.test(l));
   assert.ok(items.length >= 2);
   for (const line of items) assert.match(line, /^- \[ \] /);
@@ -311,7 +311,7 @@ test('links the six glossary terms, the concept page and the harness reference',
   assert.match(text, /\(\.\/app-definition\.md\)/);
   const links = [...text.matchAll(/\]\(\.\/glossary\.md#([\w-]+)\)/g)].map((m) => m[1]);
   assert.deepEqual([...links].sort(), ['agent-catalog', 'app-definition', 'app-registration', 'dev-issuer', 'harness', 'space']);
-  assert.match(section('Next steps'), /\(\.\/reference\/harness\.md\)/);
+  assert.match(section(text, 'Next steps'), /\(\.\/reference\/harness\.md\)/);
 });
 
 test('defines capability, space manager and manifest in one clause at first use', () => {

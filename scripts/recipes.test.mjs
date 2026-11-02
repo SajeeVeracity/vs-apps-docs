@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { codeOf, linksOf, nextLinks, section, snippetsOf, titledSnippets } from './page-helpers.mjs';
 
 const docs = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs');
 // The Next-step chain order of the five client recipes.
@@ -131,8 +132,6 @@ test('nest-adapter checks the server with dev:space and two curl lines', () => {
 });
 
 const gate = recipes.find((r) => r.name === 'gate-by-capability');
-const section = (text, title) => text.split(/^## /m).find((s) => s.startsWith(`${title}\n`)) ?? '';
-
 test('gate-by-capability starts from the leads-app start folder of the starter', () => {
   const prerequisites = section(gate.text, 'Prerequisites');
   assert.match(prerequisites, /`recipes\/leads-app`/);
@@ -198,16 +197,9 @@ test('the open-route guide checks that the open route answers 200 and the caller
   assert.match(steps, /\*\*Check\*\*:[^\n]*`200`[^\n]*`401`/);
 });
 
-test('the open-route guide next step links one related page', () => {
-  const next = section(guide(), 'Next step');
-  const links = [...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
-  assert.equal(links.length, 1);
-  assert.ok(existsSync(join(docs, 'nest', links[0].split('#')[0])), links[0]);
-});
-
 const connector = () => nest.find((r) => r.name === connectorGuide)?.text ?? '';
 const connectorCode = () =>
-  [...connector().matchAll(/^```tsx?\s+title="(server\/[^"]+|shared\/[^"]+)"\n([\s\S]*?)^```/gm)].map(([, , body]) => body).join('\n');
+  titledSnippets(connector()).filter(({ title }) => /^(server|shared)\//.test(title)).map(({ body }) => body).join('\n');
 
 test('the connector-events guide says in one line why it has no plain twin', () => {
   const lines = connector().split('\n').filter((line) => /no plain twin/.test(line));
@@ -237,12 +229,6 @@ test('the connector-events guide checks that the events route refuses a request 
   assert.match(steps, /\*\*Check\*\*:[^\n]*`401`/);
 });
 
-test('the connector-events guide next step links one related page', () => {
-  const links = [...section(connector(), 'Next step').matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
-  assert.equal(links.length, 1);
-  assert.ok(existsSync(join(docs, 'nest', links[0].split('#')[0])), links[0]);
-});
-
 test('every link to nest-adapter points at its Nest folder location', () => {
   for (const path of docFiles(docs)) {
     const text = readFileSync(path, 'utf8');
@@ -254,11 +240,10 @@ test('every link to nest-adapter points at its Nest folder location', () => {
 });
 
 const expose = recipes.find((r) => r.name === 'expose-agent-actions');
-const exposeCode = expose.text.match(/^```tsx?[^\n]*\n[\s\S]*?^```/gm).join('\n');
-const exposeSection = (title) => expose.text.split(/^## /m).find((s) => s.startsWith(`${title}\n`));
+const exposeCode = snippetsOf(expose.text);
 
 test('expose-agent-actions starts from recipes/leads-app and installs zod 3', () => {
-  assert.match(exposeSection('Prerequisites'), /`recipes\/leads-app\/`/);
+  assert.match(section(expose.text, 'Prerequisites'), /`recipes\/leads-app\/`/);
   assert.match(expose.text, /^npm install zod@3\b.*$/m);
 });
 
@@ -289,7 +274,6 @@ const callSpace = {
   nest: nest.find((r) => r.name === callSpaceName)?.text ?? '',
   plain: guides.find((r) => r.name === callSpaceName)?.text ?? '',
 };
-const snippetsOf = (text) => [...text.matchAll(/^```tsx?[^\n]*\n([\s\S]*?)^```/gm)].map(([, body]) => body).join('\n');
 
 test('Call Space from your server exists as a Nest guide and a plain guide', () => {
   assert.notEqual(callSpace.nest, '');
@@ -321,17 +305,7 @@ test('the Nest Call Space guide warns that the credential store is in memory and
   assert.match(warning[0], /persistent store before production/);
 });
 
-test('each Call Space guide ends with one Next step link that resolves', () => {
-  for (const [dir, text] of [['nest', callSpace.nest], ['guides', callSpace.plain]]) {
-    const links = [...section(text, 'Next step').matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
-    assert.equal(links.length, 1, dir);
-    assert.ok(existsSync(join(docs, dir, links[0].split('#')[0])), links[0]);
-  }
-});
-
 const members = recipes.find((r) => r.name === 'list-members');
-const codeOf = (page, titleFile) =>
-  [...page.text.matchAll(/^```tsx? title="([^"]+)"[^\n]*\n([\s\S]*?)^```/gm)].find(([, title]) => title.endsWith(titleFile))?.[2] ?? '';
 
 test('list-members needs the starter env var and a Space run, not the harness', () => {
   const prerequisites = section(members.text, 'Prerequisites');
@@ -341,13 +315,13 @@ test('list-members needs the starter env var and a Space run, not the harness', 
 });
 
 test('list-members builds the roster from groups then useUsers of the group user ids', () => {
-  assert.match(codeOf(members, 'TeamGroups.tsx'), /directory\s*\??\.groups\(\)/);
-  assert.match(codeOf(members, 'GroupRoster.tsx'), /useUsers\(group\.userIds\)/);
+  assert.match(codeOf(members.text, 'TeamGroups.tsx'), /directory\s*\??\.groups\(\)/);
+  assert.match(codeOf(members.text, 'GroupRoster.tsx'), /useUsers\(group\.userIds\)/);
 });
 
 test('list-members search and groups snippets catch a rejected call and render an error line', () => {
   for (const file of ['OwnerPicker.tsx', 'TeamGroups.tsx']) {
-    const code = codeOf(members, file);
+    const code = codeOf(members.text, file);
     assert.match(code, /\.catch\(|catch \(/, file);
     assert.match(code, /setError\(/, file);
     assert.match(code, /role="alert"/, file);
@@ -355,7 +329,7 @@ test('list-members search and groups snippets catch a rejected call and render a
 });
 
 test('list-members debounces search by a 300 ms effect timer that cleanup cancels', () => {
-  const picker = codeOf(members, 'OwnerPicker.tsx');
+  const picker = codeOf(members.text, 'OwnerPicker.tsx');
   assert.match(picker, /useEffect\(/);
   assert.match(picker, /setTimeout\([\s\S]*?,\s*300\)/);
   assert.match(picker, /return \(\) => (?:\{[^}]*)?clearTimeout\(/);
@@ -400,8 +374,6 @@ test('add-page-and-capability links between pages without a reload through navig
 
 const nestModel = () => nest.find((r) => r.name === modelGuide)?.text ?? '';
 const plainModel = () => guides.find((r) => r.name === modelGuide)?.text ?? '';
-const linksOf = (text) => [...text.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
-const titledSnippets = (text) => [...text.matchAll(/^```tsx?\s+title="([^"]+)"\n([\s\S]*?)^```/gm)].map(([, title, body]) => ({ title, body }));
 
 test('the plain call-a-model guide names no Nest term', () => {
   assert.doesNotMatch(plainModel(), /\bNest(JS)?\b|@nestjs\/|@vectoragents\/vs-apps\/nest/);
@@ -444,14 +416,6 @@ test('the call-a-model guides call the model with the returned config, never a f
   }
 });
 
-test('the call-a-model guides each end with one related Next step that resolves', () => {
-  for (const [dir, text] of [['nest', nestModel()], ['guides', plainModel()]]) {
-    const links = linksOf(section(text, 'Next step'));
-    assert.equal(links.length, 1);
-    assert.ok(existsSync(join(docs, dir, links[0].split('#')[0])), links[0]);
-  }
-});
-
 const a2aName = 'expose-app-as-a2a-agent';
 const a2a = guides.find((r) => r.name === a2aName)?.text ?? '';
 const a2aCode = () => titledSnippets(a2a).map((c) => c.body).join('\n');
@@ -484,13 +448,10 @@ test('the A2A guide names no Nest term', () => {
   assert.doesNotMatch(a2a, /\bNest(JS)?\b|@nestjs\/|@Injectable/);
 });
 
-test('the A2A guide checks the card and a refused call, and ends with one related Next step', () => {
+test('the A2A guide checks the card and a refused call', () => {
   const steps = section(a2a, 'Steps');
   assert.equal([...steps.matchAll(/^curl .*localhost:<SERVER_PORT>\/api\/a2a\/1(?:\/\.well-known\/agent-card\.json)?$/gm)].length, 2);
   assert.match(steps, /\*\*Check\*\*:[^\n]*`401`/);
-  const links = linksOf(section(a2a, 'Next step'));
-  assert.equal(links.length, 1);
-  assert.ok(existsSync(join(docs, 'guides', links[0].split('#')[0])), links[0]);
 });
 
 const trees = guides.find((r) => r.name === 'agent-action-trees');
@@ -517,24 +478,21 @@ test('the Nest pages gate with the shared lead:manage capability and name no hel
   assert.deepEqual(sharedKeys(nestAdapter.text).filter((k) => !['hello-app', 'leads', 'lead:manage'].includes(k)), []);
 });
 
-test('agent-action-trees and filter-navigation-by-capability each end with one related Next step that resolves', () => {
-  for (const page of [trees, filterNav]) {
-    const links = linksOf(section(page.text, 'Next step'));
-    assert.equal(links.length, 1, page.name);
-    assert.ok(existsSync(join(docs, 'guides', links[0].split('#')[0])), links[0]);
+test('each guide Next step has one link that resolves', () => {
+  for (const page of [...guides, ...nest.filter((p) => p.name !== nestRecipe)]) {
+    const links = nextLinks(page.text);
+    assert.equal(links.length, 1, page.path);
+    assert.ok(existsSync(join(dirname(page.path), links[0].split('#')[0])), `${page.path}: ${links[0]}`);
   }
 });
-
-const nextLinks = (page) => linksOf(section(page.text, 'Next step'));
 
 test('each recipe Next step links the next recipe in the chain, and the last links agent-action-trees', () => {
   const targets = [...recipeNames.slice(1).map((name) => `./${name}.md`), '../guides/agent-action-trees.md'];
   recipeNames.forEach((name, index) => {
-    assert.deepEqual(nextLinks(recipes.find((r) => r.name === name)), [targets[index]], name);
+    assert.deepEqual(nextLinks(recipes.find((r) => r.name === name).text), [targets[index]], name);
   });
 });
 
-const codeBlocks = (text) => [...text.matchAll(/^```(?:tsx?|json)[^\n]*\n([\s\S]*?)^```/gm)].map(([, body]) => body).join('\n');
 const bracketBody = (code, open) => {
   let depth = 0;
   for (let i = open; i < code.length; i++) {
@@ -544,7 +502,7 @@ const bracketBody = (code, open) => {
   return code.slice(open);
 };
 const keyUse = (text) => {
-  const code = codeBlocks(text);
+  const code = snippetsOf(text, 'tsx?|json');
   const first = (pattern) => [...code.matchAll(pattern)].map(([, key]) => key);
   const pageArrays = [...code.matchAll(/\bpages\b[^=\[:\n]*[=:]\s*\[/g)].map((m) => bracketBody(code, m.index + m[0].length - 1));
   return {

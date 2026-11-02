@@ -26,3 +26,4 @@ Language rules for `docs/`: simple English, defined abbreviations, numeric limit
 - Run a local Space and drive its UI: `.agents/local-space.md`.
 - Sibling repos: `../vector-spaces` (the Space, owns its start commands) and `../vector-app-quickstart` (the starter the quickstart clones).
 - Commit gate: `pnpm check`, run by `.githooks/pre-commit` and CI. Recipe and guide snippet titles start with `client/`, `server/` or `shared/`.
+- Page tests import shared helpers (`section`, `snippetsOf`, `titledSnippets`, `codeOf`, `linksOf`, `nextLinks`) from `scripts/page-helpers.mjs`.
