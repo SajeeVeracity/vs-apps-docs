@@ -28,7 +28,7 @@ Check: toast `App saved`. The row shows **Enabled**. The Space server must reach
 1. Choose **Admin**, **Tenancy**, then **Organizations**. Choose **Edit license** on the organization.
 2. Under **Allowed apps**, select the app chip. Choose **Save**.
 
-Check: toast `License saved`. Tell the developer to continue at quickstart Part 2 step 3.
+Check: toast `License saved`. Tell the developer to continue at quickstart Part 2 step 4.
 
 ## Replace an existing registration
 

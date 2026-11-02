@@ -38,6 +38,7 @@ Rows marked "Starter claim" describe the starter repo. The starter's own CI and 
 | The `client-config` route sends no `tokenIssuer`, so the client uses the SDK default `vector-space`, which matches the Space issuer and the dev issuer. | The default from the 0.2.4 dist, Research the token path for the diagram. The Space issuer value is a statement of the Space code, Decide the auto-apply manifest request. |
 | The classic-token claim in Prerequisites. | GitHub Docs, "Working with the npm registry". |
 | The share step: the user joins the space first, **Save changes** commits the share, and a View-level share lets an organization member open the page. | [Verified in a local Space](#verified-in-a-local-space). |
+| Step 4: Space treats a status outside 200 to 299, no reply within 10 seconds, or a network error on `POST /api/provision` as a failure, and the add fails. | Space code, not observed: `provisionSpace` in `vector-spaces` `apps/server/src/domain/vector-apps/provisioning/services/vector-apps-client.service.ts` fails on `!res.ok`, and its `FETCH_TIMEOUT_MS` is 10 seconds, passed to `edgeFetch` as a write (one attempt, no retry). |
 
 ## App definition
 
