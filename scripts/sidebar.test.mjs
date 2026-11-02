@@ -47,6 +47,11 @@ test('the Nest section lists the open-route guide after nest-adapter', () => {
   assert.deepEqual(nest.items.map(idOf).slice(0, 2), ['nest/nest-adapter', 'nest/open-route-and-read-caller']);
 });
 
+test('the Nest section lists the connector-events guide after the open-route guide', () => {
+  const nest = categories.find((category) => category.label === 'Nest');
+  assert.equal(idOf(nest.items[2]), 'nest/handle-connector-events');
+});
+
 test('the Guides and Nest sections each list a call-a-model guide', () => {
   for (const [label, id] of [['Guides', 'guides/call-a-model-from-your-server'], ['Nest', 'nest/call-a-model-from-your-server']]) {
     const category = categories.find((c) => c.label === label);

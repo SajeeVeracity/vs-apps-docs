@@ -42,7 +42,12 @@ const sidebars: SidebarsConfig = {
         slug: '/category/nest',
         description: 'Pages for servers built with NestJS, the framework behind the @vectoragents/vs-apps/nest adapter.',
       },
-      items: ['nest/nest-adapter', 'nest/open-route-and-read-caller', 'nest/call-a-model-from-your-server'],
+      items: [
+        'nest/nest-adapter',
+        'nest/open-route-and-read-caller',
+        'nest/handle-connector-events',
+        'nest/call-a-model-from-your-server',
+      ],
     },
     {
       type: 'category',
