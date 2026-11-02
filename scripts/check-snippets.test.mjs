@@ -100,6 +100,25 @@ test('resolves @hello-app/shared to the shared/src/index.ts block on a Nest page
   assert.equal(result.ok, true, result.output);
 });
 
+test('resolves @hello-app/shared to the shared/src/index.ts block of the same recipe page', () => {
+  const { docs, stamp } = pageIn(
+    'recipes',
+    `${fence}ts title="shared/src/index.ts"\nexport type PagePath = '/leads';\n${fence}\n\n` +
+      `${fence}ts title="client/src/use.ts"\nimport type { PagePath } from '@hello-app/shared';\nexport const p: PagePath = '/leads';\n${fence}\n`,
+  );
+  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+  assert.equal(result.ok, true, result.output);
+});
+
+test('fails a recipe snippet that misuses a type from @hello-app/shared', () => {
+  const { docs, stamp } = pageIn(
+    'recipes',
+    `${fence}ts title="shared/src/index.ts"\nexport type PagePath = '/leads';\n${fence}\n\n` +
+      `${fence}ts title="client/src/use.ts"\nimport type { PagePath } from '@hello-app/shared';\nexport const p: PagePath = '/icp';\n${fence}\n`,
+  );
+  assert.equal(checkSnippets({ docsDir: docs, stampFile: stamp }).ok, false);
+});
+
 function pageIn(folder, body) {
   const { docs, stamp } = docsDir('');
   mkdirSync(join(docs, folder));
