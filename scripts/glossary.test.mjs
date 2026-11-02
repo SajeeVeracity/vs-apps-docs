@@ -14,7 +14,7 @@ const entries = text
 const required = [
   'app', 'app definition', 'manifest', 'Space', 'space manager', 'Organization admin', 'Edit level', 'app registration', 'page',
   'capability', 'grant', 'model slot', 'connector slot', 'agent action', 'agent catalog', 'acts', 'approvals',
-  'harness', 'dev issuer', 'SDK', 'MCP', 'monorepo', 'shared package',
+  'harness', 'dev issuer', 'SDK', 'MCP', 'A2A', 'monorepo', 'shared package',
 ];
 
 test('covers every candidate term', () => {
@@ -67,4 +67,12 @@ test('Space and space manager entries open with the quickstart hand-off text', (
   const first = (name) => entries.find((e) => e.name === name).body.trim().split('\n')[0];
   assert.equal(first('Space'), 'A Vector workspace. A space manager adds apps, shares capabilities and sets slots in it. It embeds each app page in an iframe.');
   assert.equal(first('space manager'), 'A member of a space at Edit level, or an Organization admin. They add apps, grant capabilities and choose the models and connectors for the slots.');
+});
+
+test('A2A entry names the agent card helpers and the definition field', () => {
+  const entry = entries.find((e) => e.name === 'A2A').body;
+  assert.match(entry.trim(), /^Agent2Agent\./);
+  assert.match(entry, /`buildAppAgentCard`/);
+  assert.match(entry, /`createA2aRequestHandler`/);
+  assert.match(entry, /`agents\[\]`/);
 });
