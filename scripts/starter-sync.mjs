@@ -43,6 +43,17 @@ export function checkSdkPin(starterDir, installed) {
   return problems;
 }
 
+const START_FOLDERS = ['recipes/leads-app'];
+
+/** Fails for every start folder the starter lacks or whose SDK pin differs from the installed version. */
+export function checkStartFolders(starterDir, installed) {
+  return START_FOLDERS.flatMap((folder) =>
+    existsSync(join(starterDir, folder))
+      ? checkSdkPin(join(starterDir, folder), installed).map((problem) => `${folder}: ${problem}`)
+      : [`${folder} is missing from the starter`],
+  );
+}
+
 const VERSION_PAGES = ['docs/quickstart.md', 'docs/reference/harness.md'];
 const SDK_VERSION_STRING = /@vectoragents\/vs-apps(?:\/[\w-]+)?(?:@|`? )(\d+\.\d+\.\d+)/g;
 
@@ -165,7 +176,7 @@ export async function main({
     dir = temp;
   }
   try {
-    const problems = [...checkSdkPin(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir), ...checkPorts(page, dir), ...checkEnvExamples(page, dir)];
+    const problems = [...checkSdkPin(dir, sdkVersion), ...checkStartFolders(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir), ...checkPorts(page, dir), ...checkEnvExamples(page, dir)];
     for (const problem of problems) error(`starter-sync: ${problem}`);
     if (problems.length === 0) log(`starter-sync: ok (SDK ${sdkVersion}, ${STARTER_URL})`);
     return problems.length === 0 ? 0 : 1;
