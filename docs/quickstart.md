@@ -51,7 +51,7 @@ Space mints the token and posts it to your client. Your client sends it to your 
 The starter is a working app. You start from running code instead of an empty project. Clone it, export your package token and install the dependencies. `.npmrc` reads the token from the `GITHUB_PACKAGES_TOKEN` environment variable during install.
 
 ```bash
-git clone https://github.com/SajeeVeracity/vector-app-quickstart.git hello-app
+git clone https://github.com/VectorAgents/vector-app-quickstart.git hello-app
 cd hello-app
 export GITHUB_PACKAGES_TOKEN=YOUR_GITHUB_PACKAGES_TOKEN
 npm install

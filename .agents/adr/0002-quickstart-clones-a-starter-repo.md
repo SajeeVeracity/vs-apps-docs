@@ -1,6 +1,6 @@
 # The quickstart clones a starter repo
 
-The quickstart tells the reader to clone a working app from the starter repo, run it in the harness, then read its code in a tour of excerpts. The reader edits no file in Part 1. A clone gives a running app at once, where an empty folder needs four `package.json` files, four `tsconfig` files, `.npmrc` and `.gitignore` first. The repo's target home is `VectorAgents/vector-app-quickstart`, owned by Vector. Until the move it lives under the `SajeeVeracity` GitHub account. The clone URL is the single value `STARTER_URL` in `scripts/starter-url.mjs`, shared by the page, its test and CI. The ref is `main`.
+The quickstart tells the reader to clone a working app from the starter repo, run it in the harness, then read its code in a tour of excerpts. The reader edits no file in Part 1. A clone gives a running app at once, where an empty folder needs four `package.json` files, four `tsconfig` files, `.npmrc` and `.gitignore` first. The repo lives at `VectorAgents/vector-app-quickstart`, owned by Vector. The clone URL is the single value `STARTER_URL` in `scripts/starter-url.mjs`, shared by the page, its test and CI. The ref is `main`.
 
 ## Considered options
 
@@ -18,5 +18,5 @@ The quickstart tells the reader to clone a working app from the starter repo, ru
 - A starter commit can fail this repo's CI with no change here, and a page edit to an excerpt can need a starter commit first.
 - `scripts/check-snippets.mjs` skips every `starter` fence and leaves it out of the `snippets` count. The starter's CI typechecks those excerpts instead. Every other page is still typechecked here.
 - Part 1 has two Checks: `npm ls @vectoragents/vs-apps` after install, and the harness run. The page shows excerpts of the starter and the reader edits no file.
-- The starter repo is public from its first push, so the clone takes no credential. The URL value changes once, in `scripts/starter-url.mjs`, at the move.
+- The starter repo is public from its first push, so the clone takes no credential.
 - The harness reference is a manual-wiring guide for an app that is not built from the starter.
