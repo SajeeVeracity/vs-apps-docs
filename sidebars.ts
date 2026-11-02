@@ -57,6 +57,7 @@ const sidebars: SidebarsConfig = {
         'reference/client',
         'reference/react',
         'reference/agent-react',
+        'reference/server',
         'reference/harness',
         'glossary',
       ],
