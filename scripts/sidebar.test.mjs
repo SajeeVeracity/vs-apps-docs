@@ -42,6 +42,11 @@ test('the Nest section holds the nest-adapter recipe first', () => {
   assert.equal(idOf(nest.items[0]), 'nest/nest-adapter');
 });
 
+test('the Nest section lists the open-route guide after nest-adapter', () => {
+  const nest = categories.find((category) => category.label === 'Nest');
+  assert.deepEqual(nest.items.map(idOf).slice(0, 2), ['nest/nest-adapter', 'nest/open-route-and-read-caller']);
+});
+
 test('Recipes, Guides, Nest and Reference open on a generated-index page with a description', () => {
   for (const label of ['Recipes', 'Guides', 'Nest', 'Reference']) {
     const { link } = categories.find((category) => category.label === label);

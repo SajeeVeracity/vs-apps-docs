@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 const docs = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs');
 const recipeNames = ['gate-by-capability', 'read-app-context', 'list-members', 'expose-agent-actions', 'add-page-and-capability'];
 const nestRecipe = 'nest-adapter';
+const openRouteGuide = 'open-route-and-read-caller';
 const pagesIn = (dir) =>
   readdirSync(join(docs, dir))
     .filter((name) => name.endsWith('.md'))
@@ -17,9 +18,10 @@ const guides = existsSync(join(docs, 'guides')) ? pagesIn('guides') : [];
 const nest = existsSync(join(docs, 'nest')) ? pagesIn('nest') : [];
 const all = [...recipes, ...nest, ...guides];
 
-test('has one recipe per ranked task, the Nest recipe in the Nest folder and at least one guide', () => {
+test('has one recipe per ranked task, the Nest recipe and the open-route guide in the Nest folder and at least one guide', () => {
   assert.deepEqual(recipes.map((r) => r.name).sort(), [...recipeNames].sort());
   assert.ok(nest.some((page) => page.name === nestRecipe));
+  assert.ok(nest.some((page) => page.name === openRouteGuide));
   assert.ok(guides.length >= 1);
 });
 
@@ -141,11 +143,54 @@ test('nest-adapter claims no bodyParser setting and warns that the credential st
   assert.match(warning[0], /your own storage/);
 });
 
-test('nest-adapter next step links quickstart Part 2 only', () => {
+test('nest-adapter next step links quickstart Part 2, then the open-route guide', () => {
   const { text } = nest.find((r) => r.name === nestRecipe);
   const next = text.split(/^## /m).at(-1);
   assert.match(next, /^Next step\n/);
-  assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]), ['../quickstart.md#part-2-add-the-app-to-a-space']);
+  assert.deepEqual(
+    [...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]),
+    ['../quickstart.md#part-2-add-the-app-to-a-space', `./${openRouteGuide}.md`],
+  );
+});
+
+test('Nest pages share one snippet project, so no two Nest pages use the same snippet title', () => {
+  const owners = new Map();
+  for (const { name, text } of nest) {
+    for (const [, title] of text.matchAll(/^```(?:tsx?|json)[^\n]*title="([^"]+)"/gm)) {
+      assert.ok(!owners.has(title) || owners.get(title) === name, `${title} is in ${owners.get(title)} and ${name}`);
+      owners.set(title, name);
+    }
+  }
+});
+
+const guide = () => nest.find((r) => r.name === openRouteGuide)?.text ?? '';
+
+test('the open-route guide names nest-adapter as its prerequisite', () => {
+  assert.match(section(guide(), 'Prerequisites'), /\]\(\.\/nest-adapter\.md\)/);
+});
+
+test('the open-route guide shows @Public, appCaller and AppRequest in labelled server files', () => {
+  const code = [...guide().matchAll(/^```tsx?\s+title="(server\/[^"]+)"\n([\s\S]*?)^```/gm)];
+  assert.ok(code.length >= 1);
+  const body = code.map(([, , b]) => b).join('\n');
+  assert.match(body, /@Public\(\)/);
+  assert.match(body, /\bappCaller\(/);
+  assert.match(body, /\bAppRequest\b/);
+  assert.match(body, /\bimport \{[^}]*\bappCaller\b[^}]*\} from '@vectoragents\/vs-apps\/nest'/);
+});
+
+test('the open-route guide checks that the open route answers 200 and the caller route answers 401 with no token', () => {
+  const steps = section(guide(), 'Steps');
+  const curls = [...steps.matchAll(/^curl .*localhost:<SERVER_PORT>\/api\/([\w-]+)$/gm)].map((m) => m[1]);
+  assert.equal(curls.length, 2);
+  assert.match(steps, /\*\*Check\*\*:[^\n]*`200`[^\n]*`401`/);
+});
+
+test('the open-route guide next step links one related page', () => {
+  const next = section(guide(), 'Next step');
+  const links = [...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
+  assert.equal(links.length, 1);
+  assert.ok(existsSync(join(docs, 'nest', links[0].split('#')[0])), links[0]);
 });
 
 test('every link to nest-adapter points at its Nest folder location', () => {
