@@ -127,3 +127,41 @@ test('every link to nest-adapter points at its Nest folder location', () => {
     }
   }
 });
+
+const expose = recipes.find((r) => r.name === 'expose-agent-actions');
+const exposeCode = expose.text.match(/^```tsx?[^\n]*\n[\s\S]*?^```/gm).join('\n');
+const exposeSection = (title) => expose.text.split(/^## /m).find((s) => s.startsWith(`${title}\n`));
+
+test('expose-agent-actions starts from recipes/leads-app and installs zod 3', () => {
+  assert.match(exposeSection('Prerequisites'), /`recipes\/leads-app\/`/);
+  assert.match(expose.text, /^npm install zod@3\b.*$/m);
+  assert.doesNotMatch(expose.text, /npm install zod(?!@3)/);
+});
+
+test('expose-agent-actions binds the action to a shared page key and names it leads.open_lead_list', () => {
+  const pageIds = [...exposeCode.matchAll(/pageId: '([^']+)'/g)].map((m) => m[1]);
+  assert.deepEqual(pageIds, ['leads']);
+  assert.match(expose.text, /`leads\.open_lead_list`/);
+  assert.doesNotMatch(expose.text, /sdr-leads/);
+});
+
+test('expose-agent-actions names the catalog command, its entry file and the dev dependency', () => {
+  assert.match(expose.text, /^npm install --save-dev vite-node --workspace client$/m);
+  assert.match(expose.text, /^npm exec --workspace client -- vs-apps catalog extract scripts\/agent-catalog\.ts$/m);
+  assert.match(expose.text, /```ts title="client\/scripts\/agent-catalog\.ts"/);
+  assert.match(exposeCode, /extractAgentCatalog/);
+  assert.match(exposeCode, /outPath: '\.\.\/server\/agent-catalog\.json'/);
+  assert.doesNotMatch(expose.text, /Regenerate `agent-catalog\.json`/);
+});
+
+test('expose-agent-actions limits description and mounted-action claims to the SDK', () => {
+  assert.doesNotMatch(expose.text, /only guidance/);
+  assert.match(expose.text, /The SDK puts it in the manifest, which Space reads\./);
+  assert.match(expose.text, /After each successful call, the SDK reports the mounted actions\./);
+  assert.doesNotMatch(expose.text, /agent sees `leads/);
+});
+
+test('expose-agent-actions next step links agent-action-trees only', () => {
+  const next = exposeSection('Next step');
+  assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]), ['../guides/agent-action-trees.md']);
+});
