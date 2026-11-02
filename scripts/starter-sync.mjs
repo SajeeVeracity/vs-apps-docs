@@ -126,7 +126,6 @@ export function checkPorts(pageText, starterDir) {
   return problems;
 }
 
-/** Fails for every `https://<name>.example.com` origin on the page that the starter's `.env.example` lacks. */
 export function checkEnvExamples(pageText, starterDir) {
   const origins = new Set(pageText.match(/https:\/\/[\w-]+\.example\.com/g));
   const path = join(starterDir, '.env.example');

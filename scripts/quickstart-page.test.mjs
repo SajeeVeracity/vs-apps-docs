@@ -58,7 +58,7 @@ test('Goal names both end states and ends with the Mermaid diagram and its capti
   assert.equal([...body.matchAll(/^\s+participant \w+ as /gm)].length, 4);
   assert.match(body, /display only/);
   assert.ok(goal.includes('```mermaid'));
-  assert.match(goal.split('```mermaid')[1].split(/^```$/m)[1], /Space mints the token/);
+  assert.match(goal.split('```mermaid')[1].split(/^```$/m)[1], /Only the server check protects data\./);
 });
 
 test('each mermaid fence sits inside DiagramControls, imported right after the opening paragraph', () => {
@@ -248,6 +248,8 @@ test('Part 2 click paths and Checks', () => {
   const [, , publish, addApp, share, open] = steps(part2);
   assert.match(publish, /\*\*Organization\*\*, then \*\*Spaces\*\*/);
   assert.match(publish, /\*\*Agent Studio\*\*/);
+  assert.match(publish, /The space switcher, the menu in which a member picks a space, lists/);
+  assert.match(publish, /^2\. .*skip item 3\./m);
   assert.match(publish, /\*\*Publish All\*\*/);
   assert.match(publish, /All published/);
   assert.match(addApp, /\*\*Add an app\*\*/);

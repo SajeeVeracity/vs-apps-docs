@@ -37,7 +37,7 @@ sequenceDiagram
 
 </DiagramControls>
 
-Space mints the token and posts it to your client. Your client sends it to your server, and the server verifies it against the Space key set, the public keys that Space publishes.
+Space mints the token and posts it to your client. Your client sends it to your server, and the server verifies it against the Space key set, the public keys that Space publishes. Only the server check protects data. Anyone can change what runs in a browser.
 
 ## Prerequisites
 
@@ -48,7 +48,7 @@ Space mints the token and posts it to your client. Your client sends it to your 
 
 ### 1. Clone the starter and install
 
-Clone the starter, export your package token and install the dependencies. `.npmrc` reads the token from the `GITHUB_PACKAGES_TOKEN` environment variable during install.
+The starter is a working app. You start from running code instead of an empty project. Clone it, export your package token and install the dependencies. `.npmrc` reads the token from the `GITHUB_PACKAGES_TOKEN` environment variable during install.
 
 ```bash
 git clone https://github.com/SajeeVeracity/vector-app-quickstart.git hello-app
@@ -335,9 +335,9 @@ Part 2 puts the app in a real Space. Only Vector can register the app. You send 
 
 A real Space needs these things in place. Check them before step 1.
 
-- [ ] A Vector representative to send the registration request to.
+- [ ] A Vector representative, the person at Vector who registers apps, to send the registration request to.
 - [ ] A space to add the app to.
-- [ ] An Organization admin, a member who sees **Organization** under **Settings**, to do [step 3](#3-publish-the-space-agent). A space manager to do steps 4 and 5. Anyone with Edit level on the space, and any Organization admin, is a space manager.
+- [ ] An Organization admin, a member who sees **Organization** under **Settings**, to do [step 3](#3-publish-the-space-agent). A space manager to do steps 4 and 5. Anyone with Edit level on the space, the access level that lets a member edit it, and any Organization admin, is a space manager.
 - [ ] The Space server can reach your server. It needs a public URL that forwards to port `3101` (`SERVER_PORT`). Keep the URL the same until Vector confirms the registration.
 
 ### 1. Point the app at your Space
@@ -390,12 +390,10 @@ Contact your Vector representative. Vector creates the [app registration](./glos
 
 **Role**: Organization admin.
 
-The space switcher lists a space only when its agent has a published version. Until then Space shows "No spaces yet" and you cannot reach your app. A new space holds a draft agent that you publish as it is. Only an Organization admin can open an unpublished space, from the list of spaces in the organization settings.
-
-Skip this step if the canvas already shows **Published** and has no **Publish All** button.
+The space switcher, the menu in which a member picks a space, lists a space only when its agent has a published version. Until then Space shows "No spaces yet" and you cannot reach your app. A new space holds a draft agent that you publish as it is. An Organization admin opens an unpublished space from the list of spaces in the organization settings.
 
 1. Choose **Settings**, **Organization**, then **Spaces**. Choose your space.
-2. Choose **Agent Studio**, then **Canvas**.
+2. Choose **Agent Studio**, then **Canvas**. If the canvas already shows **Published** and has no **Publish All** button, skip item 3.
 3. Choose **Publish All**. In the **Review Changes Before Publishing** dialog, choose **Publish All**.
 
 **Check**: Space shows the toast `All published`. The canvas shows **Published** and the date. After a reload, the space appears in the space switcher of its members.

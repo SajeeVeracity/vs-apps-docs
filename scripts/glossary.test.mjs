@@ -12,7 +12,7 @@ const entries = text
   });
 
 const required = [
-  'app', 'app definition', 'manifest', 'Space', 'space manager', 'app registration', 'page',
+  'app', 'app definition', 'manifest', 'Space', 'space manager', 'Organization admin', 'Edit level', 'app registration', 'page',
   'capability', 'grant', 'model slot', 'connector slot', 'agent action', 'agent catalog', 'acts', 'approvals',
   'harness', 'dev issuer', 'SDK', 'MCP', 'monorepo', 'shared package',
 ];

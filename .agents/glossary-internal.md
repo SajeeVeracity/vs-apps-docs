@@ -27,7 +27,7 @@ A line in a quickstart step that starts with `**Check**` and tells the reader wh
 
 ### Role
 
-A line under a quickstart step heading that names who does the step: `**Role**: space manager.` It carries the role name and no persona. Steps 3, 4 and 5 of Part 2 have one each. It mirrors the `**Check**` line.
+A line under a quickstart step heading that names who does the step: `**Role**: Organization admin.` on step 3, `**Role**: space manager.` on steps 4 and 5. It carries the role name and no persona. It mirrors the `**Check**` line.
 
 - Maps to: no SDK symbol. `scripts/quickstart-page.test.mjs` pins it.
 - Owner: docs.

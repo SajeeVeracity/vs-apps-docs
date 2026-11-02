@@ -41,6 +41,20 @@ A member of a space at Edit level, or an Organization admin. They add apps, gran
 - Maps to: no SDK symbol.
 - Owner: Space.
 
+### Organization admin
+
+A member who manages the organization in Space and sees **Organization** under **Settings**. Every Organization admin is a space manager.
+
+- Maps to: no SDK symbol.
+- Owner: Space.
+
+### Edit level
+
+The access level that lets a member edit a space. A member at Edit level is a space manager.
+
+- Maps to: no SDK symbol.
+- Owner: Space.
+
 ### app registration
 
 The record Vector creates in Space from your manifest URL. One registration per app. Space re-pulls the manifest on a pull or the app's boot ping.

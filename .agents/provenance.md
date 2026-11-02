@@ -16,7 +16,13 @@ What each claim in these docs rests on. A ticket or spec named below without a l
 
 ## Verified in a local Space
 
-Part 2 of the quickstart is checked in a local Space from the sibling `vector-spaces` repo, through the user interface. Three checks are recorded: publishing the agent of a new space (Add the publish agent step), the Organization admin route to that publish (**Settings**, **Organization**, **Spaces**, then the space) after which an Edit member sees the space in the switcher, and sharing the app at View level, so an organization member opens the page and sees `hello:view` (spec). Labels and toasts drift with the Space UI.
+Part 2 of the quickstart is checked in a local Space from the sibling `vector-spaces` repo, through the user interface. Three checks are recorded.
+
+- Publishing the agent of a new space (Add the publish agent step).
+- The Organization admin route to that publish: **Settings**, **Organization**, **Spaces**, then the space. After it, an Edit member sees the space in the switcher.
+- Sharing the app at View level, so an organization member opens the page and sees `hello:view` (spec).
+
+Labels and toasts drift with the Space UI.
 
 ## Not yet verified
 
