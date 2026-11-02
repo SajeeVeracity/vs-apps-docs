@@ -11,7 +11,7 @@ Every symbol below follows one layout: signature, behaviour, example. Each examp
 - `@vectoragents/vs-apps` installed with a registry token.
 - React 19 with TypeScript.
 - An action declared with `defineAgentPage`, covered in the [root reference](./root.md).
-- `zod` version 3, installed with `npm install zod@3`, for the params schema of an action. Zod 4 gives an empty `paramsJsonSchema`, so the agent sees no params.
+- `zod` version 3, installed with `npm install zod@3`, for the parameter schema of an action. Zod 4 gives an empty `paramsJsonSchema`, so the agent sees no parameters.
 
 ## `useAgentAction`
 

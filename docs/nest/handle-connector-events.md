@@ -4,7 +4,7 @@ title: Handle connector events
 
 Receive an inbound event from a connector in a NestJS server, and answer it through the same connector. The guide uses `ConnectorEventsService` and the `ConnectorExecuteResult` type from the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary.md#sdk).
 
-A [connector slot](../glossary.md#connector-slot) can declare event handlers. When a space manager routes an event type of the attached connector to a handler, [Space](../glossary.md#space) sends each event to your server. `ConnectorEventsService` holds the function that runs for each handler. `ConnectorExecuteResult` is what a call back to the connector returns.
+A [connector slot](../glossary.md#connector-slot) can declare event handlers. When a [space manager](../glossary.md#space-manager) routes an event type of the attached connector to a handler, [Space](../glossary.md#space) sends each event to your server. `ConnectorEventsService` holds the function that runs for each handler. `ConnectorExecuteResult` is what a call back to the connector returns.
 
 ## Goal
 
@@ -73,7 +73,7 @@ export class SupportReplyService {
 }
 ```
 
-`operationId` names an operation of the attached connector. `send_message` is an example: use an id that your connector defines.
+`operationId` names an operation of the attached connector. `send_message` is an example: use an identifier that your connector defines.
 
 ### 3. Register the handler
 
@@ -81,7 +81,7 @@ export class SupportReplyService {
 
 The function gets the event and a context with the verified `claims` of the events token and the `traceparent` header. It returns nothing. The SDK answers `{ handled: true }` when the function returns, and answers `500` when it throws.
 
-Space delivers each event at least once, up to three times. Skip an event id that you already handled.
+Space delivers each event at least once, up to three times. Skip an event identifier that you already handled.
 
 ```ts title="server/src/support-events.service.ts"
 import { Injectable, OnModuleInit } from '@nestjs/common';
@@ -115,7 +115,7 @@ export class SupportEventsService implements OnModuleInit {
 }
 ```
 
-The throw makes the SDK answer `500`, and Space sends the event again. The set keeps its ids in memory, so a restart forgets them. Keep the ids in your own storage if a second reply is a problem.
+The throw makes the SDK answer `500`, and Space sends the event again. The set keeps its identifiers in memory, so a restart forgets them. Keep the identifiers in your own storage if a second reply is a problem.
 
 A delivery for a handler that no one registered gets `{ handled: false }` and is not sent again. `event.payload` is the body of the provider, unchanged.
 

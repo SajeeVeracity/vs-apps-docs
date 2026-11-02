@@ -14,7 +14,7 @@ const entries = text
 const required = [
   'app', 'app definition', 'manifest', 'Space', 'space manager', 'Organization admin', 'Edit level', 'app registration', 'page',
   'capability', 'grant', 'model slot', 'connector slot', 'agent action', 'agent catalog', 'acts', 'approvals',
-  'harness', 'dev issuer', 'SDK', 'MCP', 'A2A', 'monorepo', 'shared package',
+  'harness', 'dev issuer', 'SDK', 'MCP', 'A2A', 'service secret', 'app token', 'monorepo', 'shared package',
 ];
 
 test('covers every candidate term', () => {

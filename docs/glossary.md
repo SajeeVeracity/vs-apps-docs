@@ -155,10 +155,24 @@ Model Context Protocol. An open protocol that connects a model to tools and data
 
 ### A2A
 
-Agent2Agent. An open protocol that lets one agent find another through an agent card and call it with JSON-RPC. An app that declares an agent publishes the card and answers `message/send` and `message/stream`.
+Agent2Agent. An open protocol that lets one agent find another through an agent card and call it with JSON Remote Procedure Call (JSON-RPC) messages. An app that declares an agent publishes the card and answers `message/send` and `message/stream`.
 
 - Maps to: `agents[]` in the definition, and `buildAppAgentCard` and `createA2aRequestHandler` in `@vectoragents/vs-apps/server`.
 - Owner: SDK declares it. Space calls it.
+
+### service secret
+
+The secret Space creates for each pair of app and space and pushes to the app at `POST /api/provision`. The app trades it for an app token.
+
+- Maps to: `getServiceSecret` in `createSpaceAiConfigProvider`, and the credential store of `nest-adapter`.
+- Owner: Space creates it. The SDK stores and exchanges it.
+
+### app token
+
+A short-lived token that Space issues in exchange for the service secret. Space limits it to what the app may do, with no user involved.
+
+- Maps to: `createSpaceS2sTokenProvider` and `SpaceS2sService`.
+- Owner: Space issues it. The SDK requests it.
 
 ### monorepo
 

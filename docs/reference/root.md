@@ -9,7 +9,7 @@ Every symbol below follows one layout: signature, behaviour, example. Each examp
 ## Prerequisites
 
 - `@vectoragents/vs-apps` installed with a registry token.
-- `zod` version 3, installed with `npm install zod@3`, for the params schema of an action. Zod 4 gives an empty `paramsJsonSchema`, so the agent sees no params.
+- `zod` version 3, installed with `npm install zod@3`, for the parameter schema of an action. Zod 4 gives an empty `paramsJsonSchema`, so the agent sees no parameters.
 
 ## `defineAgentPage`
 
@@ -79,7 +79,7 @@ export const exportLeadsAction = openLeadListAction.child({
 });
 ```
 
-The action ids are `leads.open_lead_list` and `leads.export_leads`.
+The action identifiers are `leads.open_lead_list` and `leads.export_leads`.
 
 ## `appPages`
 

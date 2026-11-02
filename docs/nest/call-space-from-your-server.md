@@ -4,7 +4,7 @@ title: Call Space from your server
 
 Make a NestJS server call [Space](../glossary.md#space) in two ways: as the signed-in user, and as the app itself. Both use the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary.md#sdk).
 
-A call as the user carries the user's token, so Space limits it to what that user may do. A call as the app carries a short-lived token that Space issues in exchange for a service secret. Space limits it to what the app may do, with no user present.
+A call as the user carries the user's token, so Space limits it to what that user may do. A call as the app carries a short-lived token that Space issues in exchange for a [service secret](../glossary.md#service-secret). Space limits it to what the app may do, with no user present.
 
 ## Goal
 
@@ -23,7 +23,7 @@ End with two routes on the server from [`nest-adapter`](./nest-adapter.md). `POS
 
 - `SpaceClientService` has one method for each Space action. Each method takes a bearer token as its first argument.
 - `AppActionsService` wraps `SpaceClientService` for a caller. It reads the token and the `spaceId` from the request, so you pass only the request and the input.
-- `SpaceS2sService` exchanges the service secret for a short-lived app token. Space creates the secret for each pair of app and space and pushes it to the credential store from `nest-adapter`.
+- `SpaceS2sService` exchanges the service secret for a short-lived [app token](../glossary.md#app-token). Space creates the secret for each pair of app and space and pushes it to the credential store from `nest-adapter`.
 
 The store from `nest-adapter` keeps the secrets in memory and loses them on restart. `AppCredentialStore` is the one interface you implement over your own storage, so plan a persistent store before production. After a restart, `getToken` fails until the binding secret is rotated in Space, which pushes it again.
 

@@ -249,11 +249,11 @@ const routes: Record<string, Route> = {
 
 `GET /api/hello` returns the claims of a verified user token. Space calls `POST /api/provision` and `DELETE /api/deprovision` when a space manager, the person who adds apps to a Space, adds or removes the app. The harness run does not call them.
 
-The client config also returns `SPACE_API_URL` as `spaceApiUrl`, the Space API address that your page can use. When the server starts, it also tells Space which manifests it holds. `pingSpaceManifests` sends the hash of each manifest to Space, and Space reads again a manifest that changed, so a restart refreshes the manifest in Space. The ping takes the Space origin, so the code removes `/api` from `SPACE_API_URL`. The harness has no `SPACE_API_URL`, so the harness run sends no ping.
+The client configuration also returns `SPACE_API_URL` as `spaceApiUrl`, the Space API address that your page can use. When the server starts, it also tells Space which manifests it holds. `pingSpaceManifests` sends the hash of each manifest to Space, and Space reads again a manifest that changed, so a restart refreshes the manifest in Space. The ping takes the Space origin, so the code removes `/api` from `SPACE_API_URL`. The harness has no `SPACE_API_URL`, so the harness run sends no ping.
 
 ```ts title="server/src/main.ts" starter
 if (process.env.SPACE_API_URL) {
-  // The ping takes the Space origin; the client directory takes the origin plus /api.
+  // The ping takes the Space origin; client-config consumers take the origin plus /api.
   const spaceBaseUrl = process.env.SPACE_API_URL.replace(/\/api\/?$/, '');
   void pingSpaceManifests({ spaceBaseUrl, manifests });
 }
@@ -360,7 +360,7 @@ cp .env.example .env
 ```
 
 - `SPACE_JWKS_URL` is the address of the Space key set. The server uses it to check that a token comes from Space. It is the origin of the Space API followed by `/api/.well-known/apps/jwks.json`.
-- `SPACE_API_URL` is the address of the Space API. The server uses it to ping Space at start, and the client config passes it to your page. It is the origin of the Space API followed by `/api`, for example `https://space-api.example.com/api`. Write it with no trailing slash.
+- `SPACE_API_URL` is the address of the Space API. The server uses it to ping Space at start, and the client configuration passes it to your page. It is the origin of the Space API followed by `/api`, for example `https://space-api.example.com/api`. Write it with no trailing slash.
 - `ALLOWED_PARENT_ORIGIN` is the origin of the Space web client that embeds your page, for example `https://space.example.com`. Write it with no trailing slash and no path: the client accepts messages from an exact match only.
 - `PUBLIC_BASE_URL` is the origin where the Space server reaches your server, for example `https://hello-app.example.com`. The server writes it into each `{publicBaseUrl}` placeholder in the manifest. The Hello app has no placeholder. You reuse this origin in step 2 for the manifest URL.
 - `SERVER_PORT` is the port your server listens on.

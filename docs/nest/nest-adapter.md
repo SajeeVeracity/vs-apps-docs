@@ -77,7 +77,7 @@ export const manifests = buildManifests([definition], {
 });
 ```
 
-The module calls a credential store when Space provisions the app. The store below keeps the secrets in memory and loses them on restart. `AppCredentialStore` is the one interface you implement over your own storage, so plan a persistent store before production.
+The module calls a credential store when Space provisions the app. The store below keeps the secrets in memory and loses them on restart, so implement `AppCredentialStore` over your own storage and plan a persistent store before production.
 
 ```ts title="server/src/credential-store.ts"
 import { Injectable } from '@nestjs/common';

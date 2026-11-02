@@ -4,7 +4,7 @@ title: Call a model from your server
 
 Ask [Space](../glossary.md#space) for a model from a `node:http` server and call it. The guide uses `createSpaceAiConfigProvider` from the `@vectoragents/vs-apps/server` subpath of the [SDK](../glossary.md#sdk) and one [model slot](../glossary.md#model-slot), a named model request that your app declares and a [space manager](../glossary.md#space-manager) fills with one model.
 
-Your server never holds a model key. The provider trades the app's secret for a short-lived ticket and returns it as the `apiKey` of a client config. The config also holds the `baseUrl` of Space's model gateway and the `model` name to send.
+Your server never holds a model key. The provider trades the [service secret](../glossary.md#service-secret) for a short-lived key and returns it as the `apiKey` of a client configuration. The configuration also holds the `baseUrl` of Space's model gateway and the `model` name to send.
 
 ## Goal
 
@@ -39,7 +39,9 @@ Add the slot to the definition in `shared/src/index.ts`. Import `leadSummarySlot
 
 ### 2. Keep the service secret
 
-The provider needs the secret that Space pushed when it added the app. Space sends it in the body of `POST /api/provision`. The starter route checks the token and drops the body. The file below keeps the secret for each Space in memory. The map loses the secrets on restart, so replace it with your own storage before production. Until Space pushes the secret again, the provider fails with status `401`.
+The provider needs the secret that Space pushed when it added the app. Space sends it in the body of `POST /api/provision`. The starter route checks the token and drops the body.
+
+The file below keeps the secret for each Space in memory. The map loses the secrets on restart, so replace it with your own storage before production. Until Space pushes the secret again, the provider fails with status `401`.
 
 ```ts title="server/src/service-secrets.ts"
 import type { IncomingMessage } from 'node:http';
@@ -70,9 +72,9 @@ export async function getServiceSecret(spaceId: number): Promise<string | null> 
 
 ### 3. Call the model
 
-`createSpaceAiConfigProvider` takes the Space origin, the app id and `getServiceSecret`. The function it returns takes `(spaceId, slot)` and resolves to `{ provider, baseUrl, apiKey, model, expiresAt }`. `expiresAt` is a time in seconds since 1970. The provider reuses a ticket until one minute before it expires, so keep one provider for each app id and do not store the config.
+`createSpaceAiConfigProvider` takes the Space origin, the app identifier and `getServiceSecret`. The function it returns takes `(spaceId, slot)` and resolves to `{ provider, baseUrl, apiKey, model, expiresAt }`. `expiresAt` is a time in seconds since 1970. The provider reuses a ticket until one minute before it expires, so keep one provider for each app identifier and do not store the configuration.
 
-The ticket works for this slot only. `model` is the slot's alias, not the model name that the space manager picked. Send it as it is.
+The key works for this slot only. `model` is the slot's alias, not the model name that the space manager picked. Send it as it is.
 
 If no one sets the slot, Space refuses the call with status `409`. Space refuses a slot key that the manifest does not declare with status `400`. The provider throws a `SpaceActionError` that carries the status.
 

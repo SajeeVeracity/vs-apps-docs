@@ -18,9 +18,9 @@ End with an owners list built with `useUsers`, a member picker built with the di
 
 Each snippet is a complete file.
 
-### 1. Resolve owner ids to names
+### 1. Resolve owner identifiers to names
 
-`useUsers` takes user ids your data already holds, for example the owner of each lead. It fetches again only when the set of ids changes, so a new array on each render costs nothing. If Space cannot show an id, the map holds an entry with `deleted: true` and the name `Former member`. Space cannot show an id for a deleted user, a user who left the organization or an unknown id.
+`useUsers` takes user identifiers your data already holds, for example the owner of each lead. It fetches again only when the set of identifiers changes, so a new array on each render costs nothing. If Space cannot show an identifier, the map holds an entry with `deleted: true` and the name `Former member`. Space cannot show an identifier for a deleted user, a user who left the organization or an unknown identifier.
 
 ```tsx title="client/src/LeadOwners.tsx"
 import { useUsers } from '@vectoragents/vs-apps/react';
@@ -132,7 +132,7 @@ export function GroupRoster({ group }: { group: DirectoryGroup }) {
 
 ### 4. List groups
 
-`directory.groups()` returns every `DirectoryGroup` of the space. Its `id` is numeric, unlike the string id of a user. Like `search`, it rejects when Space answers with an error, so the snippet shows an error line.
+`directory.groups()` returns every `DirectoryGroup` of the space. Its `id` is numeric, unlike the string identifier of a user. Like `search`, it rejects when Space answers with an error, so the snippet shows an error line.
 
 ```tsx title="client/src/TeamGroups.tsx"
 import type { DirectoryGroup } from '@vectoragents/vs-apps/client';
@@ -168,11 +168,11 @@ export function TeamGroups() {
 
 ### 5. Mount the components
 
-In `client/src/LeadsPage.tsx`, import `LeadOwners`, `OwnerPicker` and `TeamGroups`. Render `<LeadOwners ownerIds={ownerIds} />` with the owner ids the page holds, `<OwnerPicker onPick={pickOwner} />`, where `pickOwner` is your function that stores the picked `user.id`, and `<TeamGroups />`. Each component calls `useApp` or `useUsers`, so it must render inside `AppProvider`, as the pages do.
+In `client/src/LeadsPage.tsx`, import `LeadOwners`, `OwnerPicker` and `TeamGroups`. Render `<LeadOwners ownerIds={ownerIds} />` with the owner identifiers the page holds, `<OwnerPicker onPick={pickOwner} />`, where `pickOwner` is your function that stores the picked `user.id`, and `<TeamGroups />`. Each component calls `useApp` or `useUsers`, so it must render inside `AppProvider`, as the pages do.
 
 ## Result
 
-Owner ids render as names, a search box returns members for a picker with one call per pause in typing, and each group of the space lists its members by name. A failed search or group call shows an error line.
+Owner identifiers render as names, a search box returns members for a picker with one call per pause in typing, and each group of the space lists its members by name. A failed search or group call shows an error line.
 
 ## Next step
 

@@ -182,7 +182,7 @@ A manifest change waits as a pending review until Vector applies it. If Space sh
 
 ### 5. Grant the capabilities
 
-A space manager grants `lead:manage` and `icp:manage` to a member. The member refreshes the page, and both pages appear in the navigation.
+A [space manager](../glossary.md#space-manager) grants `lead:manage` and `icp:manage` to a member. The member refreshes the page, and both pages appear in the navigation.
 
 ## Result
 

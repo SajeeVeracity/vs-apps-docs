@@ -12,8 +12,6 @@ End with one capability enforced twice: `RequireCapability` hides the `leads` pa
 
 - A GitHub package token in `GITHUB_PACKAGES_TOKEN`, as in [step 1 of the quickstart](../quickstart.md#1-clone-the-starter-and-install). The install below reads it.
 - The start folder `recipes/leads-app` from `main` of the public starter. It is `hello-app` with an ungated `leads` page. Clone the starter and work inside that folder.
-- A member who holds the capability and one who does not. A space manager [grants](../glossary.md#grant) capabilities in [Space](../glossary.md#space).
-- Background: [`RequireCapability` on the client](../reference/react.md#requirecapability).
 
 ```bash
 git clone https://github.com/VectorAgents/vector-app-quickstart.git
@@ -21,13 +19,18 @@ cd vector-app-quickstart/recipes/leads-app
 npm install
 ```
 
+- A member who holds the capability and one who does not. A [space manager](../glossary.md#space-manager) [grants](../glossary.md#grant) capabilities in [Space](../glossary.md#space).
+- Background: [`RequireCapability` on the client](../reference/react.md#requirecapability).
+
 ## Steps
 
 Each snippet is a complete file. The start folder already declares the `lead:manage` and `icp:manage` capabilities and the `leads` page, and this recipe changes what is listed below.
 
 ### 1. Gate the pages in the definition
 
-A page names its capability in `capability`. `defineApp` does not check that the name exists in `capabilities`, so keep the two keys identical. In the start folder the `leads` page has no `capability`. Add it, and add an `icp` page gated by `icp:manage`, which step 5 uses as the second page. Replace the definition in `shared/src/index.ts`.
+A page names its capability in `capability`. `defineApp` does not check that the name exists in `capabilities`, so keep the two keys identical.
+
+In the start folder the `leads` page has no `capability`. Add it, and add an `icp` page gated by `icp:manage`, which step 5 uses as the second page. Replace the definition in `shared/src/index.ts`.
 
 ```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
@@ -93,9 +96,11 @@ In `server/src/main.ts`, import `listLeads` and add this entry to the `routes` m
 
 ### 4. Check both gates
 
-Run `npm run dev` and open `http://localhost:5173/harness.html`. Choose the Leads page in the sidebar. In the dev panel, remove `lead:manage` from the capability set. The page shows the fallback text. Add `lead:manage` back, and the page shows the heading.
+Run `npm run dev` and open `http://localhost:5173/harness.html`. Choose the Leads page in the sidebar.
 
-For the server, mint a dev token without `lead:manage` through the [harness token route](../reference/harness.md). Call `GET /api/leads` with it. The server answers `403` with `Missing capability: lead:manage`. A token that holds the capability gets `200`.
+In the dev panel, remove `lead:manage` from the capability set. The page shows the fallback text. Add `lead:manage` back, and the page shows the heading.
+
+For the server, mint a development token without `lead:manage` through the [harness token route](../reference/harness.md). Call `GET /api/leads` with it. The server answers `403` with `Missing capability: lead:manage`. A token that holds the capability gets `200`.
 
 ### 5. Share one fallback across pages
 

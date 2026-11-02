@@ -2,7 +2,7 @@
 title: Expose your app as an A2A agent
 ---
 
-Let another agent find your app and call it. The guide uses the [A2A](../glossary.md#a2a) protocol (Agent2Agent), where an agent publishes an agent card and answers JSON-RPC calls. An agent card is a JSON file that names the agent, lists its skills and says where to send calls.
+Let another agent find your app and call it. The guide uses the [A2A](../glossary.md#a2a) protocol (Agent2Agent), where an agent publishes an agent card and answers calls in JSON Remote Procedure Call (JSON-RPC), a message format built on JSON. An agent card is a JSON file that names the agent, lists its skills and says where to send calls.
 
 You declare the agent in the [app definition](../glossary.md#app-definition). [Space](../glossary.md#space) reads the declaration from the [manifest](../glossary.md#manifest), fetches the card and sends calls to the address in it. The helpers come from the `@vectoragents/vs-apps/server` subpath of the [SDK](../glossary.md#sdk).
 
@@ -19,7 +19,7 @@ End with two routes on the server from [`expose-agent-actions`](../recipes/expos
 
 ### 1. Declare the agent
 
-An entry in `agents` tells Space where to find the card. `cardUrlTemplate` is an absolute URL with two tokens. `buildManifests` replaces `{publicBaseUrl}` with the `PUBLIC_BASE_URL` of your server. Space replaces `{spaceId}` with the id of each space.
+An entry in `agents` tells Space where to find the card. `cardUrlTemplate` is an absolute URL with two tokens. `buildManifests` replaces `{publicBaseUrl}` with the `PUBLIC_BASE_URL` of your server. Space replaces `{spaceId}` with the identifier of each space.
 
 `key` is a lowercase name with hyphens that stays the same across versions. Replace `shared/src/index.ts` with this file. `CAPABILITY` stays an export, because the starter server and `HelloPage.tsx` use it. It now holds `lead:manage`.
 
@@ -85,7 +85,7 @@ export function agentCard(spaceId: number) {
 
 The handler answers `message/send` with one JSON body. It answers `message/stream` with a function that writes the events, so your route sets the stream headers. Any other method gets a "Method not found" error.
 
-`assertSpaceS2s` checks the bearer token against Space's public keys. It pins the token to one space and one app, so a token for another space or app gets `403`. A call with no token gets `401`. The second argument of the handler, `ctx`, carries the space id into `generate`.
+`assertSpaceS2s` checks the bearer token against Space's public keys. It pins the token to one space and one app, so a token for another space or app gets `403`. A call with no token gets `401`. The second argument of the handler, `ctx`, carries the space identifier into `generate`.
 
 ```ts title="server/src/a2a.ts"
 import type { IncomingMessage, ServerResponse } from 'node:http';

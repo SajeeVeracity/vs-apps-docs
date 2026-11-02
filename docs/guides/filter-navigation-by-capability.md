@@ -17,7 +17,9 @@ End with a navigation component that lists the pages of the `hello-app` definiti
 
 ### 1. Declare a default page and gate each page
 
-`defaultPageKey` must name a declared page. A page without `capability` is ungated. Leave `home` ungated, gate `leads` and `icp`, and replace the definition in `shared/src/index.ts`. `CAPABILITY` stays an export, because the starter server and `HelloPage.tsx` use it. It now holds `lead:manage`.
+`defaultPageKey` must name a declared page. A page without `capability` is ungated. Leave `home` ungated, gate `leads` and `icp`, and replace the definition in `shared/src/index.ts`.
+
+`CAPABILITY` stays an export, because the starter server and `HelloPage.tsx` use it. It now holds `lead:manage`.
 
 ```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';

@@ -4,7 +4,7 @@ title: Call a model from your server
 
 Ask [Space](../glossary.md#space) for a model from a NestJS server and call it. The guide uses `SpaceAiService` from the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary.md#sdk) and one [model slot](../glossary.md#model-slot), a named model request that your app declares and a [space manager](../glossary.md#space-manager) fills with one model.
 
-Your server never holds a model key. `SpaceAiService` trades the app's secret for a short-lived ticket and returns it as the `apiKey` of a client config. The config also holds the `baseUrl` of Space's model gateway and the `model` name to send.
+Your server never holds a model key. `SpaceAiService` trades the [service secret](../glossary.md#service-secret) for a short-lived key and returns it as the `apiKey` of a client configuration. The configuration also holds the `baseUrl` of Space's model gateway and the `model` name to send.
 
 ## Goal
 
@@ -39,11 +39,11 @@ Add the slot to the definition in `shared/src/index.ts`. Import `leadSummarySlot
 
 ### 2. Call the model
 
-`getClientConfig(appId, spaceId, slot)` returns `{ provider, baseUrl, apiKey, model, expiresAt }`. `expiresAt` is a time in seconds since 1970. Do not store the config: call `getClientConfig` on each request. The service reuses a ticket until one minute before it expires.
+`getClientConfig(appId, spaceId, slot)` returns `{ provider, baseUrl, apiKey, model, expiresAt }`. `expiresAt` is a time in seconds since 1970. Do not store the configuration: call `getClientConfig` on each request. The service reuses a ticket until one minute before it expires.
 
-The ticket works for this slot only. `model` is the slot's alias, not the model name that the space manager picked. Send it as it is.
+The key works for this slot only. `model` is the slot's alias, not the model name that the space manager picked. Send it as it is.
 
-The helper below sends one message in the Anthropic format. It reads every value from the config.
+The helper below sends one message in the Anthropic format. It reads every value from the configuration.
 
 ```ts title="server/src/complete-prompt.ts"
 import type { AiClientConfig } from '@vectoragents/vs-apps/server';

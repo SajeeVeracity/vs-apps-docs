@@ -4,7 +4,7 @@ title: Call Space from your server
 
 Make your server call [Space](../glossary.md#space) in two ways: as the signed-in user, and as the app itself. Both use the `@vectoragents/vs-apps/server` subpath of the [SDK](../glossary.md#sdk) on a plain `node:http` server.
 
-A call as the user carries the user's token, so Space limits it to what that user may do. A call as the app carries a short-lived token that Space issues in exchange for a service secret. Space limits it to what the app may do, with no user present.
+A call as the user carries the user's token, so Space limits it to what that user may do. A call as the app carries a short-lived token that Space issues in exchange for a [service secret](../glossary.md#service-secret). Space limits it to what the app may do, with no user present.
 
 ## Goal
 
@@ -72,7 +72,7 @@ export function appToken(appId: string, spaceId: number): Promise<string> {
 
 ### 3. Add the handlers
 
-The agent handler passes the caller's own token to `agentInvoke`. The connectors handler passes an app token to `connectorsList`. No user limits that call, so the route must check the capability first.
+The agent handler passes the caller's own token to `agentInvoke`. The connectors handler passes an [app token](../glossary.md#app-token) to `connectorsList`. No user limits that call, so the route must check the capability first.
 
 `provisionPushInputSchema` reads the body that Space sends to the provision route. The provision handlers keep and drop the secret that `appToken` reads later. Each handler receives the verified claims, as in [gate a page and an endpoint](../recipes/gate-by-capability.md#3-enforce-the-capability-on-the-server).
 
