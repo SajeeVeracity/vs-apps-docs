@@ -53,6 +53,12 @@ export function checkSnippets({
         const name = (isNest ? `${nestDir}/` : '') + (placed ? titledName : `snippet-${origins.size + blocks.length}.${lang}`);
         blocks.push({ name, code, origin: `${doc} block ${index}` });
       }
+      // A page that writes `shared/src/index.ts` resolves `@hello-app/shared` to it, as the starter's workspace does.
+      if (!doc.startsWith(`${nestDir}/`) && titled.has('shared/src/index.ts')) {
+        const stub = join(work, `page-${fileIndex}`, 'node_modules', '@hello-app', 'shared');
+        mkdirSync(stub, { recursive: true });
+        writeFileSync(join(stub, 'index.ts'), "export * from '../../../shared/src/index';\n");
+      }
       for (const { name, code, origin } of blocks) {
         mkdirSync(dirname(join(work, name)), { recursive: true });
         // `export {}` keeps import-less snippets from sharing one global scope.

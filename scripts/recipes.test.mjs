@@ -418,6 +418,43 @@ test('list-members ends with one Next step: expose-agent-actions', () => {
   assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map(([, link]) => link), ['./expose-agent-actions.md']);
 });
 
+const addPage = recipes.find((r) => r.name === 'add-page-and-capability');
+const addPageSteps = () => section(addPage.text, 'Steps').split(/^### /m).slice(1);
+
+test('add-page-and-capability snippets use only the shared page and capability keys', () => {
+  assert.doesNotMatch(addPage.text, /sdr/i);
+  const code = [...addPage.text.matchAll(/^```tsx?[^\n]*\n([\s\S]*?)^```/gm)].map(([, body]) => body).join('\n');
+  const keys = (pattern) => [...code.matchAll(pattern)].map(([, key]) => key);
+  assert.deepEqual(keys(/\bkey: '([^']+)'/g).filter((k) => !['hello-app', 'home', 'leads', 'icp', 'hello:view', 'lead:manage', 'icp:manage'].includes(k)), []);
+  assert.deepEqual(keys(/\bcapability(?:: |=)['"]([^'"]+)['"]/g).filter((k) => !['hello:view', 'lead:manage', 'icp:manage'].includes(k)), []);
+});
+
+test('add-page-and-capability restart step says the starter tells Space and keeps Check for updates as the fallback', () => {
+  const restart = addPageSteps().find((s) => /^\d+\. .*Space/.test(s));
+  assert.ok(restart, 'a step about Space reading the manifest');
+  assert.match(restart, /`SPACE_API_URL`/);
+  assert.match(restart, /`npm run dev:space`/);
+  assert.match(restart, /\*\*Check for updates\*\*/);
+  assert.doesNotMatch(restart, /Restart the server\. A manifest change/);
+});
+
+test('add-page-and-capability links between pages without a reload through navigate and one shared pages array', () => {
+  const step = addPageSteps().find((s) => /^\d+\. Link between pages without a reload\n/.test(s));
+  assert.ok(step, 'a step named "Link between pages without a reload"');
+  assert.match(step, /iframe/);
+  assert.match(step, /history\.pushState\(/);
+  assert.match(step, /<AppProvider[^>]*\bnavigate=|\bnavigate=\{navigate\}/);
+  assert.match(step, /\bappPages\(/);
+  assert.match(step, /\bPagePath\b/);
+  assert.match(step, /event\.preventDefault\(\)/);
+  assert.match(addPage.text, /^export type PagePath = \(typeof pages\)\[number\]\['path'\];$/m);
+});
+
+test('add-page-and-capability keeps the layout and its Next step links gate-by-capability only', () => {
+  const next = section(addPage.text, 'Next step');
+  assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map(([, link]) => link), ['./gate-by-capability.md']);
+});
+
 const nestModel = () => nest.find((r) => r.name === modelGuide)?.text ?? '';
 const plainModel = () => guides.find((r) => r.name === modelGuide)?.text ?? '';
 const linksOf = (text) => [...text.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
