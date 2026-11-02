@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { section } from './page-helpers.mjs';
 import { checkFences } from './starter-sync.mjs';
 import { STARTER_URL } from './starter-url.mjs';
 import { voiceViolations } from './voice.mjs';
@@ -8,12 +9,11 @@ import { voiceViolations } from './voice.mjs';
 const text = readFileSync(new URL('../docs/quickstart.md', import.meta.url), 'utf8');
 const sections = text.split(/^## /m).slice(1);
 const titles = sections.map((s) => s.split('\n')[0]);
-const section = (prefix) => sections.find((s) => s.startsWith(prefix));
 const fences = [...text.matchAll(/^```(\w+)([^\n]*)\n([\s\S]*?)^```/gm)].map(([, lang, meta, body]) => ({ lang, meta, body }));
-const part1 = section('Part 1');
-const part2 = section('Part 2');
-const goal = section('Goal');
-const result = section('Result');
+const part1 = section(text, 'Part 1');
+const part2 = section(text, 'Part 2');
+const goal = section(text, 'Goal');
+const result = section(text, 'Result');
 const subsections = (part) => part.split(/^### /m).slice(1);
 const steps = (part) => subsections(part).filter((s) => /^\d+\. /.test(s));
 const title = (step) => step.split('\n')[0];
@@ -86,7 +86,7 @@ test('step 2 shows the harness diagram after the dev server fence and before the
 });
 
 test('prerequisites are one app-side checklist and state the baseline once', () => {
-  const prerequisites = section('Prerequisites');
+  const prerequisites = section(text, 'Prerequisites');
   const items = prerequisites.split('\n').filter((l) => /^- /.test(l));
   assert.ok(items.length >= 2);
   for (const line of items) assert.match(line, /^- \[ \] /);
@@ -170,7 +170,7 @@ test('commands run in the step that needs them', () => {
   const space = steps(part2)[0];
   assert.match(space, /^cp \.env\.example \.env$/m);
   assert.match(space, /^npm run dev:space$/m);
-  for (const name of ['SPACE_JWKS_URL', 'ALLOWED_PARENT_ORIGIN', 'PUBLIC_BASE_URL', 'SERVER_PORT', 'CLIENT_PORT']) {
+  for (const name of ['SPACE_JWKS_URL', 'SPACE_API_URL', 'ALLOWED_PARENT_ORIGIN', 'PUBLIC_BASE_URL', 'SERVER_PORT', 'CLIENT_PORT']) {
     assert.match(space, new RegExp(`^- \`${name}\``, 'm'), name);
   }
   assert.match(space, /^200 \{"keys":\[$/m);
@@ -178,6 +178,28 @@ test('commands run in the step that needs them', () => {
   for (const dropped of ['dev:server', 'dev:client', 'check:server', 'SPACE_BASE_URL']) {
     assert.doesNotMatch(text, new RegExp(dropped));
   }
+});
+
+test('Part 2 defines SPACE_API_URL with its exact shape and says what the boot ping shows', () => {
+  const env = steps(part2)[0];
+  const bullet = env.split('\n').find((l) => l.startsWith('- `SPACE_API_URL`'));
+  assert.ok(bullet);
+  assert.match(bullet, /origin of the Space API followed by `\/api`/);
+  assert.match(bullet, /`https:\/\/space-api\.example\.com\/api`/);
+  assert.match(bullet, /no trailing slash/);
+  assert.match(env, /`npm run dev` clears `SPACE_API_URL`/);
+  assert.match(env, /pings Space/);
+  assert.match(env, /prints nothing when the ping works/);
+  assert.match(env, /manifest ping for "hello-app" got/);
+  assert.match(env, /server keeps running/);
+});
+
+test('the main.ts excerpts show spaceApiUrl in client-config and the boot ping', () => {
+  const mains = fences.filter((f) => /title="server\/src\/main\.ts"/.test(f.meta));
+  assert.equal(mains.length, 2);
+  assert.match(mains[0].body, /spaceApiUrl: process\.env\.SPACE_API_URL,/);
+  assert.match(mains[1].body, /if \(process\.env\.SPACE_API_URL\) \{/);
+  assert.match(mains[1].body, /void pingSpaceManifests\(\{ spaceBaseUrl, manifests \}\);/);
 });
 
 test('the harness Check shows three lines and a limits sentence follows it', () => {
@@ -289,7 +311,7 @@ test('links the six glossary terms, the concept page and the harness reference',
   assert.match(text, /\(\.\/app-definition\.md\)/);
   const links = [...text.matchAll(/\]\(\.\/glossary\.md#([\w-]+)\)/g)].map((m) => m[1]);
   assert.deepEqual([...links].sort(), ['agent-catalog', 'app-definition', 'app-registration', 'dev-issuer', 'harness', 'space']);
-  assert.match(section('Next steps'), /\(\.\/reference\/harness\.md\)/);
+  assert.match(section(text, 'Next steps'), /\(\.\/reference\/harness\.md\)/);
 });
 
 test('defines capability, space manager and manifest in one clause at first use', () => {

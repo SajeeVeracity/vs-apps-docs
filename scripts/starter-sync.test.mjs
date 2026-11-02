@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { checkEnvExamples, checkFences, checkPageVersions, checkPorts, checkSdkPin, checkTree, installedSdkVersion, main, pageTreePaths } from './starter-sync.mjs';
+import { checkEnvExamples, checkEnvVars, checkFences, checkPageVersions, checkPorts, checkSdkPin, checkStartFolders, checkTree, installedSdkVersion, main, pageTreePaths, usedEnvNames } from './starter-sync.mjs';
 
 const tree = ['hello-app/', '├── .env.example', '├── client/', '│   ├── index.html', '│   └── src/', '│       └── main.tsx', '└── shared/', '    └── src/', '        └── index.ts'].join('\n');
 const page = [
@@ -47,6 +47,11 @@ function starter(overrides = {}) {
     'server/package.json': pin('0.2.4'),
     'shared/package.json': pin('0.2.4'),
     'package-lock.json': JSON.stringify({ packages: { 'node_modules/@vectoragents/vs-apps': { version: '0.2.4' } } }),
+    'recipes/leads-app/package.json': '{}',
+    'recipes/leads-app/client/package.json': pin('0.2.4'),
+    'recipes/leads-app/server/package.json': pin('0.2.4'),
+    'recipes/leads-app/shared/package.json': pin('0.2.4'),
+    'recipes/leads-app/package-lock.json': JSON.stringify({ packages: { 'node_modules/@vectoragents/vs-apps': { version: '0.2.4' } } }),
     ...overrides,
   };
   for (const [path, content] of Object.entries(files)) if (content !== null) write(root, path, content);
@@ -75,6 +80,51 @@ test('SDK pin: fails when the lockfile resolves another version', () => {
 test('SDK pin: fails when no file pins the SDK at all', () => {
   const root = starter({ 'client/package.json': '{}', 'server/package.json': '{}', 'shared/package.json': '{}', 'package-lock.json': null });
   assert.equal(checkSdkPin(root, '0.2.4').length, 1);
+});
+
+test('start folders: pass when recipes/leads-app exists and pins the installed version', () => {
+  assert.deepEqual(checkStartFolders(starter(), '0.2.4'), []);
+});
+
+test('start folders: fail when recipes/leads-app is missing', () => {
+  const root = starter({
+    'recipes/leads-app/package.json': null,
+    'recipes/leads-app/client/package.json': null,
+    'recipes/leads-app/server/package.json': null,
+    'recipes/leads-app/shared/package.json': null,
+    'recipes/leads-app/package-lock.json': null,
+  });
+  const problems = checkStartFolders(root, '0.2.4');
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /recipes\/leads-app is missing from the starter/);
+});
+
+test('start folders: fail when the folder pins another version, and name the folder', () => {
+  const root = starter({ 'recipes/leads-app/server/package.json': JSON.stringify({ dependencies: { '@vectoragents/vs-apps': '0.2.5' } }) });
+  const problems = checkStartFolders(root, '0.2.4');
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /recipes\/leads-app: server\/package\.json pins .* 0\.2\.5/);
+});
+
+test('start folders: fail when the folder lockfile resolves another version', () => {
+  const root = starter({ 'recipes/leads-app/package-lock.json': JSON.stringify({ packages: { 'node_modules/@vectoragents/vs-apps': { version: '0.2.3' } } }) });
+  assert.match(checkStartFolders(root, '0.2.4')[0], /recipes\/leads-app: package-lock\.json/);
+});
+
+test('main: a starter without the start folder exits 1', async () => {
+  const root = starter({
+    'recipes/leads-app/package.json': null,
+    'recipes/leads-app/client/package.json': null,
+    'recipes/leads-app/server/package.json': null,
+    'recipes/leads-app/shared/package.json': null,
+    'recipes/leads-app/package-lock.json': null,
+  });
+  assert.equal(await main({ env: { STARTER_DIR: root }, page, sdkVersion: '0.2.4', ...silent }), 1);
+});
+
+test('main: a start folder with another pin exits 1', async () => {
+  const root = starter({ 'recipes/leads-app/client/package.json': JSON.stringify({ dependencies: { '@vectoragents/vs-apps': '0.2.5' } }) });
+  assert.equal(await main({ env: { STARTER_DIR: root }, page, sdkVersion: '0.2.4', ...silent }), 1);
 });
 
 test('installedSdkVersion matches the exact pin in this repo package.json', () => {
@@ -174,7 +224,7 @@ test('ports: the real page run step names the starter ports', () => {
   assert.deepEqual(checkPorts(real, starter()), []);
 });
 
-const ENV_EXAMPLE = 'ALLOWED_PARENT_ORIGIN=https://space.example.com\nPUBLIC_BASE_URL=https://hello-app.example.com\n';
+const ENV_EXAMPLE = 'SPACE_API_URL=https://space-api.example.com/api\nALLOWED_PARENT_ORIGIN=https://space.example.com\nPUBLIC_BASE_URL=https://hello-app.example.com\n';
 const envPage = 'For example `https://space.example.com` and `https://hello-app.example.com`.';
 
 test('env example: passes when each example origin on the page is in the starter .env.example', () => {
@@ -197,7 +247,53 @@ test('env example: a page with no example origin passes', () => {
 
 test('env example: the real page origins are in the starter example', () => {
   assert.deepEqual(checkEnvExamples(real, starter({ '.env.example': ENV_EXAMPLE })), []);
-  assert.ok(real.includes('https://space.example.com') && real.includes('https://hello-app.example.com'));
+  assert.ok(['https://space.example.com', 'https://hello-app.example.com', 'https://space-api.example.com'].every((origin) => real.includes(origin)));
+});
+
+const envStarter = (example) => starter({ '.env.example': example });
+const fence = (lang, ...lines) => ['```' + lang, ...lines, '```'].join('\n');
+const docPage = (...parts) => ({ 'docs/guides/x.md': parts.join('\n\n') });
+
+test('env vars: pass when inline code and process.env names are in the starter .env.example', () => {
+  const pages = docPage('Set `SPACE_API_URL` in `.env`.', fence('ts', 'const u = process.env.PUBLIC_BASE_URL;'));
+  assert.deepEqual(checkEnvVars(pages, envStarter('SPACE_API_URL=a\nPUBLIC_BASE_URL=b\n')), []);
+});
+
+test('env vars: fail for an inline-code name the starter lacks, and name the page and the variable', () => {
+  const problems = checkEnvVars(docPage('Set `SPACE_BASE_URL` in `.env`.'), envStarter('SPACE_API_URL=a\n'));
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /docs\/guides\/x\.md/);
+  assert.match(problems[0], /SPACE_BASE_URL/);
+});
+
+test('env vars: fail for a process.env name in a code fence that the starter lacks', () => {
+  const problems = checkEnvVars(docPage(fence('ts', 'const k = process.env.MODEL_API_KEY;')), envStarter('SPACE_API_URL=a\n'));
+  assert.match(problems[0], /MODEL_API_KEY/);
+});
+
+test('env vars: a name that the page assigns in a shell fence needs no starter entry', () => {
+  const pages = docPage(fence('bash', "echo 'MODEL_API_KEY=YOUR_KEY' >> .env"), fence('ts', 'const k = process.env.MODEL_API_KEY;'));
+  assert.deepEqual(checkEnvVars(pages, envStarter('')), []);
+});
+
+test('env vars: a name that another page assigns does not count', () => {
+  const pages = { ...docPage('Read `MODEL_API_KEY`.'), 'docs/guides/y.md': fence('bash', 'MODEL_API_KEY=1') };
+  assert.equal(checkEnvVars(pages, envStarter('')).length, 1);
+});
+
+test('env vars: a name that the starter .npmrc reads counts as known', () => {
+  const root = starter({ '.npmrc': '//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}\n' });
+  assert.deepEqual(checkEnvVars(docPage('Export `GITHUB_PACKAGES_TOKEN`.'), root), []);
+});
+
+test('env vars: placeholders in fences, error codes and plain words are not variables', () => {
+  const pages = docPage('The call returns `UNAVAILABLE_ACTION`. Use `CAPABILITY` and `Result`.', fence('bash', 'curl http://localhost:<SERVER_PORT>/api'));
+  assert.deepEqual(checkEnvVars(pages, envStarter('')), []);
+});
+
+test('env vars: the real pages use names that the extractor finds', () => {
+  const names = usedEnvNames(readFileSync(new URL('../docs/guides/call-space-from-your-server.md', import.meta.url), 'utf8'));
+  assert.ok(names.includes('SPACE_API_URL'));
 });
 
 const silent = { log() {}, warn() {}, error() {} };
@@ -224,7 +320,7 @@ test('main: STARTER_DIR is used without cloning, and problems exit 1', async () 
 
 test('main: a clean starter exits 0', async () => {
   const clone = () => assert.fail('clone must not run');
-  const ok = await main({ env: { STARTER_DIR: starter() }, clone, page, sdkVersion: '0.2.4', ...silent });
+  const ok = await main({ env: { STARTER_DIR: starter() }, clone, page, sdkVersion: '0.2.4', envPages: {}, ...silent });
   assert.equal(ok, 0);
 });
 
@@ -260,4 +356,9 @@ test('main: a page with a stale SDK version exits 1', async () => {
   const stale = { 'docs/quickstart.md': '@vectoragents/vs-apps@0.1.0' };
   const code = await main({ env: { STARTER_DIR: starter() }, page, sdkVersion: '0.2.4', versionPages: stale, ...silent });
   assert.equal(code, 1);
+});
+
+test('main: a page with an env var that the starter lacks exits 1', async () => {
+  const envPages = docPage('Set `SPACE_BASE_URL`.');
+  assert.equal(await main({ env: { STARTER_DIR: starter() }, page, sdkVersion: '0.2.4', envPages, ...silent }), 1);
 });

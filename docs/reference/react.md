@@ -150,8 +150,8 @@ interface DirectoryUser {
 - Without a directory, returns a placeholder map at once with `loading: false`. Each `displayName` is the id itself.
 - Calls made in the same tick share one request. A repeat within a minute is served from the directory cache.
 - A failed lookup is retried up to three times with back-off. After the last failure the map is empty, so read each entry with a fallback to the id.
-- A deleted user stays in the map with `deleted: true`.
-- Pass a stable array, for example a module constant or a memoised value. The hook compares the set of ids, so the order does not matter.
+- An identifier that Space cannot show stays in the map with `deleted: true`.
+- The hook compares the set of identifiers. The order of the identifiers and a new array on each render do not trigger a fetch.
 
 ### Example
 

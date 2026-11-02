@@ -10,16 +10,6 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Guides',
-      link: {
-        type: 'generated-index',
-        slug: '/category/guides',
-        description: 'Advanced configuration of an app, one topic per guide.',
-      },
-      items: ['guides/agent-action-trees', 'guides/filter-navigation-by-capability'],
-    },
-    {
-      type: 'category',
       label: 'Recipes',
       link: {
         type: 'generated-index',
@@ -28,11 +18,42 @@ const sidebars: SidebarsConfig = {
       },
       items: [
         'recipes/add-page-and-capability',
-        'recipes/read-app-context',
         'recipes/gate-by-capability',
+        'recipes/read-app-context',
         'recipes/list-members',
         'recipes/expose-agent-actions',
-        'recipes/nest-adapter',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Guides',
+      link: {
+        type: 'generated-index',
+        slug: '/category/guides',
+        description: 'Advanced configuration of an app, one topic per guide.',
+      },
+      items: [
+        'guides/agent-action-trees',
+        'guides/filter-navigation-by-capability',
+        'guides/call-space-from-your-server',
+        'guides/call-a-model-from-your-server',
+        'guides/expose-app-as-a2a-agent',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Nest',
+      link: {
+        type: 'generated-index',
+        slug: '/category/nest',
+        description: 'Pages for servers built with NestJS, the framework behind the @vectoragents/vs-apps/nest adapter.',
+      },
+      items: [
+        'nest/nest-adapter',
+        'nest/open-route-and-read-caller',
+        'nest/handle-connector-events',
+        'nest/call-space-from-your-server',
+        'nest/call-a-model-from-your-server',
       ],
     },
     {
@@ -48,6 +69,7 @@ const sidebars: SidebarsConfig = {
         'reference/client',
         'reference/react',
         'reference/agent-react',
+        'reference/server',
         'reference/harness',
         'glossary',
       ],

@@ -9,7 +9,7 @@ Every symbol below follows one layout: signature, behaviour, example. Each examp
 ## Prerequisites
 
 - `@vectoragents/vs-apps` installed with a registry token.
-- `zod` for the params schema of an action.
+- `zod` version 3, installed with `npm install zod@3`, for the parameter schema of an action. Zod 4 gives an empty `paramsJsonSchema`, so the agent sees no parameters.
 
 ## `defineAgentPage`
 
@@ -53,7 +53,7 @@ interface AgentActionInput<S extends z.ZodTypeAny = z.ZodTypeAny> {
 - `page.action(...)` roots an action on the page. `action.child(...)` declares an action that is available only while its parent is mounted.
 - Throws on a duplicate `pageId`, a duplicate action id, or an `id` that is not a snake_case local name.
 - Declaring an action does not make it callable. A component must bind it with `useAgentAction` from [`/agent-react`](./agent-react.md).
-- Write each `description` for the agent. It is the only guidance the agent has about when to call the action.
+- Write each `description` for the agent. The SDK puts it in the manifest, which Space reads.
 
 ### Example
 
@@ -62,7 +62,7 @@ import { defineAgentPage } from '@vectoragents/vs-apps';
 import { z } from 'zod';
 
 export const leadsPage = defineAgentPage({
-  pageId: 'sdr-leads',
+  pageId: 'leads',
   description: 'SDR leads: people and companies found by lead searches, kept in Lead Lists.',
 });
 
@@ -79,7 +79,7 @@ export const exportLeadsAction = openLeadListAction.child({
 });
 ```
 
-The action ids are `sdr-leads.open_lead_list` and `sdr-leads.export_leads`.
+The action identifiers are `leads.open_lead_list` and `leads.export_leads`.
 
 ## `appPages`
 

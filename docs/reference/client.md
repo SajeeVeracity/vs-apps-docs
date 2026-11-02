@@ -113,7 +113,7 @@ interface DirectoryUser {
 
 - `useUsers` returns these in a map keyed by `id`.
 - `directory.search(q, take?)` returns them as an array.
-- A deleted user keeps its entry with `deleted: true`.
+- An identifier that Space cannot show keeps its entry with `deleted: true`.
 - `avatarUrl` is `null` when the user has none.
 
 ### Example

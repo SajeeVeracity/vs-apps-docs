@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { section } from './page-helpers.mjs';
 
 const text = readFileSync(new URL('../docs/reference/harness.md', import.meta.url), 'utf8');
 
@@ -25,7 +26,6 @@ test('serves harness.html with "your bundler" and keeps the development-only war
   assert.match(text, /Serve it only in development/);
 });
 
-const section = (title) => text.split(/^## /m).find((s) => s.startsWith(title));
 const intro = text.split(/^## /m)[0];
 
 test('intro says the starter includes the harness and makes no debugging-aside claim', () => {
@@ -40,7 +40,7 @@ test('has no quickstart-specific main.ts paragraph or quickstart proxy wording',
 });
 
 test('documents the three changes that make the app accept dev tokens', () => {
-  const changes = section('Accept dev tokens');
+  const changes = section(text, 'Accept dev tokens');
   assert.ok(changes, 'section "Accept dev tokens"');
   assert.match(changes, /ALLOWED_PARENT_ORIGIN/);
   assert.match(changes, /harness origin/);
@@ -64,7 +64,7 @@ test('types appId as a UUID', () => {
 });
 
 test('says where VA_DEV_ISSUER=true goes and that the server needs a restart', () => {
-  const place = section('Turn the harness on and off');
+  const place = section(text, 'Turn the harness on and off');
   assert.ok(place, 'section "Turn the harness on and off"');
   assert.match(place, /environment of the app server process/);
   assert.match(place, /VA_DEV_ISSUER=true/);
@@ -72,7 +72,7 @@ test('says where VA_DEV_ISSUER=true goes and that the server needs a restart', (
 });
 
 test('lists the five limits in full', () => {
-  const limits = section('Limits');
+  const limits = section(text, 'Limits');
   assert.ok(limits, 'section "Limits"');
   const items = limits.split('\n').filter((l) => l.startsWith('- '));
   assert.equal(items.length, 5);

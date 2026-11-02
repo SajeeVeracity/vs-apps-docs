@@ -11,7 +11,7 @@ Every symbol below follows one layout: signature, behaviour, example. Each examp
 - `@vectoragents/vs-apps` installed with a registry token.
 - React 19 with TypeScript.
 - An action declared with `defineAgentPage`, covered in the [root reference](./root.md).
-- `zod` for the params schema of an action.
+- `zod` version 3, installed with `npm install zod@3`, for the parameter schema of an action. Zod 4 gives an empty `paramsJsonSchema`, so the agent sees no parameters.
 
 ## `useAgentAction`
 
@@ -59,7 +59,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 
 const leadsPage = defineAgentPage({
-  pageId: 'sdr-leads',
+  pageId: 'leads',
   description: 'SDR leads: people and companies found by lead searches, kept in Lead Lists.',
 });
 
@@ -204,7 +204,7 @@ type AgentActionDispatchResult =
 - Registering a second handler for the same id replaces the first.
 - `dispatch` validates `params` against the action's schema and passes the parsed value to the handler. Without a schema, `params` reach the handler unchanged.
 - `context` reaches the handler as its second argument. Concurrent dispatches do not share it.
-- The bridge that Space talks to calls `dispatch` and reports the outcome. A successful call returns the mounted-action tree, so the agent sees the actions the new page state exposes.
+- The bridge that Space talks to calls `dispatch` and reports the outcome. After each successful call, the bridge reports the mounted actions.
 
 ### Example
 
@@ -217,7 +217,7 @@ export function DispatchButton({ leadListId }: { leadListId: string }) {
   const [status, setStatus] = useState('idle');
 
   async function run() {
-    const result = await registry.dispatch('sdr-leads.open_lead_list', { leadListId });
+    const result = await registry.dispatch('leads.open_lead_list', { leadListId });
     setStatus(result.ok ? 'opened' : result.code);
   }
 
@@ -231,8 +231,8 @@ export function DispatchButton({ leadListId }: { leadListId: string }) {
 
 ## Result
 
-A page component that binds `sdr-leads.open_lead_list` with `useAgentAction`, and a debugging component that lists and dispatches mounted actions through the registry.
+A page component that binds `leads.open_lead_list` with `useAgentAction`, and a debugging component that lists and dispatches mounted actions through the registry.
 
 ## Next step
 
-Continue with the [root reference](./root.md).
+Continue with the [server reference](./server.md).

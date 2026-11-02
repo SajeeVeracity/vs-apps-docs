@@ -8,7 +8,7 @@ The adapter is the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary
 
 ## Goal
 
-End with a NestJS server that does what the quickstart server does: it serves the [manifest](../glossary.md#manifest), verifies each user token and refuses a token that lacks the `hello:view` [capability](../glossary.md#capability).
+End with a NestJS server that does what the quickstart server does: it serves the [manifest](../glossary.md#manifest), verifies each user token and refuses a token that lacks the `lead:manage` [capability](../glossary.md#capability).
 
 ## Prerequisites
 
@@ -44,12 +44,12 @@ The `dev` script in `server/package.json` runs `src/main.ts`, so it needs no cha
 
 ### 2. Serve the manifest
 
-The definition and the manifest builder are the starter files, unchanged. They are repeated so that the module below has its input. `AppPlatformModule` serves the result.
+The manifest builder is the starter file, unchanged. The definition replaces the starter page and capability with the shared `leads` page and `lead:manage` capability. `CAPABILITY` stays an export, because the starter client and server import it. `AppPlatformModule` serves the result.
 
 ```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
 
-export const CAPABILITY = 'hello:view';
+export const CAPABILITY = 'lead:manage';
 
 export const definition = defineApp({
   key: 'hello-app',
@@ -57,13 +57,13 @@ export const definition = defineApp({
   version: '0.1.0',
   pages: [
     {
-      key: 'home',
-      label: 'Home',
+      key: 'leads',
+      label: 'Leads',
       path: '/',
       capability: CAPABILITY,
     },
   ],
-  capabilities: [{ key: CAPABILITY, label: 'View hello', effect: 'read' }],
+  capabilities: [{ key: CAPABILITY, label: 'Manage Leads', effect: 'write' }],
 });
 ```
 
@@ -77,7 +77,7 @@ export const manifests = buildManifests([definition], {
 });
 ```
 
-The module calls a credential store when Space provisions the app. The store below keeps the secrets in memory, so a restart loses them. Use a database for anything beyond a first run.
+The module calls a credential store when Space provisions the app. The store below keeps the secrets in memory and loses them on restart, so implement `AppCredentialStore` over your own storage and plan a persistent store before production.
 
 ```ts title="server/src/credential-store.ts"
 import { Injectable } from '@nestjs/common';
@@ -113,18 +113,14 @@ import type { UserTokenClaims } from '@vectoragents/vs-apps';
 @Controller('hello')
 export class HelloController {
   @Get()
-  @RequireCapability('hello:view')
+  @RequireCapability('lead:manage')
   hello(@CurrentUser() user: UserTokenClaims) {
     return { sub: user.sub, spaceId: user.spaceId };
   }
 }
 ```
 
-The module reads the Space values from the `.env` file from Part 2 step 1 of the quickstart. The Nest platform module also needs `SPACE_BASE_URL`, the origin of the Space API. Append it to `.env`.
-
-```bash
-echo 'SPACE_BASE_URL=YOUR_SPACE_API_ORIGIN' >> .env
-```
+The module reads the Space values from the `.env` file from Part 2 step 1 of the quickstart. The Nest platform module needs the origin of Space, so the code removes the `/api` suffix from `SPACE_API_URL`.
 
 The module also serves `GET /api/client-config` and the manifest route, so it replaces the `routes` map of the starter's `server/src/main.ts` and `requireProvisioning` in `server/src/auth.ts`.
 
@@ -139,7 +135,7 @@ import { manifests } from './manifests';
   imports: [
     AppPlatformModule.forRoot({
       options: () => ({
-        spaceBaseUrl: process.env.SPACE_BASE_URL ?? '',
+        spaceBaseUrl: (process.env.SPACE_API_URL ?? '').replace(/\/api\/?$/, ''),
         spaceJwksUrl: process.env.SPACE_JWKS_URL ?? '',
         allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN ?? '',
       }),
@@ -154,7 +150,7 @@ export class AppModule {}
 
 ### 4. Start the server
 
-The file below replaces the starter's `server/src/main.ts`, which the `dev` script runs. Set `bodyParser: false`. The platform endpoints read the raw request body. The `api` prefix gives the manifest its `/api/manifest/:appKey` path.
+The file below replaces the starter's `server/src/main.ts`, which the `dev` script runs. The `api` prefix gives the manifest its `/api/manifest/:appKey` path.
 
 ```ts title="server/src/main.ts"
 import 'reflect-metadata';
@@ -162,7 +158,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { bodyParser: false });
+  const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
   await app.listen(Number(process.env.SERVER_PORT));
 }
@@ -185,4 +181,4 @@ The NestJS server answers `client-config` with `200` and `manifest/hello-app` wi
 
 ## Next step
 
-Continue with [Part 2 of the quickstart](../quickstart.md#part-2-add-the-app-to-a-space) to register the app in Space.
+Continue with [Part 2 of the quickstart](../quickstart.md#part-2-add-the-app-to-a-space) to register the app in Space. Then [open a route and read the caller](./open-route-and-read-caller.md).

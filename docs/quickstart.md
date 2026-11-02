@@ -224,6 +224,7 @@ const routes: Record<string, Route> = {
   '/api/client-config': async () => ({
     allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN,
     spaceJwksUrl: devIssuer ? DEV_JWKS_PATH : process.env.SPACE_JWKS_URL,
+    spaceApiUrl: process.env.SPACE_API_URL,
   }),
   '/api/manifest/hello-app': async (req) => {
     await requireProvisioning(req);
@@ -247,6 +248,16 @@ const routes: Record<string, Route> = {
 `GET /api/client-config` tells the client which parent origin and which key set to trust. In harness mode the key set comes from `DEV_JWKS_PATH`, the route where `devIssuer` publishes its public keys. Otherwise it comes from `SPACE_JWKS_URL`. A check that fails throws an `AppAuthError`. The server replies with status 401 when the token is missing or invalid, and 403 when the token lacks the capability.
 
 `GET /api/hello` returns the claims of a verified user token. Space calls `POST /api/provision` and `DELETE /api/deprovision` when a space manager, the person who adds apps to a Space, adds or removes the app. The harness run does not call them.
+
+The client configuration also returns `SPACE_API_URL` as `spaceApiUrl`, the Space API address that your page can use. When the server starts, it also tells Space which manifests it holds. `pingSpaceManifests` sends the hash of each manifest to Space, and Space reads again a manifest that changed, so a restart refreshes the manifest in Space. The ping takes the Space origin, so the code removes `/api` from `SPACE_API_URL`. The harness has no `SPACE_API_URL`, so the harness run sends no ping.
+
+```ts title="server/src/main.ts" starter
+if (process.env.SPACE_API_URL) {
+  // The ping takes the Space origin; client-config consumers take the origin plus /api.
+  const spaceBaseUrl = process.env.SPACE_API_URL.replace(/\/api\/?$/, '');
+  void pingSpaceManifests({ spaceBaseUrl, manifests });
+}
+```
 
 ### 5. Read the token in the page
 
@@ -349,6 +360,7 @@ cp .env.example .env
 ```
 
 - `SPACE_JWKS_URL` is the address of the Space key set. The server uses it to check that a token comes from Space. It is the origin of the Space API followed by `/api/.well-known/apps/jwks.json`.
+- `SPACE_API_URL` is the address of the Space API. The server uses it to ping Space at start, and the client configuration passes it to your page. It is the origin of the Space API followed by `/api`, for example `https://space-api.example.com/api`. Write it with no trailing slash.
 - `ALLOWED_PARENT_ORIGIN` is the origin of the Space web client that embeds your page, for example `https://space.example.com`. Write it with no trailing slash and no path: the client accepts messages from an exact match only.
 - `PUBLIC_BASE_URL` is the origin where the Space server reaches your server, for example `https://hello-app.example.com`. The server writes it into each `{publicBaseUrl}` placeholder in the manifest. The Hello app has no placeholder. You reuse this origin in step 2 for the manifest URL.
 - `SERVER_PORT` is the port your server listens on.
@@ -359,6 +371,8 @@ cp .env.example .env
 ```bash
 npm run dev:space
 ```
+
+With `SPACE_API_URL` set, the server pings Space each time it starts. `npm run dev` clears `SPACE_API_URL`, so only `npm run dev:space` sends the ping. The server prints nothing when the ping works. If the ping fails, the server logs a line such as `manifest ping for "hello-app" got 500` and tries again after 5 seconds and after 15 seconds. The server keeps running in every case.
 
 **Check**: in a second terminal, run this command. It prints the HTTP status and the first 9 characters of the response.
 

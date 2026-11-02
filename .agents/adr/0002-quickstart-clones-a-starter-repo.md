@@ -15,6 +15,8 @@ The quickstart tells the reader to clone a working app from the starter repo, ru
   - The starter's pinned SDK version differs from the SDK version installed here.
   - A page `starter` fence is not a verbatim substring of its starter file.
   - A path in the page's directory tree is missing from the starter.
+  - A start folder that a recipe names, `recipes/leads-app`, is missing from the starter or pins another SDK version.
+  - A page uses an environment variable that the starter `.env.example` and `.npmrc` lack and the page does not set.
 - A starter commit can fail this repo's CI with no change here, and a page edit to an excerpt can need a starter commit first.
 - `scripts/check-snippets.mjs` skips every `starter` fence and leaves it out of the `snippets` count. The starter's CI typechecks those excerpts instead. Every other page is still typechecked here.
 - Part 1 has two Checks: `npm ls @vectoragents/vs-apps` after install, and the harness run. The page shows excerpts of the starter and the reader edits no file.
