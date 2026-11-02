@@ -2,22 +2,25 @@
 title: List and pick members
 ---
 
-Show the owners of SDR leads by name and let a user pick a member. The data comes from the [space](../glossary.md#space) directory.
+Show the owners of leads by name, let a member pick an owner and list the people in each group. The data comes from the [space](../glossary.md#space) directory.
 
 ## Goal
 
-End with an owners list built with `useUsers` and a member picker built with the directory search.
+End with an owners list built with `useUsers`, a member picker built with the directory search, and a roster of each group.
 
 ## Prerequisites
 
-- The app from the [quickstart](../quickstart.md). `loadAppClientConfig` must return a `spaceApiUrl`, otherwise the directory is not available.
+- The app from the [quickstart](../quickstart.md), added to a Space as in [Part 2](../quickstart.md#part-2-add-the-app-to-a-space) and run with `npm run dev:space`. The harness has no directory, because `npm run dev` clears `SPACE_API_URL`.
+- `SPACE_API_URL` in `.env`, set to the Space API origin followed by `/api`, for example `https://space-api.example.com/api`. The starter returns it as `spaceApiUrl` in `/api/client-config`. Without it, `useApp().directory` is `null`.
 - Background: [`useUsers`](../reference/react.md#useusers), [`DirectoryUser` and `DirectoryGroup`](../reference/client.md#directoryuser).
 
 ## Steps
 
+Each snippet is a complete file.
+
 ### 1. Resolve owner ids to names
 
-`useUsers` takes user ids your data already holds, for example the owner of each lead. Pass a stable array. A deleted user stays in the map with `deleted: true`.
+`useUsers` takes user ids your data already holds, for example the owner of each lead. It fetches again only when the set of ids changes, so a new array on each render costs nothing. If Space cannot show an id, the map holds an entry with `deleted: true` and the name `Former member`. Space cannot show an id for a deleted user, a user who left the organization or an unknown id.
 
 ```tsx title="client/src/LeadOwners.tsx"
 import { useUsers } from '@vectoragents/vs-apps/react';
@@ -45,26 +48,51 @@ export function LeadOwners({ ownerIds }: { ownerIds: readonly string[] }) {
 
 ### 2. Search members for a picker
 
-`useApp().directory` is `null` without a directory. `search` returns `DirectoryUser` entries.
+`useApp().directory` is `null` without a directory. `search` returns `DirectoryUser` entries and rejects when Space answers with an error, so the snippet catches the rejection and shows an error line.
+
+Search runs from an effect that waits 300 ms after the last keystroke. The cleanup cancels the timer when the query changes, so only the last pause sends a call. The same cleanup drops a reply that arrives after the query changed.
 
 ```tsx title="client/src/OwnerPicker.tsx"
 import type { DirectoryUser } from '@vectoragents/vs-apps/client';
 import { useApp } from '@vectoragents/vs-apps/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export function OwnerPicker({ onPick }: { onPick: (user: DirectoryUser) => void }) {
   const { directory } = useApp();
+  const [query, setQuery] = useState('');
   const [matches, setMatches] = useState<DirectoryUser[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!directory || query.trim() === '') {
+      setMatches([]);
+      return;
+    }
+    let stale = false;
+    const timer = setTimeout(() => {
+      directory
+        .search(query, 5)
+        .then((found) => {
+          if (stale) return;
+          setMatches(found);
+          setError(null);
+        })
+        .catch(() => {
+          if (!stale) setError('The search failed. Try again.');
+        });
+    }, 300);
+    return () => {
+      stale = true;
+      clearTimeout(timer);
+    };
+  }, [directory, query]);
 
   if (!directory) return <p>The directory is not available.</p>;
 
   return (
     <div>
-      <input
-        type="search"
-        placeholder="Find an owner"
-        onChange={async (event) => setMatches(await directory.search(event.target.value, 5))}
-      />
+      <input type="search" placeholder="Find an owner" value={query} onChange={(event) => setQuery(event.target.value)} />
+      {error ? <p role="alert">{error}</p> : null}
       <ul>
         {matches.map((user) => (
           <li key={user.id}>
@@ -79,36 +107,68 @@ export function OwnerPicker({ onPick }: { onPick: (user: DirectoryUser) => void 
 }
 ```
 
-### 3. List groups
+### 3. Show the members of a group
 
-`directory.groups()` returns every `DirectoryGroup`. Its `id` is numeric, unlike the string id of a user.
+A `DirectoryGroup` holds `userIds`, not names. `userIds` lists only members that Space shows. Pass them to `useUsers` to get names. A hook cannot run in a loop, so one component takes one group.
 
-```tsx title="client/src/TeamGroups.tsx"
+```tsx title="client/src/GroupRoster.tsx"
 import type { DirectoryGroup } from '@vectoragents/vs-apps/client';
-import { useApp } from '@vectoragents/vs-apps/react';
-import { useEffect, useState } from 'react';
+import { useUsers } from '@vectoragents/vs-apps/react';
 
-export function TeamGroups() {
-  const { directory } = useApp();
-  const [groups, setGroups] = useState<DirectoryGroup[]>([]);
+export function GroupRoster({ group }: { group: DirectoryGroup }) {
+  const { users, loading } = useUsers(group.userIds);
 
-  useEffect(() => {
-    void directory?.groups().then(setGroups);
-  }, [directory]);
+  if (loading) return <p>Loading members.</p>;
 
   return (
     <ul>
-      {groups.map((group) => (
-        <li key={group.id}>{group.name}</li>
+      {group.userIds.map((id) => (
+        <li key={id}>{users.get(id)?.displayName ?? id}</li>
       ))}
     </ul>
   );
 }
 ```
 
+### 4. List groups
+
+`directory.groups()` returns every `DirectoryGroup` of the space. Its `id` is numeric, unlike the string id of a user. Like `search`, it rejects when Space answers with an error, so the snippet shows an error line.
+
+```tsx title="client/src/TeamGroups.tsx"
+import type { DirectoryGroup } from '@vectoragents/vs-apps/client';
+import { useApp } from '@vectoragents/vs-apps/react';
+import { useEffect, useState } from 'react';
+import { GroupRoster } from './GroupRoster';
+
+export function TeamGroups() {
+  const { directory } = useApp();
+  const [groups, setGroups] = useState<DirectoryGroup[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    directory
+      ?.groups()
+      .then(setGroups)
+      .catch(() => setError('The groups failed to load. Try again.'));
+  }, [directory]);
+
+  return (
+    <div>
+      {error ? <p role="alert">{error}</p> : null}
+      {groups.map((group) => (
+        <section key={group.id}>
+          <h3>{group.name}</h3>
+          <GroupRoster group={group} />
+        </section>
+      ))}
+    </div>
+  );
+}
+```
+
 ## Result
 
-Owner ids render as names, a search box returns members for a picker, and the groups of the space list in a component.
+Owner ids render as names, a search box returns members for a picker with one call per pause in typing, and each group of the space lists its members by name. A failed search or group call shows an error line.
 
 ## Next step
 
