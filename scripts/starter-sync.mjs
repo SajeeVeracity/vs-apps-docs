@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -144,6 +144,53 @@ export function checkEnvExamples(pageText, starterDir) {
   return [...origins].filter((origin) => !example.includes(origin)).map((origin) => `.env.example lacks ${origin}, which the page names`);
 }
 
+const ENV_NAME = '[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*';
+// Inline code names need an underscore, so words such as `CAPABILITY` are not read as variables.
+const INLINE_NAME = '[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+';
+// Inline code that is an UPPER_SNAKE name but an error code of the SDK, not an environment variable.
+const ERROR_CODES = new Set(['UNAVAILABLE_ACTION', 'INVALID_PARAMS']);
+const SHELL_LANGS = new Set(['bash', 'sh', 'shell', 'env', 'dotenv']);
+const ENV_PAGE_DIRS = ['docs/recipes', 'docs/guides', 'docs/nest'];
+
+const readEnvPages = () =>
+  Object.fromEntries(
+    ENV_PAGE_DIRS.flatMap((dir) =>
+      readdirSync(join(root, dir))
+        .filter((file) => file.endsWith('.md'))
+        .map((file) => [`${dir}/${file}`, readFileSync(join(root, dir, file), 'utf8')]),
+    ),
+  );
+
+/** Names that a page assigns (`NAME=` in a shell or env fence). */
+function assignedEnvNames(text) {
+  const shell = fencesOf(text).filter((fence) => SHELL_LANGS.has(fence.lang));
+  return shell.flatMap((fence) => [...fence.body.matchAll(new RegExp(`(?:^|[\\s'"])(?:export\\s+)?(${ENV_NAME})=`, 'gm'))].map((m) => m[1]));
+}
+
+/** Names that a page uses: `process.env.NAME`, an assignment, or an UPPER_SNAKE word alone in inline code. */
+export function usedEnvNames(text) {
+  const prose = text.replace(/^```[\s\S]*?^```/gm, '');
+  const inline = [...prose.matchAll(new RegExp(`\`(${INLINE_NAME})\``, 'g'))].map((m) => m[1]).filter((name) => !ERROR_CODES.has(name));
+  const read = [...text.matchAll(new RegExp(`process\\.env\\.(${ENV_NAME})`, 'g'))].map((m) => m[1]);
+  return [...new Set([...inline, ...read, ...assignedEnvNames(text)])];
+}
+
+const readNames = (path, pattern) => (existsSync(path) ? [...readFileSync(path, 'utf8').matchAll(pattern)].map((m) => m[1]) : []);
+
+/**
+ * Fails for every environment variable that a recipe, guide or Nest page uses when neither the starter nor the page defines it.
+ * The starter defines a name in `.env.example` (`NAME=`) or `.npmrc` (`${NAME}`); the page defines it with `NAME=` in a shell fence.
+ */
+export function checkEnvVars(pages, starterDir) {
+  const known = new Set([...readNames(join(starterDir, '.env.example'), /^(?:export\s+)?([A-Z][A-Z0-9_]*)=/gm), ...readNames(join(starterDir, '.npmrc'), /\$\{([A-Z][A-Z0-9_]*)\}/g)]);
+  return Object.entries(pages).flatMap(([path, text]) => {
+    const assigned = new Set(assignedEnvNames(text));
+    return usedEnvNames(text)
+      .filter((name) => !known.has(name) && !assigned.has(name))
+      .map((name) => `${path} uses ${name}, which the starter .env.example and .npmrc lack and the page does not set`);
+  });
+}
+
 // The page clones the default branch, so the check reads main and not a tag.
 const gitClone = (url, dir) => execFileSync('git', ['clone', '--depth', '1', '--branch', 'main', url, dir], { stdio: 'pipe' });
 
@@ -153,6 +200,7 @@ export async function main({
   page = readFileSync(pagePath, 'utf8'),
   sdkVersion = installedSdkVersion(),
   versionPages = readVersionPages(),
+  envPages = readEnvPages(),
   log = console.log,
   warn = console.warn,
   error = console.error,
@@ -176,7 +224,7 @@ export async function main({
     dir = temp;
   }
   try {
-    const problems = [...checkSdkPin(dir, sdkVersion), ...checkStartFolders(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir), ...checkPorts(page, dir), ...checkEnvExamples(page, dir)];
+    const problems = [...checkSdkPin(dir, sdkVersion), ...checkStartFolders(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir), ...checkPorts(page, dir), ...checkEnvExamples(page, dir), ...checkEnvVars(envPages, dir)];
     for (const problem of problems) error(`starter-sync: ${problem}`);
     if (problems.length === 0) log(`starter-sync: ok (SDK ${sdkVersion}, ${STARTER_URL})`);
     return problems.length === 0 ? 0 : 1;
