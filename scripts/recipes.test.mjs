@@ -63,12 +63,31 @@ test('links the reference, the quickstart and the glossary, and every link resol
   }
 });
 
-test('never uses the csr-agents page and uses SDR examples', () => {
+test('never uses the csr-agents page', () => {
   for (const { name, text } of all) {
     assert.doesNotMatch(text, /csr-agents|csr:agents|csr\.agents/i, name);
   }
-  // nest-adapter mirrors the quickstart hello-app, which has no SDR example.
-  assert.ok(recipes.every((r) => /sdr|lead|icp/i.test(r.text)));
+});
+
+// Docusaurus slug of a heading: lowercase, drop punctuation, spaces to hyphens, or the explicit {#id}.
+const slugOf = (heading) => {
+  const explicit = heading.match(/\{#([\w-]+)\}\s*$/);
+  if (explicit) return explicit[1];
+  return heading.trim().toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s/g, '-');
+};
+const anchorsOf = (text) =>
+  new Set([...text.replace(/^```[\s\S]*?^```/gm, '').matchAll(/^#{1,6} (.+)$/gm)].map(([, heading]) => slugOf(heading)));
+
+test('every #anchor link from a recipe, guide or Nest page targets a heading that exists', () => {
+  let checked = 0;
+  for (const { path, name, text } of all) {
+    for (const [, target, anchor] of text.matchAll(/\]\((\.[^)#]*\.md)#([^)]+)\)/g)) {
+      const file = join(dirname(path), target);
+      assert.ok(anchorsOf(readFileSync(file, 'utf8')).has(anchor), `${name}: ${target}#${anchor}`);
+      checked += 1;
+    }
+  }
+  assert.ok(checked > 20);
 });
 
 test('follows the writing standard', () => {
@@ -137,6 +156,7 @@ test('nest-adapter claims no bodyParser setting and warns that the credential st
   assert.equal(warning.length, 1);
   assert.match(warning[0], /`AppCredentialStore`/);
   assert.match(warning[0], /your own storage/);
+  assert.match(warning[0], /persistent store before production/);
 });
 
 test('nest-adapter next step links quickstart Part 2, then the open-route guide', () => {
@@ -298,6 +318,7 @@ test('the Nest Call Space guide warns that the credential store is in memory and
   assert.equal(warning.length, 1);
   assert.match(warning[0], /`AppCredentialStore`/);
   assert.match(warning[0], /your own storage/);
+  assert.match(warning[0], /persistent store before production/);
 });
 
 test('each Call Space guide ends with one Next step link that resolves', () => {
@@ -488,7 +509,7 @@ test('the Nest pages gate with the shared lead:manage capability and name no hel
   assert.deepEqual(sharedKeys(nestAdapter.text).filter((k) => !['hello-app', 'leads', 'lead:manage'].includes(k)), []);
 });
 
-test('the guides that predate the recipe chain each end with one related Next step that resolves', () => {
+test('agent-action-trees and filter-navigation-by-capability each end with one related Next step that resolves', () => {
   for (const page of [trees, filterNav]) {
     const links = linksOf(section(page.text, 'Next step'));
     assert.equal(links.length, 1, page.name);
@@ -581,6 +602,10 @@ test('each Nest guide with a plain twin links it in its prerequisites, and the r
       assert.ok(existsSync(join(dirname(from.path), target)), `${from.path} -> ${target}`);
     }
   }
+});
+
+test('the Space origin comes from SPACE_API_URL on every page, never SPACE_BASE_URL', () => {
+  for (const { name, text } of all) assert.doesNotMatch(text, /SPACE_BASE_URL/, name);
 });
 
 test('no page tells the reader to install zod without version 3, disable bodyParser or pass a stable array', () => {

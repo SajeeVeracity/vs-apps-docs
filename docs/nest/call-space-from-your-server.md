@@ -25,7 +25,7 @@ End with two routes on the server from [`nest-adapter`](./nest-adapter.md). `POS
 - `AppActionsService` wraps `SpaceClientService` for a caller. It reads the token and the `spaceId` from the request, so you pass only the request and the input.
 - `SpaceS2sService` exchanges the service secret for a short-lived app token. Space creates the secret for each pair of app and space and pushes it to the credential store from `nest-adapter`.
 
-The store from `nest-adapter` keeps the secrets in memory and loses them on restart. `AppCredentialStore` is the one interface you implement over your own storage. After a restart, `getToken` fails until the binding secret is rotated in Space, which pushes it again.
+The store from `nest-adapter` keeps the secrets in memory and loses them on restart. `AppCredentialStore` is the one interface you implement over your own storage, so plan a persistent store before production. After a restart, `getToken` fails until the binding secret is rotated in Space, which pushes it again.
 
 ### 2. Add the routes
 

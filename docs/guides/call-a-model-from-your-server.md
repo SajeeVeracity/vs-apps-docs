@@ -81,13 +81,16 @@ import type { UserTokenClaims } from '@vectoragents/vs-apps';
 import { createSpaceAiConfigProvider, type AiClientConfig } from '@vectoragents/vs-apps/server';
 import { getServiceSecret } from './service-secrets';
 
+// The origin has no `/api` suffix.
+const spaceBaseUrl = (process.env.SPACE_API_URL ?? '').replace(/\/api\/?$/, '');
+
 const providers = new Map<string, ReturnType<typeof createSpaceAiConfigProvider>>();
 
 function providerFor(appId: string) {
   let provider = providers.get(appId);
   if (!provider) {
     provider = createSpaceAiConfigProvider({
-      spaceBaseUrl: process.env.SPACE_BASE_URL ?? '',
+      spaceBaseUrl,
       appId,
       getServiceSecret,
     });
@@ -126,11 +129,7 @@ The string `'lead-summary'` must equal the `key` from step 1.
 
 ### 4. Mount the routes
 
-Add the Space origin to `.env`. The starter's `.env` holds `SPACE_JWKS_URL` and no origin. The value is the origin of the Space API, with no `/api` suffix.
-
-```bash
-echo 'SPACE_BASE_URL=YOUR_SPACE_API_ORIGIN' >> .env
-```
+The provider reads `SPACE_API_URL` from `.env`, which the starter sets in Part 2 of the quickstart. The code in step 3 removes the `/api` suffix, because the provider needs the origin of Space.
 
 In `server/src/main.ts`, make four changes.
 

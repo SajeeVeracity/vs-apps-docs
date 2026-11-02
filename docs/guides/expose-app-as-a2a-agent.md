@@ -164,7 +164,7 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost:<SERVER_PORT>/
 
 **Check**: the first command prints a card whose `url` ends in `/api/a2a/1`. The second prints `401`, because the route verifies a token from Space before it reads the call.
 
-A manifest change waits as a pending review, as in [add a page and a capability](../recipes/add-page-and-capability.md#3-let-space-pull-the-manifest). Ask Vector to apply it, so Space reads the new `agents` entry.
+A manifest change waits as a pending review, as in [add a page and a capability](../recipes/add-page-and-capability.md#4-let-space-read-the-manifest). Ask Vector to apply it, so Space reads the new `agents` entry.
 
 ## Result
 

@@ -77,7 +77,7 @@ export const manifests = buildManifests([definition], {
 });
 ```
 
-The module calls a credential store when Space provisions the app. The store below keeps the secrets in memory and loses them on restart. `AppCredentialStore` is the one interface you implement over your own storage.
+The module calls a credential store when Space provisions the app. The store below keeps the secrets in memory and loses them on restart. `AppCredentialStore` is the one interface you implement over your own storage, so plan a persistent store before production.
 
 ```ts title="server/src/credential-store.ts"
 import { Injectable } from '@nestjs/common';
@@ -120,11 +120,7 @@ export class HelloController {
 }
 ```
 
-The module reads the Space values from the `.env` file from Part 2 step 1 of the quickstart. The Nest platform module also needs `SPACE_BASE_URL`, the origin of the Space API. Append it to `.env`.
-
-```bash
-echo 'SPACE_BASE_URL=YOUR_SPACE_API_ORIGIN' >> .env
-```
+The module reads the Space values from the `.env` file from Part 2 step 1 of the quickstart. The Nest platform module needs the origin of Space, so the code removes the `/api` suffix from `SPACE_API_URL`.
 
 The module also serves `GET /api/client-config` and the manifest route, so it replaces the `routes` map of the starter's `server/src/main.ts` and `requireProvisioning` in `server/src/auth.ts`.
 
@@ -139,7 +135,7 @@ import { manifests } from './manifests';
   imports: [
     AppPlatformModule.forRoot({
       options: () => ({
-        spaceBaseUrl: process.env.SPACE_BASE_URL ?? '',
+        spaceBaseUrl: (process.env.SPACE_API_URL ?? '').replace(/\/api\/?$/, ''),
         spaceJwksUrl: process.env.SPACE_JWKS_URL ?? '',
         allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN ?? '',
       }),
