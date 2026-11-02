@@ -164,7 +164,6 @@ test('Nest pages share one snippet project, so no two Nest pages use the same sn
 });
 
 const guide = () => nest.find((r) => r.name === openRouteGuide)?.text ?? '';
-const section = (text, heading) => text.split(/^## /m).find((s) => s.startsWith(`${heading}\n`)) ?? '';
 
 test('the open-route guide names nest-adapter as its prerequisite', () => {
   assert.match(section(guide(), 'Prerequisites'), /\]\(\.\/nest-adapter\.md\)/);
