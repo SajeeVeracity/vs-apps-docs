@@ -138,6 +138,21 @@ test('gate-by-capability ends with one Next step: read-app-context', () => {
   assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map(([, link]) => link), ['./read-app-context.md']);
 });
 
+const readContext = recipes.find((r) => r.name === 'read-app-context');
+
+test('read-app-context snippets use only the shared capability and page keys', () => {
+  const code = [...readContext.text.matchAll(/^```tsx?[^\n]*\n([\s\S]*?)^```/gm)].map(([, body]) => body).join('\n');
+  const capabilities = [...code.matchAll(/\bhasCapability\('([^']+)'\)/g)].map(([, key]) => key);
+  assert.ok(capabilities.length >= 1);
+  assert.deepEqual(capabilities.filter((k) => !['lead:manage', 'icp:manage'].includes(k)), []);
+  assert.deepEqual([...code.matchAll(/\bhref="\/([^"]*)"/g)].map(([, path]) => path).filter((p) => !['leads', 'icp'].includes(p)), []);
+});
+
+test('read-app-context ends with one Next step: list-members', () => {
+  const next = section(readContext.text, 'Next step');
+  assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map(([, link]) => link), ['./list-members.md']);
+});
+
 test('nest-adapter claims no bodyParser setting and warns that the credential store is in memory', () => {
   const { text } = nest.find((r) => r.name === nestRecipe);
   assert.doesNotMatch(text, /bodyParser/);
