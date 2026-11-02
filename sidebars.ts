@@ -10,16 +10,6 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Guides',
-      link: {
-        type: 'generated-index',
-        slug: '/category/guides',
-        description: 'Advanced configuration of an app, one topic per guide.',
-      },
-      items: ['guides/agent-action-trees', 'guides/filter-navigation-by-capability'],
-    },
-    {
-      type: 'category',
       label: 'Recipes',
       link: {
         type: 'generated-index',
@@ -32,8 +22,27 @@ const sidebars: SidebarsConfig = {
         'recipes/gate-by-capability',
         'recipes/list-members',
         'recipes/expose-agent-actions',
-        'recipes/nest-adapter',
       ],
+    },
+    {
+      type: 'category',
+      label: 'Guides',
+      link: {
+        type: 'generated-index',
+        slug: '/category/guides',
+        description: 'Advanced configuration of an app, one topic per guide.',
+      },
+      items: ['guides/agent-action-trees', 'guides/filter-navigation-by-capability'],
+    },
+    {
+      type: 'category',
+      label: 'Nest',
+      link: {
+        type: 'generated-index',
+        slug: '/category/nest',
+        description: 'Pages for servers built with NestJS, the framework behind the @vectoragents/vs-apps/nest adapter.',
+      },
+      items: ['nest/nest-adapter'],
     },
     {
       type: 'category',
@@ -48,6 +57,7 @@ const sidebars: SidebarsConfig = {
         'reference/client',
         'reference/react',
         'reference/agent-react',
+        'reference/server',
         'reference/harness',
         'glossary',
       ],
