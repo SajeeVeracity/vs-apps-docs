@@ -47,6 +47,11 @@ test('the Nest section lists the open-route guide after nest-adapter', () => {
   assert.deepEqual(nest.items.map(idOf).slice(0, 2), ['nest/nest-adapter', 'nest/open-route-and-read-caller']);
 });
 
+test('the Nest section lists the connector-events guide after the open-route guide', () => {
+  const nest = categories.find((category) => category.label === 'Nest');
+  assert.equal(idOf(nest.items[2]), 'nest/handle-connector-events');
+});
+
 test('Recipes, Guides, Nest and Reference open on a generated-index page with a description', () => {
   for (const label of ['Recipes', 'Guides', 'Nest', 'Reference']) {
     const { link } = categories.find((category) => category.label === label);

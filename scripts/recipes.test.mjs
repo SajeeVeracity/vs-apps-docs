@@ -8,6 +8,7 @@ const docs = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs');
 const recipeNames = ['gate-by-capability', 'read-app-context', 'list-members', 'expose-agent-actions', 'add-page-and-capability'];
 const nestRecipe = 'nest-adapter';
 const openRouteGuide = 'open-route-and-read-caller';
+const connectorGuide = 'handle-connector-events';
 const pagesIn = (dir) =>
   readdirSync(join(docs, dir))
     .filter((name) => name.endsWith('.md'))
@@ -18,10 +19,11 @@ const guides = existsSync(join(docs, 'guides')) ? pagesIn('guides') : [];
 const nest = existsSync(join(docs, 'nest')) ? pagesIn('nest') : [];
 const all = [...recipes, ...nest, ...guides];
 
-test('has one recipe per ranked task, the Nest recipe and the open-route guide in the Nest folder and at least one guide', () => {
+test('has one recipe per ranked task, the Nest recipe and the Nest guides in the Nest folder and at least one guide', () => {
   assert.deepEqual(recipes.map((r) => r.name).sort(), [...recipeNames].sort());
   assert.ok(nest.some((page) => page.name === nestRecipe));
   assert.ok(nest.some((page) => page.name === openRouteGuide));
+  assert.ok(nest.some((page) => page.name === connectorGuide));
   assert.ok(guides.length >= 1);
 });
 
@@ -193,6 +195,48 @@ test('the open-route guide next step links one related page', () => {
   assert.ok(existsSync(join(docs, 'nest', links[0].split('#')[0])), links[0]);
 });
 
+const connector = () => nest.find((r) => r.name === connectorGuide)?.text ?? '';
+const connectorCode = () =>
+  [...connector().matchAll(/^```tsx?\s+title="(server\/[^"]+|shared\/[^"]+)"\n([\s\S]*?)^```/gm)].map(([, , body]) => body).join('\n');
+
+test('the connector-events guide names nest-adapter as its prerequisite', () => {
+  assert.match(section(connector(), 'Prerequisites'), /\]\(\.\/nest-adapter\.md\)/);
+});
+
+test('the connector-events guide says in one line why it has no plain twin', () => {
+  const lines = connector().split('\n').filter((line) => /no plain twin/.test(line));
+  assert.equal(lines.length, 1);
+  assert.match(lines[0], /`assertSpaceEvents`/);
+  assert.match(lines[0], /`\/server`/);
+});
+
+test('the connector-events guide registers a handler with ConnectorEventsService and checks a ConnectorExecuteResult', () => {
+  const body = connectorCode();
+  assert.match(body, /\bimport \{[^}]*\bConnectorEventsService\b[^}]*\} from '@vectoragents\/vs-apps\/nest'/);
+  assert.match(body, /\.on\(\s*\{[^}]*\bappKey\b[^}]*\bslot\b[^}]*\bhandler\b/);
+  assert.match(body, /\bimport type \{[^}]*\bConnectorExecuteResult\b[^}]*\} from '@vectoragents\/vs-apps'/);
+  assert.match(body, /\bPromise<ConnectorExecuteResult>/);
+  assert.match(body, /\.status\b/);
+});
+
+test('the connector-events guide declares the slot with a handler key that the code registers', () => {
+  const declared = [...connector().matchAll(/^\s+key: '([\w-]+)',\n\s+label: '[^']+',\n\s+defaultEventTypes/gm)].map((m) => m[1]);
+  assert.equal(declared.length, 1);
+  assert.match(connectorCode(), new RegExp(`handler: '${declared[0]}'`));
+});
+
+test('the connector-events guide checks that the events route refuses a request with no token', () => {
+  const steps = section(connector(), 'Steps');
+  assert.equal([...steps.matchAll(/^curl .*localhost:<SERVER_PORT>\/api\/events\/hello-app$/gm)].length, 1);
+  assert.match(steps, /\*\*Check\*\*:[^\n]*`401`/);
+});
+
+test('the connector-events guide next step links one related page', () => {
+  const links = [...section(connector(), 'Next step').matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
+  assert.equal(links.length, 1);
+  assert.ok(existsSync(join(docs, 'nest', links[0].split('#')[0])), links[0]);
+});
+
 test('every link to nest-adapter points at its Nest folder location', () => {
   for (const path of docFiles(docs)) {
     const text = readFileSync(path, 'utf8');
@@ -246,7 +290,7 @@ const callSpace = {
   nest: nest.find((r) => r.name === callSpaceName)?.text ?? '',
   plain: guides.find((r) => r.name === callSpaceName)?.text ?? '',
 };
-const codeOf = (text) => [...text.matchAll(/^```tsx?[^\n]*\n([\s\S]*?)^```/gm)].map(([, body]) => body).join('\n');
+const snippetsOf = (text) => [...text.matchAll(/^```tsx?[^\n]*\n([\s\S]*?)^```/gm)].map(([, body]) => body).join('\n');
 
 test('Call Space from your server exists as a Nest guide and a plain guide', () => {
   assert.notEqual(callSpace.nest, '');
@@ -265,7 +309,7 @@ test('each Call Space guide links its twin in Background', () => {
 });
 
 test('the Nest guide shows SpaceClientService, SpaceS2sService and AppActionsService in labelled server files', () => {
-  const code = codeOf(callSpace.nest);
+  const code = snippetsOf(callSpace.nest);
   for (const symbol of ['SpaceClientService', 'SpaceS2sService', 'AppActionsService']) {
     assert.match(code, new RegExp(`\\b${symbol}\\b`));
   }
@@ -274,7 +318,7 @@ test('the Nest guide shows SpaceClientService, SpaceS2sService and AppActionsSer
 });
 
 test('the plain guide uses createSpaceActionsClient and createSpaceS2sTokenProvider from the server subpath', () => {
-  const code = codeOf(callSpace.plain);
+  const code = snippetsOf(callSpace.plain);
   assert.match(code, /\bcreateSpaceActionsClient\(/);
   assert.match(code, /\bcreateSpaceS2sTokenProvider\(/);
   assert.match(code, /from '@vectoragents\/vs-apps\/server'/);
@@ -302,4 +346,57 @@ test('each Call Space guide ends with one Next step link that resolves', () => {
     assert.equal(links.length, 1, dir);
     assert.ok(existsSync(join(docs, dir, links[0].split('#')[0])), links[0]);
   }
+});
+
+const members = recipes.find((r) => r.name === 'list-members');
+const codeOf = (page, titleFile) =>
+  [...page.text.matchAll(/^```tsx? title="([^"]+)"[^\n]*\n([\s\S]*?)^```/gm)].find(([, title]) => title.endsWith(titleFile))?.[2] ?? '';
+
+test('list-members needs the starter env var and a Space run, not the harness', () => {
+  const prerequisites = section(members.text, 'Prerequisites');
+  assert.match(prerequisites, /`SPACE_API_URL`/);
+  assert.match(prerequisites, /`npm run dev:space`/);
+  assert.match(prerequisites, /harness/);
+});
+
+test('list-members and the useUsers reference drop the stable array instruction', () => {
+  const reference = readFileSync(join(docs, 'reference', 'react.md'), 'utf8');
+  assert.doesNotMatch(members.text, /stable array/i);
+  assert.doesNotMatch(reference, /stable array/i);
+});
+
+test('list-members builds the roster from groups then useUsers of the group user ids', () => {
+  assert.match(codeOf(members, 'TeamGroups.tsx'), /directory\s*\??\.groups\(\)/);
+  assert.match(codeOf(members, 'GroupRoster.tsx'), /useUsers\(group\.userIds\)/);
+});
+
+test('list-members search and groups snippets catch a rejected call and render an error line', () => {
+  for (const file of ['OwnerPicker.tsx', 'TeamGroups.tsx']) {
+    const code = codeOf(members, file);
+    assert.match(code, /\.catch\(|catch \(/, file);
+    assert.match(code, /setError\(/, file);
+    assert.match(code, /role="alert"/, file);
+  }
+});
+
+test('list-members debounces search by a 300 ms effect timer that cleanup cancels', () => {
+  const picker = codeOf(members, 'OwnerPicker.tsx');
+  assert.match(picker, /useEffect\(/);
+  assert.match(picker, /setTimeout\([\s\S]*?,\s*300\)/);
+  assert.match(picker, /return \(\) => (?:\{[^}]*)?clearTimeout\(/);
+});
+
+test('list-members states the deleted flag as Space sends it and groups as the space lists them', () => {
+  assert.match(members.text, /`deleted: true`/);
+  assert.match(members.text, /cannot show/);
+});
+
+test('list-members snippets use only the shared keys', () => {
+  assert.doesNotMatch(members.text, /sdr/i);
+  assert.deepEqual([...members.text.matchAll(/\b(?:key|capability): '([^']+)'/g)].map(([, key]) => key).filter((k) => !['hello-app', 'leads', 'icp', 'lead:manage', 'icp:manage'].includes(k)), []);
+});
+
+test('list-members ends with one Next step: expose-agent-actions', () => {
+  const next = section(members.text, 'Next step');
+  assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map(([, link]) => link), ['./expose-agent-actions.md']);
 });
