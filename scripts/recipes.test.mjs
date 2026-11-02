@@ -98,3 +98,33 @@ test('nest-adapter checks the server with dev:space and two curl lines', () => {
   assert.match(text, /curl .*localhost:<SERVER_PORT>\/api\/client-config/);
   assert.match(text, /curl .*localhost:<SERVER_PORT>\/api\/manifest\/hello-app/);
 });
+
+const gate = recipes.find((r) => r.name === 'gate-by-capability');
+const section = (text, title) => text.split(/^## /m).find((s) => s.startsWith(`${title}\n`)) ?? '';
+
+test('gate-by-capability starts from the leads-app start folder of the starter', () => {
+  const prerequisites = section(gate.text, 'Prerequisites');
+  assert.match(prerequisites, /`recipes\/leads-app`/);
+  assert.match(prerequisites, /git clone https:\/\/github\.com\/VectorAgents\/vector-app-quickstart\.git/);
+});
+
+test('gate-by-capability snippets use only the shared page and capability keys', () => {
+  const code = [...gate.text.matchAll(/^```tsx?[^\n]*\n([\s\S]*?)^```/gm)].map(([, body]) => body).join('\n');
+  const keys = (pattern) => [...code.matchAll(pattern)].map(([, key]) => key);
+  assert.deepEqual(keys(/\bkey: '([^']+)'/g).filter((k) => !['hello-app', 'home', 'leads', 'icp', 'hello:view', 'lead:manage', 'icp:manage'].includes(k)), []);
+  assert.deepEqual(keys(/\bcapability(?:: |=)['"]([^'"]+)['"]/g).filter((k) => !['hello:view', 'lead:manage', 'icp:manage'].includes(k)), []);
+  assert.doesNotMatch(gate.text, /sdr/i);
+});
+
+test('gate-by-capability closes by sharing one fallback across at least two pages', () => {
+  const steps = section(gate.text, 'Steps').split(/^### /m).slice(1);
+  assert.match(steps.at(-1), /^\d+\. Share one fallback across pages\n/);
+  assert.equal([...steps.at(-1).matchAll(/^```tsx title="client\/src\/\w+\.tsx"/gm)].length >= 2, true);
+  assert.ok([...gate.text.matchAll(/<GatedPage\b/g)].length >= 2);
+  assert.equal([...gate.text.matchAll(/fallback=/g)].length, 2);
+});
+
+test('gate-by-capability ends with one Next step: read-app-context', () => {
+  const next = section(gate.text, 'Next step');
+  assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map(([, link]) => link), ['./read-app-context.md']);
+});
