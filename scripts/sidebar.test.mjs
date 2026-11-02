@@ -73,3 +73,8 @@ test('the Nest section lists the Call Space guide and the Guides section lists i
   assert.ok(ids('Nest').includes('nest/call-space-from-your-server'));
   assert.ok(ids('Guides').includes('guides/call-space-from-your-server'));
 });
+
+test('the Guides section lists the A2A guide', () => {
+  const guides = categories.find((category) => category.label === 'Guides').items.map(idOf);
+  assert.ok(guides.includes('guides/expose-app-as-a2a-agent'));
+});

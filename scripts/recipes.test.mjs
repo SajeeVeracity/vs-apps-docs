@@ -478,3 +478,47 @@ test('the call-a-model guides each end with one related Next step that resolves'
     assert.ok(existsSync(join(docs, dir, links[0].split('#')[0])), links[0]);
   }
 });
+
+const a2aName = 'expose-app-as-a2a-agent';
+const a2a = guides.find((r) => r.name === a2aName)?.text ?? '';
+const a2aCode = () => titledSnippets(a2a).map((c) => c.body).join('\n');
+
+test('the A2A guide names expose-agent-actions as prerequisite and defines A2A at first use with a glossary link', () => {
+  assert.notEqual(a2a, '');
+  assert.match(section(a2a, 'Prerequisites'), /\]\(\.\.\/recipes\/expose-agent-actions\.md\)/);
+  const first = a2a.replace(/^---\n[\s\S]*?\n---\n/, '').split('\n').find((line) => /A2A/.test(line));
+  assert.match(first, /\[A2A\]\(\.\.\/glossary\.md#a2a\)/);
+});
+
+test('the A2A guide builds the card with buildAppAgentCard and answers with createA2aRequestHandler in labelled server files', () => {
+  const body = a2aCode();
+  assert.match(body, /import \{[^}]*\bbuildAppAgentCard\b[^}]*\} from '@vectoragents\/vs-apps\/server'/);
+  assert.match(body, /import \{[^}]*\bcreateA2aRequestHandler\b[^}]*\} from '@vectoragents\/vs-apps\/server'/);
+  assert.match(body, /\bbuildAppAgentCard\(\{/);
+  assert.match(body, /\bcreateA2aRequestHandler</);
+  assert.match(body, /\bassertSpaceS2s\(/);
+  assert.match(body, /kind: 'a2a'/);
+  for (const { title } of titledSnippets(a2a)) assert.match(title, /^(server|shared)\//);
+});
+
+test('the A2A guide declares the agent in the definition with the card URL template', () => {
+  const body = a2aCode();
+  assert.match(body, /\bagents: \[/);
+  assert.match(body, /protocol: 'a2a'/);
+  assert.match(body, /cardUrlTemplate: '\{publicBaseUrl\}\/api\/a2a\/\{spaceId\}'/);
+});
+
+test('the A2A guide uses only the shared keys and names no Nest term', () => {
+  const keys = [...a2a.matchAll(/'([a-z]+:[a-z]+)'/g)].map((m) => m[1]).filter((k) => !k.startsWith('node:'));
+  assert.deepEqual(keys.filter((k) => !['hello:view', 'lead:manage', 'icp:manage'].includes(k)), []);
+  assert.doesNotMatch(a2a, /\bNest(JS)?\b|@nestjs\/|@Injectable/);
+});
+
+test('the A2A guide checks the card and a refused call, and ends with one related Next step', () => {
+  const steps = section(a2a, 'Steps');
+  assert.equal([...steps.matchAll(/^curl .*localhost:<SERVER_PORT>\/api\/a2a\/1(?:\/\.well-known\/agent-card\.json)?$/gm)].length, 2);
+  assert.match(steps, /\*\*Check\*\*:[^\n]*`401`/);
+  const links = linksOf(section(a2a, 'Next step'));
+  assert.equal(links.length, 1);
+  assert.ok(existsSync(join(docs, 'guides', links[0].split('#')[0])), links[0]);
+});

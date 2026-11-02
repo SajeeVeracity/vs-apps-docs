@@ -37,6 +37,7 @@ const sidebars: SidebarsConfig = {
         'guides/filter-navigation-by-capability',
         'guides/call-space-from-your-server',
         'guides/call-a-model-from-your-server',
+        'guides/expose-app-as-a2a-agent',
       ],
     },
     {
