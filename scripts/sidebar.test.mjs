@@ -52,6 +52,13 @@ test('the Nest section lists the connector-events guide after the open-route gui
   assert.equal(idOf(nest.items[2]), 'nest/handle-connector-events');
 });
 
+test('the Guides and Nest sections each list a call-a-model guide', () => {
+  for (const [label, id] of [['Guides', 'guides/call-a-model-from-your-server'], ['Nest', 'nest/call-a-model-from-your-server']]) {
+    const category = categories.find((c) => c.label === label);
+    assert.ok(category.items.map(idOf).includes(id), label);
+  }
+});
+
 test('Recipes, Guides, Nest and Reference open on a generated-index page with a description', () => {
   for (const label of ['Recipes', 'Guides', 'Nest', 'Reference']) {
     const { link } = categories.find((category) => category.label === label);

@@ -32,7 +32,12 @@ const sidebars: SidebarsConfig = {
         slug: '/category/guides',
         description: 'Advanced configuration of an app, one topic per guide.',
       },
-      items: ['guides/agent-action-trees', 'guides/filter-navigation-by-capability', 'guides/call-space-from-your-server'],
+      items: [
+        'guides/agent-action-trees',
+        'guides/filter-navigation-by-capability',
+        'guides/call-space-from-your-server',
+        'guides/call-a-model-from-your-server',
+      ],
     },
     {
       type: 'category',
@@ -42,7 +47,13 @@ const sidebars: SidebarsConfig = {
         slug: '/category/nest',
         description: 'Pages for servers built with NestJS, the framework behind the @vectoragents/vs-apps/nest adapter.',
       },
-      items: ['nest/nest-adapter', 'nest/open-route-and-read-caller', 'nest/handle-connector-events', 'nest/call-space-from-your-server'],
+      items: [
+        'nest/nest-adapter',
+        'nest/open-route-and-read-caller',
+        'nest/handle-connector-events',
+        'nest/call-space-from-your-server',
+        'nest/call-a-model-from-your-server',
+      ],
     },
     {
       type: 'category',
