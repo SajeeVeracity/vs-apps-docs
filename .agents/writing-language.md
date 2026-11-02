@@ -28,7 +28,7 @@ Precedence: rules here win over any reference. A page-type section wins over the
 
 ### Terms
 
-- **T1 Vector and SDK terms.** Define at first use, or link to the glossary at first use. This includes role words such as "staff" and "space manager". Link at the first use in the page, not at the first use in a section.
+- **T1 Vector and SDK terms.** Define at first use, or link to the glossary at first use. This includes role words such as "staff" and "space manager". Link at the first use in the page, not at the first use in a section. The quickstart defines "capability", "space manager" and "manifest" in a one-clause appositive at first use, and `scripts/quickstart-page.test.mjs` pins that form: keep the clause, do not swap it for a link.
 - **T2 Standard terms.** Standard web, TypeScript, Node and React terms need no definition.
 - **T3 Informal words.** A word used with a private meaning ("pull", "boot ping", "ungated", "surface") is a Vector term: apply T1, or replace it with a plain phrase.
 
