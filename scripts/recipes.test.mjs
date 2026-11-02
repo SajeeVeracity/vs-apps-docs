@@ -8,6 +8,7 @@ const docs = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs');
 const recipeNames = ['gate-by-capability', 'read-app-context', 'list-members', 'expose-agent-actions', 'add-page-and-capability'];
 const nestRecipe = 'nest-adapter';
 const openRouteGuide = 'open-route-and-read-caller';
+const modelGuide = 'call-a-model-from-your-server';
 const pagesIn = (dir) =>
   readdirSync(join(docs, dir))
     .filter((name) => name.endsWith('.md'))
@@ -22,7 +23,8 @@ test('has one recipe per ranked task, the Nest recipe and the open-route guide i
   assert.deepEqual(recipes.map((r) => r.name).sort(), [...recipeNames].sort());
   assert.ok(nest.some((page) => page.name === nestRecipe));
   assert.ok(nest.some((page) => page.name === openRouteGuide));
-  assert.ok(guides.length >= 1);
+  assert.ok(nest.some((page) => page.name === modelGuide));
+  assert.ok(guides.some((page) => page.name === modelGuide));
 });
 
 test('every page follows the template and ends with a result and a next step', () => {
@@ -239,4 +241,65 @@ test('expose-agent-actions limits description and mounted-action claims to the S
 test('expose-agent-actions next step links agent-action-trees only', () => {
   const next = exposeSection('Next step');
   assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]), ['../guides/agent-action-trees.md']);
+});
+
+const nestModel = () => nest.find((r) => r.name === modelGuide)?.text ?? '';
+const plainModel = () => guides.find((r) => r.name === modelGuide)?.text ?? '';
+const linksOf = (text) => [...text.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
+const codeOf = (text) => [...text.matchAll(/^```tsx?\s+title="([^"]+)"\n([\s\S]*?)^```/gm)].map(([, title, body]) => ({ title, body }));
+
+test('the call-a-model guides name their prerequisite recipe', () => {
+  assert.match(section(nestModel(), 'Prerequisites'), /\]\(\.\/nest-adapter\.md\)/);
+  assert.match(section(plainModel(), 'Prerequisites'), /\]\(\.\.\/recipes\/expose-agent-actions\.md\)/);
+});
+
+test('the call-a-model guides link their twin in Background, and the plain guide names no Nest term', () => {
+  assert.ok(linksOf(section(nestModel(), 'Prerequisites')).includes(`../guides/${modelGuide}.md`));
+  assert.ok(linksOf(section(plainModel(), 'Prerequisites')).includes(`../nest/${modelGuide}.md`));
+  assert.doesNotMatch(plainModel(), /\bNest(JS)?\b|@nestjs\/|@vectoragents\/vs-apps\/nest/);
+});
+
+test('each call-a-model guide links the glossary at the first model slot and says what an unset slot does', () => {
+  for (const text of [nestModel(), plainModel()]) {
+    const body = text.replace(/^---\n[\s\S]*?\n---\n/, '');
+    assert.equal(body.search(/model slot/i), body.indexOf('[model slot](') + 1);
+    assert.match(body, /\[model slot\]\([./]+\/glossary\.md#model-slot\)/);
+    assert.match(body, /If no one sets the slot, Space refuses the call with status `409`/);
+  }
+});
+
+test('the Nest call-a-model guide injects SpaceAiService and passes the model slot key', () => {
+  const body = codeOf(nestModel()).map((c) => c.body).join('\n');
+  assert.ok(codeOf(nestModel()).every((c) => /^(client|server|shared)\//.test(c.title)));
+  assert.match(body, /import \{[^}]*\bSpaceAiService\b[^}]*\} from '@vectoragents\/vs-apps\/nest'/);
+  assert.match(body, /\.getClientConfig\(\s*claims\.appId,\s*claims\.spaceId,\s*'lead-summary'/);
+  assert.match(body, /\bkey: 'lead-summary'/);
+  assert.match(body, /\bSpaceActionError\b/);
+});
+
+test('the plain call-a-model guide builds createSpaceAiConfigProvider from the stored service secret', () => {
+  const body = codeOf(plainModel()).map((c) => c.body).join('\n');
+  assert.match(body, /import \{[^}]*\bcreateSpaceAiConfigProvider\b[^}]*\} from '@vectoragents\/vs-apps\/server'/);
+  assert.match(body, /^\s+getServiceSecret,$/m);
+  assert.match(body, /\bkey: 'lead-summary'/);
+  assert.match(plainModel(), /requireCapability\(req, 'lead:manage'\)/);
+  assert.match(plainModel(), /`\/api\/provision`/);
+});
+
+test('the call-a-model guides call the model with the returned config, never a fixed key or model', () => {
+  for (const text of [nestModel(), plainModel()]) {
+    const body = codeOf(text).map((c) => c.body).join('\n');
+    assert.match(body, /config\.apiKey/);
+    assert.match(body, /config\.baseUrl/);
+    assert.match(body, /model: config\.model/);
+    assert.doesNotMatch(body, /process\.env\.\w*(API_KEY|ANTHROPIC)/);
+  }
+});
+
+test('the call-a-model guides each end with one related Next step that resolves', () => {
+  for (const [dir, text] of [['nest', nestModel()], ['guides', plainModel()]]) {
+    const links = linksOf(section(text, 'Next step'));
+    assert.equal(links.length, 1);
+    assert.ok(existsSync(join(docs, dir, links[0].split('#')[0])), links[0]);
+  }
 });

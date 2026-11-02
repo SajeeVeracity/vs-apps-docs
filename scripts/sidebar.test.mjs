@@ -47,6 +47,13 @@ test('the Nest section lists the open-route guide after nest-adapter', () => {
   assert.deepEqual(nest.items.map(idOf).slice(0, 2), ['nest/nest-adapter', 'nest/open-route-and-read-caller']);
 });
 
+test('the Guides and Nest sections each list a call-a-model guide', () => {
+  for (const [label, id] of [['Guides', 'guides/call-a-model-from-your-server'], ['Nest', 'nest/call-a-model-from-your-server']]) {
+    const category = categories.find((c) => c.label === label);
+    assert.ok(category.items.map(idOf).includes(id), label);
+  }
+});
+
 test('Recipes, Guides, Nest and Reference open on a generated-index page with a description', () => {
   for (const label of ['Recipes', 'Guides', 'Nest', 'Reference']) {
     const { link } = categories.find((category) => category.label === label);
