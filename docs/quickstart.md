@@ -337,7 +337,7 @@ A real Space needs these things in place. Check them before step 1.
 
 - [ ] A Vector representative to send the registration request to.
 - [ ] A space to add the app to.
-- [ ] A space manager to do [steps 3, 4 and 5](#3-publish-the-space-agent). Anyone with Edit level on the space, and any Organization admin, is a space manager.
+- [ ] An Organization admin, a member who sees **Organization** under **Settings**, to do [step 3](#3-publish-the-space-agent). A space manager to do steps 4 and 5. Anyone with Edit level on the space, and any Organization admin, is a space manager.
 - [ ] The Space server can reach your server. It needs a public URL that forwards to port `3101` (`SERVER_PORT`). Keep the URL the same until Vector confirms the registration.
 
 ### 1. Point the app at your Space
@@ -388,16 +388,17 @@ Contact your Vector representative. Vector creates the [app registration](./glos
 
 ### 3. Publish the space agent
 
-**Role**: space manager.
+**Role**: Organization admin.
 
-The space switcher lists a space only when its agent has a published version. Until then Space shows "No spaces yet" and you cannot reach your app. A new space holds a draft agent that you publish as it is.
+The space switcher lists a space only when its agent has a published version. Until then Space shows "No spaces yet" and you cannot reach your app. A new space holds a draft agent that you publish as it is. Only an Organization admin can open an unpublished space, from the list of spaces in the organization settings.
 
 Skip this step if the canvas already shows **Published** and has no **Publish All** button.
 
-1. Choose **Settings**, **Space**, **Agent Studio**, then **Canvas**.
-2. Choose **Publish All**. In the **Review Changes Before Publishing** dialog, choose **Publish All**.
+1. Choose **Settings**, **Organization**, then **Spaces**. Choose your space.
+2. Choose **Agent Studio**, then **Canvas**.
+3. Choose **Publish All**. In the **Review Changes Before Publishing** dialog, choose **Publish All**.
 
-**Check**: Space shows the toast `All published`. The canvas shows **Published** and the date.
+**Check**: Space shows the toast `All published`. The canvas shows **Published** and the date. After a reload, the space appears in the space switcher of its members.
 
 ### 4. Add the app to a space
 
