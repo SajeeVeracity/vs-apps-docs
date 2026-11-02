@@ -83,7 +83,7 @@ export class LeadSummaryController {
   constructor(private readonly ai: SpaceAiService) {}
 
   @Get()
-  @RequireCapability('hello:view')
+  @RequireCapability('lead:manage')
   async summary(@Req() req: AppRequest) {
     const { claims } = appCaller(req);
     try {
