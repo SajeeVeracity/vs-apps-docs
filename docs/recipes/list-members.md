@@ -166,6 +166,10 @@ export function TeamGroups() {
 }
 ```
 
+### 5. Mount the components
+
+In `client/src/LeadsPage.tsx`, import `LeadOwners`, `OwnerPicker` and `TeamGroups`. Render `<LeadOwners ownerIds={ownerIds} />` with the owner ids the page holds, `<OwnerPicker onPick={pickOwner} />`, where `pickOwner` is your function that stores the picked `user.id`, and `<TeamGroups />`. Each component calls `useApp` or `useUsers`, so it must render inside `AppProvider`, as the pages do.
+
 ## Result
 
 Owner ids render as names, a search box returns members for a picker with one call per pause in typing, and each group of the space lists its members by name. A failed search or group call shows an error line.

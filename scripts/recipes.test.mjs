@@ -366,6 +366,14 @@ test('list-members states the deleted flag as Space sends it and groups as the s
   assert.match(members.text, /cannot show/);
 });
 
+test('list-members mounts every component it builds in the leads page', () => {
+  const steps = section(members.text, 'Steps').split(/^### /m).slice(1);
+  const mount = steps.at(-1);
+  assert.match(mount, /^5\. Mount the components\n/);
+  assert.match(mount, /`client\/src\/LeadsPage\.tsx`/);
+  for (const component of ['LeadOwners', 'OwnerPicker', 'TeamGroups']) assert.match(mount, new RegExp(`<${component}\\b`), component);
+});
+
 const addPage = recipes.find((r) => r.name === 'add-page-and-capability');
 const addPageSteps = () => section(addPage.text, 'Steps').split(/^### /m).slice(1);
 
@@ -614,6 +622,7 @@ test('no page tells the reader to install zod without version 3, disable bodyPar
     assert.doesNotMatch(text, /npm install zod(?!@3)/, path);
     assert.doesNotMatch(text, /bodyParser: false/, path);
     assert.doesNotMatch(text, /pass a stable array/i, path);
+    assert.doesNotMatch(text, /sdr-leads/, path);
+    assert.doesNotMatch(text, /A deleted user (stays|keeps)/, path);
   }
-  for (const { name, text } of all) assert.doesNotMatch(text, /sdr-leads/, name);
 });

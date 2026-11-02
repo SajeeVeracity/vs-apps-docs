@@ -59,7 +59,7 @@ import { useState } from 'react';
 import { z } from 'zod';
 
 const leadsPage = defineAgentPage({
-  pageId: 'sdr-leads',
+  pageId: 'leads',
   description: 'SDR leads: people and companies found by lead searches, kept in Lead Lists.',
 });
 
@@ -217,7 +217,7 @@ export function DispatchButton({ leadListId }: { leadListId: string }) {
   const [status, setStatus] = useState('idle');
 
   async function run() {
-    const result = await registry.dispatch('sdr-leads.open_lead_list', { leadListId });
+    const result = await registry.dispatch('leads.open_lead_list', { leadListId });
     setStatus(result.ok ? 'opened' : result.code);
   }
 
@@ -231,7 +231,7 @@ export function DispatchButton({ leadListId }: { leadListId: string }) {
 
 ## Result
 
-A page component that binds `sdr-leads.open_lead_list` with `useAgentAction`, and a debugging component that lists and dispatches mounted actions through the registry.
+A page component that binds `leads.open_lead_list` with `useAgentAction`, and a debugging component that lists and dispatches mounted actions through the registry.
 
 ## Next step
 

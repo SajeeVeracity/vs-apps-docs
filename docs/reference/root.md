@@ -62,7 +62,7 @@ import { defineAgentPage } from '@vectoragents/vs-apps';
 import { z } from 'zod';
 
 export const leadsPage = defineAgentPage({
-  pageId: 'sdr-leads',
+  pageId: 'leads',
   description: 'SDR leads: people and companies found by lead searches, kept in Lead Lists.',
 });
 
@@ -79,7 +79,7 @@ export const exportLeadsAction = openLeadListAction.child({
 });
 ```
 
-The action ids are `sdr-leads.open_lead_list` and `sdr-leads.export_leads`.
+The action ids are `leads.open_lead_list` and `leads.export_leads`.
 
 ## `appPages`
 
