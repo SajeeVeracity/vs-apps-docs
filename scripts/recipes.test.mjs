@@ -157,3 +157,56 @@ test('every link to nest-adapter points at its Nest folder location', () => {
     }
   }
 });
+
+const members = recipes.find((r) => r.name === 'list-members');
+const codeOf = (page, titleFile) =>
+  [...page.text.matchAll(/^```tsx? title="([^"]+)"[^\n]*\n([\s\S]*?)^```/gm)].find(([, title]) => title.endsWith(titleFile))?.[2] ?? '';
+
+test('list-members needs the starter env var and a Space run, not the harness', () => {
+  const prerequisites = section(members.text, 'Prerequisites');
+  assert.match(prerequisites, /`SPACE_API_URL`/);
+  assert.match(prerequisites, /`npm run dev:space`/);
+  assert.match(prerequisites, /harness/);
+});
+
+test('list-members and the useUsers reference drop the stable array instruction', () => {
+  const reference = readFileSync(join(docs, 'reference', 'react.md'), 'utf8');
+  assert.doesNotMatch(members.text, /stable array/i);
+  assert.doesNotMatch(reference, /stable array/i);
+});
+
+test('list-members builds the roster from groups then useUsers of the group user ids', () => {
+  assert.match(codeOf(members, 'TeamGroups.tsx'), /directory\s*\??\.groups\(\)/);
+  assert.match(codeOf(members, 'GroupRoster.tsx'), /useUsers\(group\.userIds\)/);
+});
+
+test('list-members search and groups snippets catch a rejected call and render an error line', () => {
+  for (const file of ['OwnerPicker.tsx', 'TeamGroups.tsx']) {
+    const code = codeOf(members, file);
+    assert.match(code, /\.catch\(|catch \(/, file);
+    assert.match(code, /setError\(/, file);
+    assert.match(code, /role="alert"/, file);
+  }
+});
+
+test('list-members debounces search by a 300 ms effect timer that cleanup cancels', () => {
+  const picker = codeOf(members, 'OwnerPicker.tsx');
+  assert.match(picker, /useEffect\(/);
+  assert.match(picker, /setTimeout\([\s\S]*?,\s*300\)/);
+  assert.match(picker, /return \(\) => (?:\{[^}]*)?clearTimeout\(/);
+});
+
+test('list-members states the deleted flag as Space sends it and groups as the space lists them', () => {
+  assert.match(members.text, /`deleted: true`/);
+  assert.match(members.text, /cannot show/);
+});
+
+test('list-members snippets use only the shared keys', () => {
+  assert.doesNotMatch(members.text, /sdr/i);
+  assert.deepEqual([...members.text.matchAll(/\b(?:key|capability): '([^']+)'/g)].map(([, key]) => key).filter((k) => !['hello-app', 'leads', 'icp', 'lead:manage', 'icp:manage'].includes(k)), []);
+});
+
+test('list-members ends with one Next step: expose-agent-actions', () => {
+  const next = section(members.text, 'Next step');
+  assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map(([, link]) => link), ['./expose-agent-actions.md']);
+});
