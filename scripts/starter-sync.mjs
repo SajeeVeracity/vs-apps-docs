@@ -126,6 +126,13 @@ export function checkPorts(pageText, starterDir) {
   return problems;
 }
 
+export function checkEnvExamples(pageText, starterDir) {
+  const origins = new Set(pageText.match(/https:\/\/[\w-]+\.example\.com/g));
+  const path = join(starterDir, '.env.example');
+  const example = existsSync(path) ? readFileSync(path, 'utf8') : '';
+  return [...origins].filter((origin) => !example.includes(origin)).map((origin) => `.env.example lacks ${origin}, which the page names`);
+}
+
 // The page clones the default branch, so the check reads main and not a tag.
 const gitClone = (url, dir) => execFileSync('git', ['clone', '--depth', '1', '--branch', 'main', url, dir], { stdio: 'pipe' });
 
@@ -158,7 +165,7 @@ export async function main({
     dir = temp;
   }
   try {
-    const problems = [...checkSdkPin(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir), ...checkPorts(page, dir)];
+    const problems = [...checkSdkPin(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir), ...checkPorts(page, dir), ...checkEnvExamples(page, dir)];
     for (const problem of problems) error(`starter-sync: ${problem}`);
     if (problems.length === 0) log(`starter-sync: ok (SDK ${sdkVersion}, ${STARTER_URL})`);
     return problems.length === 0 ? 0 : 1;

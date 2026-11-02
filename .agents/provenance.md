@@ -16,7 +16,13 @@ What each claim in these docs rests on. A ticket or spec named below without a l
 
 ## Verified in a local Space
 
-Part 2 of the quickstart is checked in a local Space from the sibling `vector-spaces` repo, through the user interface. Two checks are recorded: publishing the agent of a new space (Add the publish agent step), and sharing the app at View level, so an organization member opens the page and sees `hello:view` (spec). Labels and toasts drift with the Space UI.
+Part 2 of the quickstart is checked in a local Space from the sibling `vector-spaces` repo, through the user interface. Three checks are recorded.
+
+- Publishing the agent of a new space (Add the publish agent step).
+- The Organization admin route to that publish: **Settings**, **Organization**, **Spaces**, then the space. After it, an Edit member sees the space in the switcher.
+- Sharing the app at View level, so an organization member opens the page and sees `hello:view` (spec).
+
+Labels and toasts drift with the Space UI.
 
 ## Not yet verified
 
@@ -38,6 +44,7 @@ Rows marked "Starter claim" describe the starter repo. The starter's own CI and 
 | The `client-config` route sends no `tokenIssuer`, so the client uses the SDK default `vector-space`, which matches the Space issuer and the dev issuer. | The default from the 0.2.4 dist, Research the token path for the diagram. The Space issuer value is a statement of the Space code, Decide the auto-apply manifest request. |
 | The classic-token claim in Prerequisites. | GitHub Docs, "Working with the npm registry". |
 | The share step: the user joins the space first, **Save changes** commits the share, and a View-level share lets an organization member open the page. | [Verified in a local Space](#verified-in-a-local-space). |
+| Step 4: Space treats a status outside 200 to 299, no reply within 10 seconds, or a network error on `POST /api/provision` as a failure, and the add fails. | Space code, not observed: `provisionSpace` in `vector-spaces` `apps/server/src/domain/vector-apps/provisioning/services/vector-apps-client.service.ts` fails on `!res.ok`, and its `FETCH_TIMEOUT_MS` is 10 seconds, passed to `edgeFetch` as a write (one attempt, no retry). |
 
 ## App definition
 

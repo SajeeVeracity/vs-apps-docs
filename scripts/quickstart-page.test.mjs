@@ -112,20 +112,23 @@ test('Part 2 has Before you start, then six steps with roles only on steps 3, 4 
   const [intro, ...rest] = subsections(part2);
   assert.equal(title(intro), 'Before you start');
   const items = intro.split('\n').filter((l) => /^- /.test(l));
-  assert.equal(items.length, 3);
+  assert.equal(items.length, 4);
   for (const line of items) assert.match(line, /^- \[ \] /);
   assert.deepEqual(rest.map(title), [
     '1. Point the app at your Space',
     '2. Ask Vector to register the app',
-    '3. Publish the space agent (space manager)',
-    '4. Add the app to a space (space manager)',
-    '5. Share the app with a user (space manager)',
+    '3. Publish the space agent',
+    '4. Add the app to a space',
+    '5. Share the app with a user',
     '6. Open the page',
   ]);
-  assert.match(intro, /\]\(#3-publish-the-space-agent-space-manager\)/);
-  assert.equal(count(/\(space manager\)$/gm), 3);
-  assert.match(text, /ready to do steps 3, 4 and 5\./);
-  assert.match(text, /In step 4, \*\*Hello app\*\* appears/);
+  assert.match(intro, /\]\(#3-publish-the-space-agent\)/);
+  assert.ok(rest[2].includes('**Role**: Organization admin.'));
+  const roled = rest.filter((step) => step.includes('**Role**: space manager.'));
+  assert.deepEqual(roled.map(title), rest.slice(3, 5).map(title));
+  assert.equal([...part2.matchAll(/\*\*Role\*\*: space manager\./g)].length, 2);
+  assert.match(text, /An Organization admin, [^.]*, to do \[step 3\]\(#3-publish-the-space-agent\)\. A space manager to do steps 4 and 5\./);
+  assert.match(text, /then continue at step 4\. \*\*Hello app\*\* appears/);
   assert.doesNotMatch(text, /Each step names the role/);
 });
 
@@ -170,7 +173,7 @@ test('commands run in the step that needs them', () => {
   for (const name of ['SPACE_JWKS_URL', 'ALLOWED_PARENT_ORIGIN', 'PUBLIC_BASE_URL', 'SERVER_PORT', 'CLIENT_PORT']) {
     assert.match(space, new RegExp(`^- \`${name}\``, 'm'), name);
   }
-  assert.match(space, /^\{"keys":\[$/m);
+  assert.match(space, /^200 \{"keys":\[$/m);
   assert.match(space, /\/api\/\.well-known\/apps\/jwks\.json/);
   for (const dropped of ['dev:server', 'dev:client', 'check:server', 'SPACE_BASE_URL']) {
     assert.doesNotMatch(text, new RegExp(dropped));
@@ -243,7 +246,10 @@ test('names Vite once the page shows it, so the baseline allowance holds', () =>
 
 test('Part 2 click paths and Checks', () => {
   const [, , publish, addApp, share, open] = steps(part2);
+  assert.match(publish, /\*\*Organization\*\*, then \*\*Spaces\*\*/);
   assert.match(publish, /\*\*Agent Studio\*\*/);
+  assert.match(publish, /The space switcher, the menu in which a member picks a space, lists/);
+  assert.match(publish, /^2\. .*skip item 3\./m);
   assert.match(publish, /\*\*Publish All\*\*/);
   assert.match(publish, /All published/);
   assert.match(addApp, /\*\*Add an app\*\*/);
@@ -260,16 +266,17 @@ test('Part 2 click paths and Checks', () => {
   assert.doesNotMatch(steps(part2)[1], /Auto-apply/);
 });
 
-test('Part 2 says each provisioning fact once, where the reader meets it, and makes no 404 claim', () => {
+test('Part 2 says each provisioning fact once, where the reader meets it, and makes no 404 claim in steps 2 and 4', () => {
   const [, register, , addApp] = steps(part2);
   const once = (re) => assert.equal((part2.match(re) ?? []).length, 1, String(re));
   once(/`serviceSecret`/g);
   once(/`requireProvisioning`/g);
-  once(/a reply that is not OK/g);
+  once(/a status outside 200 to 299/g);
   assert.match(register, /`requireProvisioning`/);
   assert.match(addApp, /`serviceSecret`/);
-  assert.match(addApp, /a reply that is not OK/);
-  assert.doesNotMatch(text, /\b404\b/);
+  assert.match(addApp, /a status outside 200 to 299/);
+  assert.doesNotMatch(register, /\b404\b/);
+  assert.doesNotMatch(addApp, /\b404\b/);
 });
 
 test('the Result summarises the last Check and has no second output block', () => {

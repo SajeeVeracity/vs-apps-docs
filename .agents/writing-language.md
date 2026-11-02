@@ -61,7 +61,7 @@ Scope: `docs/quickstart.md` only. `scripts/voice.mjs` checks the TU1 hard cap, T
 - **TU3 No contractions.**
 - **TU4 Reason first.** A step or section opens with a sentence that says why.
 - **TU5 Imperative steps.** A step starts with an imperative verb. "-ing" forms are allowed where natural.
-- **TU6 Define in one clause.** Define a term in one clause at first use. Link only a destination the reader follows.
+- **TU6 Define in one clause.** Define a term in one clause at first use. Link only a destination the reader follows. The page defines "capability", "space manager" and "manifest" in a one-clause appositive at first use, and `scripts/quickstart-page.test.mjs` pins that form.
 - **TU7 Security contract first.** Lead with the security contract. Teach through running code, not folder creation. Say that a client check is display only and the server check decides.
 
 ## Not in this checklist
