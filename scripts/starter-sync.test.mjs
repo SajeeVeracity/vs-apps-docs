@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { checkEnvExamples, checkFences, checkPageVersions, checkPorts, checkSdkPin, checkTree, installedSdkVersion, main, pageTreePaths } from './starter-sync.mjs';
+import { checkEnvExamples, checkFences, checkPageVersions, checkPorts, checkSdkPin, checkStartFolders, checkTree, installedSdkVersion, main, pageTreePaths } from './starter-sync.mjs';
 
 const tree = ['hello-app/', '├── .env.example', '├── client/', '│   ├── index.html', '│   └── src/', '│       └── main.tsx', '└── shared/', '    └── src/', '        └── index.ts'].join('\n');
 const page = [
@@ -47,6 +47,11 @@ function starter(overrides = {}) {
     'server/package.json': pin('0.2.4'),
     'shared/package.json': pin('0.2.4'),
     'package-lock.json': JSON.stringify({ packages: { 'node_modules/@vectoragents/vs-apps': { version: '0.2.4' } } }),
+    'recipes/leads-app/package.json': '{}',
+    'recipes/leads-app/client/package.json': pin('0.2.4'),
+    'recipes/leads-app/server/package.json': pin('0.2.4'),
+    'recipes/leads-app/shared/package.json': pin('0.2.4'),
+    'recipes/leads-app/package-lock.json': JSON.stringify({ packages: { 'node_modules/@vectoragents/vs-apps': { version: '0.2.4' } } }),
     ...overrides,
   };
   for (const [path, content] of Object.entries(files)) if (content !== null) write(root, path, content);
@@ -75,6 +80,51 @@ test('SDK pin: fails when the lockfile resolves another version', () => {
 test('SDK pin: fails when no file pins the SDK at all', () => {
   const root = starter({ 'client/package.json': '{}', 'server/package.json': '{}', 'shared/package.json': '{}', 'package-lock.json': null });
   assert.equal(checkSdkPin(root, '0.2.4').length, 1);
+});
+
+test('start folders: pass when recipes/leads-app exists and pins the installed version', () => {
+  assert.deepEqual(checkStartFolders(starter(), '0.2.4'), []);
+});
+
+test('start folders: fail when recipes/leads-app is missing', () => {
+  const root = starter({
+    'recipes/leads-app/package.json': null,
+    'recipes/leads-app/client/package.json': null,
+    'recipes/leads-app/server/package.json': null,
+    'recipes/leads-app/shared/package.json': null,
+    'recipes/leads-app/package-lock.json': null,
+  });
+  const problems = checkStartFolders(root, '0.2.4');
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /recipes\/leads-app is missing from the starter/);
+});
+
+test('start folders: fail when the folder pins another version, and name the folder', () => {
+  const root = starter({ 'recipes/leads-app/server/package.json': JSON.stringify({ dependencies: { '@vectoragents/vs-apps': '0.2.5' } }) });
+  const problems = checkStartFolders(root, '0.2.4');
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /recipes\/leads-app: server\/package\.json pins .* 0\.2\.5/);
+});
+
+test('start folders: fail when the folder lockfile resolves another version', () => {
+  const root = starter({ 'recipes/leads-app/package-lock.json': JSON.stringify({ packages: { 'node_modules/@vectoragents/vs-apps': { version: '0.2.3' } } }) });
+  assert.match(checkStartFolders(root, '0.2.4')[0], /recipes\/leads-app: package-lock\.json/);
+});
+
+test('main: a starter without the start folder exits 1', async () => {
+  const root = starter({
+    'recipes/leads-app/package.json': null,
+    'recipes/leads-app/client/package.json': null,
+    'recipes/leads-app/server/package.json': null,
+    'recipes/leads-app/shared/package.json': null,
+    'recipes/leads-app/package-lock.json': null,
+  });
+  assert.equal(await main({ env: { STARTER_DIR: root }, page, sdkVersion: '0.2.4', ...silent }), 1);
+});
+
+test('main: a start folder with another pin exits 1', async () => {
+  const root = starter({ 'recipes/leads-app/client/package.json': JSON.stringify({ dependencies: { '@vectoragents/vs-apps': '0.2.5' } }) });
+  assert.equal(await main({ env: { STARTER_DIR: root }, page, sdkVersion: '0.2.4', ...silent }), 1);
 });
 
 test('installedSdkVersion matches the exact pin in this repo package.json', () => {
