@@ -55,3 +55,9 @@ test('Recipes, Guides, Nest and Reference open on a generated-index page with a 
     assert.equal(link.slug, `/category/${label.toLowerCase()}`, label);
   }
 });
+
+test('the Nest section lists the Call Space guide and the Guides section lists its plain twin', () => {
+  const ids = (label) => categories.find((category) => category.label === label).items.map(idOf);
+  assert.ok(ids('Nest').includes('nest/call-space-from-your-server'));
+  assert.ok(ids('Guides').includes('guides/call-space-from-your-server'));
+});

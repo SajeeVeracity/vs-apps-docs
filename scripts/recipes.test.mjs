@@ -240,3 +240,66 @@ test('expose-agent-actions next step links agent-action-trees only', () => {
   const next = exposeSection('Next step');
   assert.deepEqual([...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]), ['../guides/agent-action-trees.md']);
 });
+
+const callSpaceName = 'call-space-from-your-server';
+const callSpace = {
+  nest: nest.find((r) => r.name === callSpaceName)?.text ?? '',
+  plain: guides.find((r) => r.name === callSpaceName)?.text ?? '',
+};
+const codeOf = (text) => [...text.matchAll(/^```tsx?[^\n]*\n([\s\S]*?)^```/gm)].map(([, body]) => body).join('\n');
+
+test('Call Space from your server exists as a Nest guide and a plain guide', () => {
+  assert.notEqual(callSpace.nest, '');
+  assert.notEqual(callSpace.plain, '');
+});
+
+test('the Nest guide names nest-adapter and the plain guide names expose-agent-actions as prerequisite', () => {
+  assert.match(section(callSpace.nest, 'Prerequisites'), /\]\(\.\/nest-adapter\.md\)/);
+  assert.match(section(callSpace.plain, 'Prerequisites'), /\]\(\.\.\/recipes\/expose-agent-actions\.md\)/);
+});
+
+test('each Call Space guide links its twin in Background', () => {
+  const background = (text) => section(text, 'Prerequisites').split('\n').find((line) => /^- Background:/.test(line)) ?? '';
+  assert.match(background(callSpace.nest), new RegExp(`\\]\\(\\.\\./guides/${callSpaceName}\\.md\\)`));
+  assert.match(background(callSpace.plain), new RegExp(`\\]\\(\\.\\./nest/${callSpaceName}\\.md\\)`));
+});
+
+test('the Nest guide shows SpaceClientService, SpaceS2sService and AppActionsService in labelled server files', () => {
+  const code = codeOf(callSpace.nest);
+  for (const symbol of ['SpaceClientService', 'SpaceS2sService', 'AppActionsService']) {
+    assert.match(code, new RegExp(`\\b${symbol}\\b`));
+  }
+  assert.match(code, /from '@vectoragents\/vs-apps\/nest'/);
+  for (const [, title] of callSpace.nest.matchAll(/^```tsx?[^\n]*title="([^"]+)"/gm)) assert.match(title, /^server\//);
+});
+
+test('the plain guide uses createSpaceActionsClient and createSpaceS2sTokenProvider from the server subpath', () => {
+  const code = codeOf(callSpace.plain);
+  assert.match(code, /\bcreateSpaceActionsClient\(/);
+  assert.match(code, /\bcreateSpaceS2sTokenProvider\(/);
+  assert.match(code, /from '@vectoragents\/vs-apps\/server'/);
+  assert.doesNotMatch(callSpace.plain, /\bNest(JS)?\b|@nestjs\/|@Injectable|AppActionsService|SpaceClientService|SpaceS2sService/);
+});
+
+test('both Call Space guides use only the shared capability keys', () => {
+  for (const text of Object.values(callSpace)) {
+    const keys = [...text.matchAll(/'([a-z]+:[a-z]+)'/g)].map((m) => m[1]).filter((k) => !k.startsWith('node:'));
+    assert.ok(keys.length >= 1);
+    assert.deepEqual(keys.filter((k) => !['hello:view', 'lead:manage', 'icp:manage'].includes(k)), []);
+  }
+});
+
+test('the Nest Call Space guide warns that the credential store is in memory and is the one interface to implement', () => {
+  const warning = callSpace.nest.split('\n').filter((line) => /in memory/.test(line) && /loses them on restart/.test(line));
+  assert.equal(warning.length, 1);
+  assert.match(warning[0], /`AppCredentialStore`/);
+  assert.match(warning[0], /your own storage/);
+});
+
+test('each Call Space guide ends with one Next step link that resolves', () => {
+  for (const [dir, text] of [['nest', callSpace.nest], ['guides', callSpace.plain]]) {
+    const links = [...section(text, 'Next step').matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]);
+    assert.equal(links.length, 1, dir);
+    assert.ok(existsSync(join(docs, dir, links[0].split('#')[0])), links[0]);
+  }
+});
