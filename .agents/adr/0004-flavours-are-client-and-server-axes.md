@@ -19,7 +19,7 @@ The published docs assume TypeScript 5 with `strict`, Node 20.19+ and `npm` for 
 
 - **Tabs for the flavours.** Rejected: a tab is local to its page, so the choice does not reach the next page, the first paint shows the default flavour, and a link cannot carry the choice.
 - **Tabs for each package manager.** Rejected: triples the commands to keep correct. `npm` ships with Node, so the Node guarantee already covers it.
-- **Leave the bundler to the reader.** Rejected for the quickstart: the reader scaffolds a starter that ships Vite already wired, so the reader never picks a bundler ([ADR 0002](0002-quickstart-clones-a-starter-repo.md)). Other pages say "your bundler".
+- **Leave the bundler to the reader.** Rejected for the quickstart: the reader scaffolds a starter that ships Vite already wired, so the reader never picks a bundler ([ADR 0003](0003-quickstart-runs-create-app-from-github-packages.md)). Other pages say "your bundler".
 - **Single package with client and server in one `src/`.** Rejected for the quickstart: Vite and Node need different `tsconfig` settings, so the app definition would be copied or imported across folders.
 
 ## Consequences

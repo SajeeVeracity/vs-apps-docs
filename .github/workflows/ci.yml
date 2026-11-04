@@ -26,7 +26,25 @@ jobs:
         run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.PACKAGES_TOKEN }}" >> .npmrc
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      # CI is set, so a failed clone of the public starter fails the job.
-      - run: pnpm check:starter
       # Writes static/verified.json, then builds the site.
       - run: pnpm build
+
+  # Networked: runs the published CLI once per pair against the starter main. A failure here means the
+  # starter or the CLI moved, not the build above.
+  starter-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      # The CLI package is on GitHub Packages; the secret must grant read:packages.
+      - name: Authenticate to GitHub Packages
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.PACKAGES_TOKEN }}" >> .npmrc
+      - run: pnpm install --frozen-lockfile
+      # CI is set, so a failed clone or CLI run fails the job. The script generates the page trees first.
+      - run: pnpm check:starter

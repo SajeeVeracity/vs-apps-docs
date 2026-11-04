@@ -34,3 +34,9 @@ How to write a page that differs by flavour. Terms: axis, flavour, pair, flavour
 - The redirect table maps each stub address to the axes of its page. Add an old address in `flavours.config.json` as `legacyRedirects: [{ "from": "/nest/x", "to": "/guides/x", "fixed": { "server": "nest" } }]`: `to` must be a flavoured page, `fixed` pins flavours over the reader's choice. The head script also runs on `404.html`, and the Layout runs it for a not-found route, so the old address needs no page.
 - The sidebar lists stubs. `src/theme/DocSidebarItem/Link` points each entry into the reader's pair. A pair that the URL does not fully name takes its missing axes from the saved choice.
 - `src/flavours/resolve.mjs` holds the pure logic (`scripts/flavours-resolve.test.mjs`). `normalizePath`, `completeChoice` and `redirectTarget` are inlined into the head script through `Function.prototype.toString`, so they stay self-contained.
+
+## Starter check
+
+- `pnpm check:starter` generates a project for each pair with the starter CLI and checks every flavoured page in each of its trees against that project (SDK pin, `starter` code blocks, directory tree, ports, environment variables). A neutral page is checked against the default pair.
+- A page that starts from the `leads-app` overlay says so in front matter: `start: leads-app`. The default is `hello`.
+- It fails when a block names a flavour that no starter template names in `flavour.json`, or when a template of an axis has no block or `todo` on a flavoured page that uses the axis.
