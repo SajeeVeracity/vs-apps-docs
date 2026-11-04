@@ -20,16 +20,18 @@ End with two routes on the server from [`expose-agent-actions`](../recipes/expos
 
 ## Prerequisites
 
-- The app from [`expose-agent-actions`](../recipes/expose-agent-actions.md), installed and running with `npm run dev:space`. It starts from the `leads-app` start of the starter. Set up registry access as in step 0 of the [quickstart](../quickstart.md), then scaffold the start:
+- The app from [`expose-agent-actions`](../recipes/expose-agent-actions.md), running with `npm run dev:space`. Work in its folder. If you do not have it, set up registry access as in step 0 of the [quickstart](../quickstart.md), then scaffold the `leads-app` start of the starter into a new folder. The folder name `leads-guide` differs from `leads-app`, the folder of the recipe, so the two do not clash:
 
 <!-- flavour node -->
 ```bash
-npm create @vectoragents/app leads-app -- --client react --server node --start leads-app
+npm create @vectoragents/app leads-guide -- --client react --server node --start leads-app
+cd leads-guide
 ```
 <!-- /flavour -->
 <!-- flavour nest -->
 ```bash
-npm create @vectoragents/app leads-app -- --client react --server nest --start leads-app
+npm create @vectoragents/app leads-guide -- --client react --server nest --start leads-app
+cd leads-guide
 ```
 <!-- /flavour -->
 

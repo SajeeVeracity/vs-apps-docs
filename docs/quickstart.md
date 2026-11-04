@@ -532,12 +532,7 @@ npm run dev:space
 ```
 
 With `SPACE_API_URL` set, the server pings Space each time it starts. `npm run dev` clears `SPACE_API_URL`, so only `npm run dev:space` sends the ping.
-<!-- flavour node -->
-The server prints nothing when the ping works. If the ping fails, the server logs a line such as `manifest ping for "hello-app" got 500` and tries again after 5 seconds and after 15 seconds. The server keeps running in every case.
-<!-- /flavour -->
-<!-- flavour nest -->
-If the ping fails, the server logs a line such as `manifest ping for "hello-app" got 500` and tries again after 5 seconds and after 15 seconds. The server logs `Manifest ping sent for: hello-app` when the ping ends, also after a failure. The server keeps running in every case.
-<!-- /flavour -->
+If the ping fails, the server logs a line such as `manifest ping for "hello-app" got 500` and tries again after 5 seconds and after 15 seconds. The server keeps running in every case.
 
 **Check**: in a second terminal, run this command. It prints the HTTP status and the first 9 characters of the response.
 

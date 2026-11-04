@@ -11,6 +11,11 @@ test('the quickstart is emitted once per pair, react with node and with nest', (
   assert.deepEqual(trees.map(({ tree }) => tree), ['react/node', 'react/nest']);
 });
 
+test('Part 2 is the same text in every tree', () => {
+  const [first, ...rest] = trees.map(({ text }) => section(text, 'Part 2'));
+  for (const part of rest) assert.equal(part, first);
+});
+
 for (const { tree, text } of trees) {
   const server = tree.split('/')[1];
   const nest = server === 'nest';
@@ -232,8 +237,7 @@ for (const { tree, text } of trees) {
     assert.match(bullet, /no trailing slash/);
     assert.match(env, /`npm run dev` clears `SPACE_API_URL`/);
     assert.match(env, /pings Space/);
-    assert.match(env, nest ? /logs `Manifest ping sent for: hello-app`/ : /prints nothing when the ping works/);
-    assert.doesNotMatch(env, nest ? /prints nothing when the ping works/ : /Manifest ping sent for/);
+    assert.doesNotMatch(env, /prints nothing when the ping works|Manifest ping sent for/);
     assert.match(env, /manifest ping for "hello-app" got/);
     assert.match(env, /server keeps running/);
   });

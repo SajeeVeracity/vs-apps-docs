@@ -497,13 +497,14 @@ test('no recipe or guide except read-app-context names an SDR key', () => {
   for (const { name, text } of all.filter((page) => page.name !== 'read-app-context')) assert.doesNotMatch(text, /sdr/i, name);
 });
 
-test('the guides that moved start from the leads-app overlay and scaffold it for the pair of each tree', () => {
+test('the guides that moved start from the leads-app overlay and scaffold it into a new folder for the pair of each tree', () => {
   for (const name of [callSpaceName, modelGuide, a2aName]) {
     const page = guides.find((g) => g.name === name);
     assert.match(page.text, /^---\n[\s\S]*?^start: leads-app$[\s\S]*?\n---\n/m, name);
     for (const { tree, text } of treesOf(`guides/${name}.md`)) {
       const server = tree.split('/')[0];
-      assert.match(section(text, 'Prerequisites'), new RegExp(`^npm create @vectoragents/app leads-app -- --client react --server ${server} --start leads-app$`, 'm'), `${name} ${tree}`);
+      assert.match(section(text, 'Prerequisites'), new RegExp(`^npm create @vectoragents/app leads-guide -- --client react --server ${server} --start leads-app$`, 'm'), `${name} ${tree}`);
+      assert.match(section(text, 'Prerequisites'), /into a new folder/, `${name} ${tree}`);
       assert.doesNotMatch(text, /recipes\/leads-app|git clone/, `${name} ${tree}`);
     }
   }
