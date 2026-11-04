@@ -28,6 +28,8 @@ jobs:
       - run: pnpm check
       # Writes static/verified.json, then builds the site.
       - run: pnpm build
+      # Reads the built site: the search indexes of each client-server pair.
+      - run: pnpm test:build
 
   # Networked: runs the published CLI once per pair against the starter main. A failure here means the
   # starter or the CLI moved, not the build above.

@@ -1,6 +1,7 @@
 import { themes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
 import embedFile from './src/plugins/embed-file.mjs';
+import { searchTheme } from './src/plugins/search-per-pair.mjs';
 import pkg from './package.json' with { type: 'json' };
 import flavours from './flavours.config.json' with { type: 'json' };
 
@@ -26,10 +27,7 @@ const config: Config = {
   ],
   themes: [
     '@docusaurus/theme-mermaid',
-    [
-      '@easyops-cn/docusaurus-search-local',
-      { docsDir: flavours.outDir, docsRouteBasePath: '/', indexBlog: false, hashed: true },
-    ],
+    searchTheme(flavours),
   ],
   themeConfig: {
     navbar: {

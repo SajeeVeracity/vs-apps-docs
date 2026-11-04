@@ -12,6 +12,7 @@
     "check": "pnpm generate && pnpm check:snippets && pnpm typecheck && pnpm test",
     "check:starter": "pnpm generate && node scripts/starter-sync.mjs",
     "test": "node --test scripts/*.test.mjs",
+    "test:build": "node --test scripts/build-check/*.test.mjs",
     "pretypecheck": "node scripts/ensure-stamp.mjs",
     "typecheck": "tsc --noEmit"
   },
@@ -19,7 +20,7 @@
     "@docusaurus/core": "^3.10.2",
     "@docusaurus/preset-classic": "^3.10.2",
     "@docusaurus/theme-mermaid": "^3.10.2",
-    "@easyops-cn/docusaurus-search-local": "^0.55.3",
+    "@easyops-cn/docusaurus-search-local": "0.55.3",
     "@mdx-js/react": "^3.1.1",
     "@mermaid-js/layout-elk": "^1.0.1",
     "@vectoragents/vs-apps": "0.2.4",
