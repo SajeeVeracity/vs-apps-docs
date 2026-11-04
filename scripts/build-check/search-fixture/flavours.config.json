@@ -1,0 +1,10 @@
+{
+  "docsRoot": "docs",
+  "outDir": "docs-gen",
+  "todoCap": 0,
+  "axes": {
+    "client": { "react": "React" },
+    "server": { "node": "Node.js", "nest": "Nest.js" }
+  },
+  "defaults": { "client": "react", "server": "node" }
+}
