@@ -2,6 +2,7 @@ import { themes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
 import embedFile from './src/plugins/embed-file.mjs';
 import pkg from './package.json' with { type: 'json' };
+import flavours from './flavours.config.json' with { type: 'json' };
 
 const sdkVersion = pkg.dependencies['@vectoragents/vs-apps'];
 
@@ -17,7 +18,7 @@ const config: Config = {
     [
       'classic',
       {
-        docs: { routeBasePath: '/', sidebarPath: './sidebars.ts', beforeDefaultRemarkPlugins: [embedFile] },
+        docs: { path: flavours.outDir, routeBasePath: '/', sidebarPath: './sidebars.ts', beforeDefaultRemarkPlugins: [embedFile] },
         blog: false,
         theme: { customCss: './src/css/custom.css' },
       },
@@ -27,7 +28,7 @@ const config: Config = {
     '@docusaurus/theme-mermaid',
     [
       '@easyops-cn/docusaurus-search-local',
-      { docsRouteBasePath: '/', indexBlog: false, hashed: true },
+      { docsDir: flavours.outDir, docsRouteBasePath: '/', indexBlog: false, hashed: true },
     ],
   ],
   themeConfig: {

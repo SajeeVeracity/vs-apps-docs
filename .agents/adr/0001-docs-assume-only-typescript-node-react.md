@@ -1,5 +1,7 @@
 # Published docs assume only TypeScript, Node and React
 
+Superseded by [ADR 0004](0004-flavours-are-client-and-server-axes.md).
+
 The published docs and their examples assume TypeScript 5 with `strict`, Node 20.19+ with `npm`, and React 18+. Vector's own apps use NestJS, Vite and `pnpm`, but an external developer may use none of them, so a page that names one makes that reader translate before they can start. Servers are `node:http` on the SDK's `/server` subpath, clients are plain React files, and installs use `npm`, which ships with Node.
 
 ## Considered options

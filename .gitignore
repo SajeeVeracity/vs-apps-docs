@@ -7,3 +7,4 @@ static/verified.json
 .scratch
 .playwright-cli
 .claude
+docs-gen

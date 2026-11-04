@@ -59,3 +59,39 @@ The quickstart steps that follow the harness run. Each one shows files of the st
 
 - Maps to: no SDK symbol.
 - Owner: docs.
+
+### axis
+
+One row of the flavour picker: `client` or `server`. A page varies on the axes whose flavours its blocks name ([ADR 0004](adr/0004-flavours-are-client-and-server-axes.md)).
+
+- Maps to: the keys of `axes` in `flavours.config.json`.
+- Owner: docs.
+
+### flavour
+
+One value of an axis: client `react`; server `node` (Node.js + TypeScript) or `nest` (Nest.js). A flavour name is lowercase, belongs to one axis and never equals a doc folder name.
+
+- Maps to: a key under an axis in `flavours.config.json`, the name in a `<!-- flavour <name> -->` marker, and one template directory of the starter.
+- Owner: docs.
+
+### pair
+
+One client flavour and one server flavour together, such as `react+node`. It names the unit that the picker saves, that gets a search index and that the quickstart scaffolds. It has no link to the pair of app and space in "service secret".
+
+- Maps to: one value combination of both axes in the generated tree.
+- Owner: docs.
+
+### flavour block
+
+Source text between `<!-- flavour <name> -->` and `<!-- /flavour -->`. `todo` after the name marks a block nobody has written. The generator keeps the block in the trees of its flavour and drops it from the others.
+
+- Maps to: `parse` in `scripts/generate.mjs`.
+- Owner: docs.
+
+### neutral page
+
+A page with no flavour block. It is published once, at its own address, and the picker does not change it.
+
+- Maps to: a page that `scripts/generate.mjs` copies unchanged.
+- Owner: docs.
+
