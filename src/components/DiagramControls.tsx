@@ -234,7 +234,7 @@ function readSize(viewport: HTMLElement | null): Size {
   return { width: viewport?.clientWidth ?? 0, height: viewport?.clientHeight ?? 0 };
 }
 
-/** Wraps one Mermaid fence. If the wrapper throws, the plain fence renders. */
+/** Wraps one Mermaid code block. If the wrapper throws, the plain code block renders. */
 export default function DiagramControls({ children }: { children: ReactNode }): ReactElement {
   return (
     <ErrorBoundary fallback={() => <>{children}</>}>

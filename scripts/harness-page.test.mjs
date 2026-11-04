@@ -54,7 +54,7 @@ test('documents the three changes that make the app accept dev tokens', () => {
 
 test('harness.html has a root element and loads harness.tsx', () => {
   const html = /```html title="harness\.html"\n([\s\S]*?)```/.exec(text)?.[1];
-  assert.ok(html, 'harness.html fence');
+  assert.ok(html, 'harness.html code block');
   assert.match(html, /<div id="root"><\/div>/);
   assert.match(html, /<script type="module" src="\/src\/harness\.tsx"><\/script>/);
 });

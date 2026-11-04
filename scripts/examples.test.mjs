@@ -39,7 +39,7 @@ test('sdr shows several pages and csr shows connector eventHandlers', async () =
   assert.ok(csr.resources.connectors.every((c) => c.eventHandlers.length > 0));
 });
 
-test('a file-embedded fence is typechecked as pasted', () => {
+test('a file-embedded code block is typechecked as pasted', () => {
   const root2 = mkdtempSync(join(tmpdir(), 'emb-'));
   mkdirSync(join(root2, 'docs'));
   writeFileSync(join(root2, 'bad.ts'), `const n: number = 'x';\n`);

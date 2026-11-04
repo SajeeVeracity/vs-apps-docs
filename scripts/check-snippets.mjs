@@ -8,10 +8,10 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const nestDir = 'nest';
 const titleRoots = /^(client|server|shared)\//;
 const titleFolders = /^(recipes|guides|nest)\//;
-const fence = /^```(ts|tsx)\b([^\n]*)\n([\s\S]*?)^```/gm;
+const codeBlock = /^```(ts|tsx)\b([^\n]*)\n([\s\S]*?)^```/gm;
 
-/** True when the fence meta has the `starter` word outside its title. */
-export const isStarterFence = (meta) => /(^|\s)starter(\s|$)/.test(meta.replace(/title="[^"]*"/, ''));
+/** True when the code block meta has the `starter` word outside its title. */
+export const isStarterCodeBlock = (meta) => /(^|\s)starter(\s|$)/.test(meta.replace(/title="[^"]*"/, ''));
 
 function docFiles(dir) {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -21,7 +21,7 @@ function docFiles(dir) {
   });
 }
 
-/** Typechecks the ts/tsx fences under `docsDir`; writes `stampFile` only on a clean pass. */
+/** Typechecks the ts/tsx code blocks under `docsDir`; writes `stampFile` only on a clean pass. */
 export function checkSnippets({
   docsDir = join(root, 'docs'),
   baseDir = root,
@@ -36,13 +36,13 @@ export function checkSnippets({
       let index = 0;
       const titled = new Set();
       const blocks = [];
-      for (const [, lang, meta, body] of readFileSync(file, 'utf8').matchAll(fence)) {
+      for (const [, lang, meta, body] of readFileSync(file, 'utf8').matchAll(codeBlock)) {
         index++;
         const title = /title="([^"]+)"/.exec(meta)?.[1];
         // Recipes, guides and Nest pages build on the quickstart app, so their file paths use its layout. Runs before the starter skip.
         if (title && titleFolders.test(doc) && !titleRoots.test(title)) badTitles.push(`${doc}: ${title}`);
-        // The starter's CI typechecks a `starter` fence.
-        if (isStarterFence(meta)) continue;
+        // The starter's CI typechecks a `starter` code block.
+        if (isStarterCodeBlock(meta)) continue;
         const code = fileMeta(meta) ? readEmbedded(baseDir, fileMeta(meta)) : body;
         // A titled block is written at its title path so relative imports between a page's blocks resolve.
         const placed = title && !titled.has(title);

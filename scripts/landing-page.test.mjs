@@ -4,14 +4,14 @@ import { test } from 'node:test';
 
 const text = readFileSync(new URL('../docs/index.mdx', import.meta.url), 'utf8');
 const body = text.replace(/^---\n[\s\S]*?\n---\n/, '');
-const outsideFences = body.replace(/^```[\s\S]*?^```/gm, '');
+const outsideCodeBlocks = body.replace(/^```[\s\S]*?^```/gm, '');
 
 test('the page links to Quickstart', () => {
-  assert.match(outsideFences, /<Link\b[^>]*\bto="\/quickstart"/);
+  assert.match(outsideCodeBlocks, /<Link\b[^>]*\bto="\/quickstart"/);
 });
 
 test('the page has a single top-level heading', () => {
-  assert.equal((outsideFences.match(/^# /gm) ?? []).length, 1);
+  assert.equal((outsideCodeBlocks.match(/^# /gm) ?? []).length, 1);
 });
 
 test('the goal tracks stay', () => {

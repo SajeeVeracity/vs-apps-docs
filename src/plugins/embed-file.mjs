@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** Code fences with `file="path"` take their body from that file, relative to `baseDir`. */
+/** Code blocks with `file="path"` take their body from that file, relative to `baseDir`. */
 export function fileMeta(meta) {
   return /\bfile="([^"]+)"/.exec(meta ?? '')?.[1];
 }
