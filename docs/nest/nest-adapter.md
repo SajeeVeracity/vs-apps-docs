@@ -12,7 +12,7 @@ End with a NestJS server that does what the quickstart server does: it serves th
 
 ## Prerequisites
 
-- The starter app from the [quickstart](../quickstart.md), cloned and installed (Part 1, step 1), with the `.env` file from Part 2, step 1 in place. Step 3 below reads it. The client is unchanged.
+- The starter app from the [quickstart](../quickstart.md), scaffolded with `--server node` and installed (Part 1, step 1), with the `.env` file from Part 2, step 1 in place. Step 3 below reads it. The client is unchanged.
 - NestJS 11. The adapter lists `@nestjs/common` and `@nestjs/core` as peer packages.
 - Background: the [server primitives](../reference/root.md) that the adapter wraps.
 

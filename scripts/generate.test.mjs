@@ -242,7 +242,7 @@ test('flavours.json lists each flavoured page with its stub address and tree add
   ]);
 });
 
-test('the shipped config keeps every page of this site neutral: one byte-identical copy, no tree', () => {
+test('the shipped config emits a page without a flavour marker as one byte-identical copy and lists the others', () => {
   const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
   const shipped = JSON.parse(readFileSync(join(repo, 'flavours.config.json'), 'utf8'));
   const out = mkdtempSync(join(tmpdir(), 'generate-site-'));
@@ -250,10 +250,13 @@ test('the shipped config keeps every page of this site neutral: one byte-identic
   const { todos } = generate({ root: repo, config: { ...shipped, outDir: relative(repo, out) } });
   const sources = readdirSync(join(repo, shipped.docsRoot), { recursive: true, withFileTypes: true }).filter((e) => e.isFile());
   assert.ok(sources.length > 20);
+  const flavoured = [];
   for (const entry of sources) {
     const rel = relative(join(repo, shipped.docsRoot), join(entry.parentPath, entry.name));
-    assert.deepEqual(readFileSync(join(out, rel)), readFileSync(join(repo, shipped.docsRoot, rel)), rel);
+    const text = readFileSync(join(repo, shipped.docsRoot, rel));
+    if (/^<!-- flavour /m.test(text.toString())) flavoured.push(rel);
+    else assert.deepEqual(readFileSync(join(out, rel)), text, rel);
   }
-  assert.deepEqual(JSON.parse(readFileSync(join(out, 'flavours.json'), 'utf8')).pages, []);
+  assert.deepEqual(JSON.parse(readFileSync(join(out, 'flavours.json'), 'utf8')).pages.map((page) => page.source).sort(), flavoured.sort());
   assert.ok(todos <= shipped.todoCap);
 });
