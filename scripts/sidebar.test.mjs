@@ -52,11 +52,10 @@ test('the Nest section lists the connector-events guide after the open-route gui
   assert.equal(idOf(nest.items[2]), 'nest/handle-connector-events');
 });
 
-test('the Guides and Nest sections each list a call-a-model guide', () => {
-  for (const [label, id] of [['Guides', 'guides/call-a-model-from-your-server'], ['Nest', 'nest/call-a-model-from-your-server']]) {
-    const category = categories.find((c) => c.label === label);
-    assert.ok(category.items.map(idOf).includes(id), label);
-  }
+test('the Guides section lists the call-a-model guide and the Nest section lists no twin of it', () => {
+  const ids = (label) => categories.find((c) => c.label === label).items.map(idOf);
+  assert.ok(ids('Guides').includes('guides/call-a-model-from-your-server'));
+  assert.ok(!ids('Nest').includes('nest/call-a-model-from-your-server'));
 });
 
 test('Recipes, Guides, Nest and Reference open on a generated-index page with a description', () => {
@@ -68,9 +67,9 @@ test('Recipes, Guides, Nest and Reference open on a generated-index page with a 
   }
 });
 
-test('the Nest section lists the Call Space guide and the Guides section lists its plain twin', () => {
+test('the Guides section lists the Call Space guide and the Nest section lists no twin of it', () => {
   const ids = (label) => categories.find((category) => category.label === label).items.map(idOf);
-  assert.ok(ids('Nest').includes('nest/call-space-from-your-server'));
+  assert.ok(!ids('Nest').includes('nest/call-space-from-your-server'));
   assert.ok(ids('Guides').includes('guides/call-space-from-your-server'));
 });
 

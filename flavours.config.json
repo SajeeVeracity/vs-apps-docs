@@ -6,5 +6,9 @@
     "client": { "react": "React" },
     "server": { "node": "Node.js + TypeScript", "nest": "Nest.js" }
   },
-  "defaults": { "client": "react", "server": "node" }
+  "defaults": { "client": "react", "server": "node" },
+  "legacyRedirects": [
+    { "from": "/nest/call-space-from-your-server", "to": "/guides/call-space-from-your-server", "fixed": { "server": "nest" } },
+    { "from": "/nest/call-a-model-from-your-server", "to": "/guides/call-a-model-from-your-server", "fixed": { "server": "nest" } }
+  ]
 }

@@ -52,8 +52,6 @@ const sidebars: SidebarsConfig = {
         'nest/nest-adapter',
         'nest/open-route-and-read-caller',
         'nest/handle-connector-events',
-        'nest/call-space-from-your-server',
-        'nest/call-a-model-from-your-server',
       ],
     },
     {
