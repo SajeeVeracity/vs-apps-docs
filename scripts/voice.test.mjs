@@ -27,7 +27,7 @@ test('a semicolon and a 21-word step are not violations', () => {
   assert.deepEqual(rules(`- ${words(21)}.`), []);
 });
 
-test('skips frontmatter, fences, tables and headings', () => {
+test('skips frontmatter, code blocks, tables and headings', () => {
   const md = [
     '---', `title: ${words(50)} don't`, '---',
     `# ${words(50)}`,
@@ -38,7 +38,7 @@ test('skips frontmatter, fences, tables and headings', () => {
   assert.deepEqual(rules(md), []);
 });
 
-test('skips the directory tree fence', () => {
+test('skips the directory tree code block', () => {
   assert.deepEqual(rules(['```text', `client/ ${words(50)}`, '```'].join('\n')), []);
 });
 

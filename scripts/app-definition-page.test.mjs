@@ -38,7 +38,7 @@ test('contrasts definition and manifest and says Space never sees the definition
   assert.match(text, /Space never sees the definition/);
 });
 
-test('the one mermaid fence sits inside DiagramControls, imported first in the body', () => {
+test('the one mermaid code block sits inside DiagramControls, imported first in the body', () => {
   const body = text.replace(/^---\n[\s\S]*?\n---\n/, '').trim();
   assert.equal(body.split('\n\n')[0], "import DiagramControls from '@site/src/components/DiagramControls';");
   assert.match(text, /<DiagramControls>\n\n```mermaid\n[\s\S]*?\n```\n\n<\/DiagramControls>\n\n### On import and in the client/);

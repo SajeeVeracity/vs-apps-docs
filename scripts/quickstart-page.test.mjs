@@ -2,14 +2,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { section } from './page-helpers.mjs';
-import { checkFences } from './starter-sync.mjs';
+import { checkCodeBlocks } from './starter-sync.mjs';
 import { STARTER_URL } from './starter-url.mjs';
 import { voiceViolations } from './voice.mjs';
 
 const text = readFileSync(new URL('../docs/quickstart.md', import.meta.url), 'utf8');
 const sections = text.split(/^## /m).slice(1);
 const titles = sections.map((s) => s.split('\n')[0]);
-const fences = [...text.matchAll(/^```(\w+)([^\n]*)\n([\s\S]*?)^```/gm)].map(([, lang, meta, body]) => ({ lang, meta, body }));
+const codeBlocks = [...text.matchAll(/^```(\w+)([^\n]*)\n([\s\S]*?)^```/gm)].map(([, lang, meta, body]) => ({ lang, meta, body }));
 const part1 = section(text, 'Part 1');
 const part2 = section(text, 'Part 2');
 const goal = section(text, 'Goal');
@@ -49,7 +49,7 @@ test('has the Quickstart frontmatter title and a one-paragraph opening that link
 test('Goal names both end states and ends with the Mermaid diagram and its caption', () => {
   assert.match(goal, /harness/);
   assert.match(goal, /open in a Space/);
-  const diagrams = fences.filter((f) => f.lang === 'mermaid');
+  const diagrams = codeBlocks.filter((f) => f.lang === 'mermaid');
   assert.equal(diagrams.length, 2);
   const [{ body }] = diagrams;
   assert.match(body, /^sequenceDiagram$/m);
@@ -61,7 +61,7 @@ test('Goal names both end states and ends with the Mermaid diagram and its capti
   assert.match(goal.split('```mermaid')[1].split(/^```$/m)[1], /Only the server check protects data\./);
 });
 
-test('each mermaid fence sits inside DiagramControls, imported right after the opening paragraph', () => {
+test('each mermaid code block sits inside DiagramControls, imported right after the opening paragraph', () => {
   const body = text.replace(/^---\n[\s\S]*?\n---\n/, '').trim();
   const [opening, importLine] = body.split('\n\n');
   assert.doesNotMatch(opening, /DiagramControls/);
@@ -71,12 +71,12 @@ test('each mermaid fence sits inside DiagramControls, imported right after the o
   assert.match(text, /<DiagramControls>\n\n```mermaid\n[\s\S]*?\n```\n\n<\/DiagramControls>\n\nStep \(3\) in the diagram produces/);
 });
 
-test('step 2 shows the harness diagram after the dev server fence and before the Check', () => {
+test('step 2 shows the harness diagram after the dev server code block and before the Check', () => {
   const run = steps(part1)[1];
   assert.equal(run.split('```mermaid').length, 2);
-  const [beforeFence, afterFence] = run.split('```mermaid');
-  assert.match(beforeFence, /```bash\nnpm run dev\n```\n\nOpen `http:\/\/localhost:5173\/harness\.html`[^\n]*\n\n<DiagramControls>\n\n$/);
-  const [body, afterBody] = afterFence.split(/^```$/m);
+  const [beforeCodeBlock, afterCodeBlock] = run.split('```mermaid');
+  assert.match(beforeCodeBlock, /```bash\nnpm run dev\n```\n\nOpen `http:\/\/localhost:5173\/harness\.html`[^\n]*\n\n<DiagramControls>\n\n$/);
+  const [body, afterBody] = afterCodeBlock.split(/^```$/m);
   assert.match(body, /^sequenceDiagram$/m);
   assert.match(body, /^\s+accTitle: \S/m);
   assert.match(body, /^\s+accDescr: \S/m);
@@ -138,7 +138,7 @@ test('Checks sit in Part 1 steps 1 and 2 and in every Part 2 step', () => {
 });
 
 test('one tree of the cloned layout, after clone, with no per-step trees or new markers', () => {
-  const trees = fences.filter((f) => f.lang === 'text' && /^hello-app\/$/m.test(f.body));
+  const trees = codeBlocks.filter((f) => f.lang === 'text' && /^hello-app\/$/m.test(f.body));
   assert.equal(trees.length, 1);
   assert.ok(steps(part1)[0].includes(trees[0].body));
   for (const name of ['client/', 'server/', 'shared/', '.env.example', 'index.html', 'main.tsx', 'vite.config.ts']) {
@@ -195,7 +195,7 @@ test('Part 2 defines SPACE_API_URL with its exact shape and says what the boot p
 });
 
 test('the main.ts excerpts show spaceApiUrl in client-config and the boot ping', () => {
-  const mains = fences.filter((f) => /title="server\/src\/main\.ts"/.test(f.meta));
+  const mains = codeBlocks.filter((f) => /title="server\/src\/main\.ts"/.test(f.meta));
   assert.equal(mains.length, 2);
   assert.match(mains[0].body, /spaceApiUrl: process\.env\.SPACE_API_URL,/);
   assert.match(mains[1].body, /if \(process\.env\.SPACE_API_URL\) \{/);
@@ -220,7 +220,7 @@ test('the page says a client check is display only and the server check decides'
 });
 
 test('every ts and tsx block is a starter excerpt of a named file with no ellipsis', () => {
-  const code = fences.filter((f) => f.lang === 'ts' || f.lang === 'tsx');
+  const code = codeBlocks.filter((f) => f.lang === 'ts' || f.lang === 'tsx');
   assert.ok(code.length >= 6);
   for (const f of code) {
     assert.match(f.meta, /title="[\w./-]+"/);
@@ -231,7 +231,7 @@ test('every ts and tsx block is a starter excerpt of a named file with no ellips
 });
 
 test('shell blocks have no prompt and one command per line', () => {
-  const shell = fences.filter((f) => f.lang === 'bash');
+  const shell = codeBlocks.filter((f) => f.lang === 'bash');
   assert.ok(shell.length >= 3);
   for (const f of shell) {
     for (const line of f.body.trim().split('\n')) {
@@ -329,6 +329,6 @@ test('follows the writing standard', () => {
 });
 
 // STARTER_DIR names a clone of the starter repo.
-test('every starter fence is a verbatim substring of the starter file it names', { skip: !process.env.STARTER_DIR }, () => {
-  assert.deepEqual(checkFences(text, process.env.STARTER_DIR), []);
+test('every starter code block is a verbatim substring of the starter file it names', { skip: !process.env.STARTER_DIR }, () => {
+  assert.deepEqual(checkCodeBlocks(text, process.env.STARTER_DIR), []);
 });

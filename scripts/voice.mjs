@@ -4,12 +4,12 @@ const CONTRACTION = /\b(?:\w+n['’]t|\w+['’](?:re|ve|ll|d|m)|(?:it|that|there
 const CHECKBOX = /^\[[ xX]\]\s+/;
 const LIST_ITEM = /^\s*(?:[-*+]|\d+\.)\s+/;
 
-/** Splits markdown into prose blocks, skipping frontmatter, fences (the directory tree is one), tables, headings and admonition markers. */
+/** Splits markdown into prose blocks, skipping frontmatter, code blocks (the directory tree is one), tables, headings and admonition markers. */
 function blocks(markdown) {
   const lines = markdown.replace(/^---\n[\s\S]*?\n---\n/, '').split('\n');
   const out = [];
   let current = null;
-  let fence = false;
+  let inCodeBlock = false;
   const flush = () => {
     if (current) out.push(current);
     current = null;
@@ -17,8 +17,8 @@ function blocks(markdown) {
   for (const line of lines) {
     if (/^\s*(```|~~~)/.test(line)) {
       flush();
-      fence = !fence;
-    } else if (fence || /^\s*\|/.test(line) || /^#{1,6}\s/.test(line) || /^\s*:::/.test(line)) {
+      inCodeBlock = !inCodeBlock;
+    } else if (inCodeBlock || /^\s*\|/.test(line) || /^#{1,6}\s/.test(line) || /^\s*:::/.test(line)) {
       flush();
     } else if (line.trim() === '') {
       flush();

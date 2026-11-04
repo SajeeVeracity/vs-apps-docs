@@ -7,7 +7,7 @@ export const linksOf = (text) => [...text.matchAll(/\]\(([^)]+)\)/g)].map((m) =>
 
 export const nextLinks = (text) => linksOf(section(text, 'Next step'));
 
-/** Fenced blocks of the given languages, bodies joined by newlines. */
+/** Code blocks of the given languages, bodies joined by newlines. */
 export const snippetsOf = (text, langs = 'tsx?') =>
   [...text.matchAll(new RegExp(`^\`\`\`(?:${langs})[^\\n]*\\n([\\s\\S]*?)^\`\`\``, 'gm'))].map(([, body]) => body).join('\n');
 

@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isStarterFence } from './check-snippets.mjs';
+import { isStarterCodeBlock } from './check-snippets.mjs';
 import { STARTER_URL } from './starter-url.mjs';
 
 const SDK = '@vectoragents/vs-apps';
@@ -15,7 +15,7 @@ const readJson = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
 export const installedSdkVersion = () => readJson(join(root, 'node_modules', SDK, 'package.json')).version;
 
-export const fencesOf = (text) =>
+export const codeBlocksOf = (text) =>
   [...text.matchAll(/^```(\w+)([^\n]*)\n([\s\S]*?)^```/gm)].map(([, lang, meta, body]) => ({ lang, meta, body }));
 
 /** Fails for every pin of the SDK in the starter that differs from the installed version. */
@@ -68,29 +68,29 @@ export function checkPageVersions(pages = readVersionPages(), installed = instal
   );
 }
 
-/** Fails for every `starter` fence that is not a verbatim substring of the starter file its title names. */
-export function checkFences(pageText, starterDir) {
+/** Fails for every `starter` code block that is not a verbatim substring of the starter file its title names. */
+export function checkCodeBlocks(pageText, starterDir) {
   const problems = [];
-  for (const fence of fencesOf(pageText).filter((fence) => isStarterFence(fence.meta))) {
-    const path = /title="([^"]+)"/.exec(fence.meta)?.[1];
+  for (const codeBlock of codeBlocksOf(pageText).filter((codeBlock) => isStarterCodeBlock(codeBlock.meta))) {
+    const path = /title="([^"]+)"/.exec(codeBlock.meta)?.[1];
     if (!path) {
-      problems.push(`a starter fence has no title: ${fence.body.split('\n')[0]}`);
+      problems.push(`a starter code block has no title: ${codeBlock.body.split('\n')[0]}`);
       continue;
     }
     const file = join(starterDir, path);
     if (!existsSync(file)) problems.push(`${path} is missing from the starter`);
-    else if (!readFileSync(file, 'utf8').includes(fence.body.trimEnd())) problems.push(`${path} excerpt differs from the starter`);
+    else if (!readFileSync(file, 'utf8').includes(codeBlock.body.trimEnd())) problems.push(`${path} excerpt differs from the starter`);
   }
   return problems;
 }
 
-/** Paths of the `hello-app/` tree fence, directories without the trailing slash. */
+/** Paths of the `hello-app/` tree code block, directories without the trailing slash. */
 export function pageTreePaths(pageText) {
-  const fence = fencesOf(pageText).find((f) => f.lang === 'text' && /^hello-app\/$/m.test(f.body));
-  if (!fence) return [];
+  const codeBlock = codeBlocksOf(pageText).find((f) => f.lang === 'text' && /^hello-app\/$/m.test(f.body));
+  if (!codeBlock) return [];
   const paths = [];
   const stack = [];
-  for (const line of fence.body.split('\n')) {
+  for (const line of codeBlock.body.split('\n')) {
     const entry = /^((?:│ {3}| {4})*)(?:├── |└── )(.+)$/.exec(line);
     if (!entry) continue;
     const depth = entry[1].length / 4;
@@ -111,13 +111,13 @@ export function checkTree(pageText, starterDir) {
 
 const RUN_STEP_HEADING = /^#{2,4} (?:\d+\. )?Run the app in the harness\s*$/m;
 
-/** The text up to the first heading outside a fenced block, so a `# comment` in a fence does not end it. */
+/** The text up to the first heading outside a code block, so a `# comment` in a code block does not end it. */
 function sliceToHeading(text) {
   const lines = text.split('\n');
-  let inFence = false;
+  let inCodeBlock = false;
   const end = lines.findIndex((line) => {
-    if (line.startsWith('```')) inFence = !inFence;
-    return !inFence && /^#{1,4} /.test(line);
+    if (line.startsWith('```')) inCodeBlock = !inCodeBlock;
+    return !inCodeBlock && /^#{1,4} /.test(line);
   });
   return (end === -1 ? lines : lines.slice(0, end)).join('\n');
 }
@@ -161,10 +161,10 @@ const readEnvPages = () =>
     ),
   );
 
-/** Names that a page assigns (`NAME=` in a shell or env fence). */
+/** Names that a page assigns (`NAME=` in a shell or env code block). */
 function assignedEnvNames(text) {
-  const shell = fencesOf(text).filter((fence) => SHELL_LANGS.has(fence.lang));
-  return shell.flatMap((fence) => [...fence.body.matchAll(new RegExp(`(?:^|[\\s'"])(?:export\\s+)?(${ENV_NAME})=`, 'gm'))].map((m) => m[1]));
+  const shell = codeBlocksOf(text).filter((codeBlock) => SHELL_LANGS.has(codeBlock.lang));
+  return shell.flatMap((codeBlock) => [...codeBlock.body.matchAll(new RegExp(`(?:^|[\\s'"])(?:export\\s+)?(${ENV_NAME})=`, 'gm'))].map((m) => m[1]));
 }
 
 /** Names that a page uses: `process.env.NAME`, an assignment, or an UPPER_SNAKE word alone in inline code. */
@@ -179,7 +179,7 @@ const readNames = (path, pattern) => (existsSync(path) ? [...readFileSync(path, 
 
 /**
  * Fails for every environment variable that a recipe, guide or Nest page uses when neither the starter nor the page defines it.
- * The starter defines a name in `.env.example` (`NAME=`) or `.npmrc` (`${NAME}`); the page defines it with `NAME=` in a shell fence.
+ * The starter defines a name in `.env.example` (`NAME=`) or `.npmrc` (`${NAME}`); the page defines it with `NAME=` in a shell code block.
  */
 export function checkEnvVars(pages, starterDir) {
   const known = new Set([...readNames(join(starterDir, '.env.example'), /^(?:export\s+)?([A-Z][A-Z0-9_]*)=/gm), ...readNames(join(starterDir, '.npmrc'), /\$\{([A-Z][A-Z0-9_]*)\}/g)]);
@@ -224,7 +224,7 @@ export async function main({
     dir = temp;
   }
   try {
-    const problems = [...checkSdkPin(dir, sdkVersion), ...checkStartFolders(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkFences(page, dir), ...checkTree(page, dir), ...checkPorts(page, dir), ...checkEnvExamples(page, dir), ...checkEnvVars(envPages, dir)];
+    const problems = [...checkSdkPin(dir, sdkVersion), ...checkStartFolders(dir, sdkVersion), ...checkPageVersions(versionPages, sdkVersion), ...checkCodeBlocks(page, dir), ...checkTree(page, dir), ...checkPorts(page, dir), ...checkEnvExamples(page, dir), ...checkEnvVars(envPages, dir)];
     for (const problem of problems) error(`starter-sync: ${problem}`);
     if (problems.length === 0) log(`starter-sync: ok (SDK ${sdkVersion}, ${STARTER_URL})`);
     return problems.length === 0 ? 0 : 1;

@@ -5,7 +5,7 @@ What each claim in these docs rests on. A ticket or spec named below without a l
 ## Sources
 
 - SDK behaviour rests on the installed `@vectoragents/vs-apps` 0.2.4 dist (compiled output and type declarations) and its README. The SDK source is not available, so a claim never rests on it.
-- Every code snippet typechecks against the installed package, except the quickstart's `starter` fences. The starter's CI typechecks those excerpts ([ADR 0002](adr/0002-quickstart-clones-a-starter-repo.md)). The stamp at the foot of each page shows the version and date of the last run.
+- Every code snippet typechecks against the installed package, except the quickstart's `starter` code blocks. The starter's CI typechecks those excerpts ([ADR 0002](adr/0002-quickstart-clones-a-starter-repo.md)). The stamp at the foot of each page shows the version and date of the last run.
 - Space-side claims come from Space-side documentation, except the checks under [Verified in a local Space](#verified-in-a-local-space). This covers registration, the pending review, auto-apply, navigation entries, grants and the configuration sheet.
 
 ## SDK gaps

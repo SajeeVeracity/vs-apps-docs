@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { checkEnvExamples, checkEnvVars, checkFences, checkPageVersions, checkPorts, checkSdkPin, checkStartFolders, checkTree, installedSdkVersion, main, pageTreePaths, usedEnvNames } from './starter-sync.mjs';
+import { checkEnvExamples, checkEnvVars, checkCodeBlocks, checkPageVersions, checkPorts, checkSdkPin, checkStartFolders, checkTree, installedSdkVersion, main, pageTreePaths, usedEnvNames } from './starter-sync.mjs';
 
 const tree = ['hello-app/', '├── .env.example', '├── client/', '│   ├── index.html', '│   └── src/', '│       └── main.tsx', '└── shared/', '    └── src/', '        └── index.ts'].join('\n');
 const page = [
@@ -132,20 +132,20 @@ test('installedSdkVersion matches the exact pin in this repo package.json', () =
   assert.equal(installedSdkVersion(), manifest.dependencies['@vectoragents/vs-apps']);
 });
 
-test('fences: passes when the excerpt is a substring of the starter file, and skips fences without starter', () => {
-  assert.deepEqual(checkFences(page, starter()), []);
+test('code blocks: passes when the excerpt is a substring of the starter file, and skips code blocks without starter', () => {
+  assert.deepEqual(checkCodeBlocks(page, starter()), []);
 });
 
-test('fences: fails when the excerpt differs from the starter file', () => {
+test('code blocks: fails when the excerpt differs from the starter file', () => {
   const root = starter({ 'shared/src/index.ts': "export const CAPABILITY = 'hello:read';\n" });
-  const problems = checkFences(page, root);
+  const problems = checkCodeBlocks(page, root);
   assert.equal(problems.length, 1);
   assert.match(problems[0], /shared\/src\/index\.ts/);
 });
 
-test('fences: fails when the named file is missing from the starter', () => {
+test('code blocks: fails when the named file is missing from the starter', () => {
   const root = starter({ 'shared/src/index.ts': null });
-  assert.match(checkFences(page, root)[0], /missing/);
+  assert.match(checkCodeBlocks(page, root)[0], /missing/);
 });
 
 test('pageTreePaths lists files and directories of the cloned-layout tree', () => {
@@ -210,9 +210,9 @@ test('ports: a longer number that starts with the port is not a match', () => {
   assert.match(checkPorts(stale, starter())[0], /port 3101/);
 });
 
-test('ports: a comment line inside a fence does not end the run step', () => {
-  const fenced = ['### 2. Run the app in the harness', '', '```bash', '# start the dev servers', 'npm run dev', '```', '', 'Server on port 3101, Vite on port 5173.', '', '### 3. Next', ''].join('\n');
-  assert.deepEqual(checkPorts(fenced, starter()), []);
+test('ports: a comment line inside a code block does not end the run step', () => {
+  const withCodeBlock = ['### 2. Run the app in the harness', '', '```bash', '# start the dev servers', 'npm run dev', '```', '', 'Server on port 3101, Vite on port 5173.', '', '### 3. Next', ''].join('\n');
+  assert.deepEqual(checkPorts(withCodeBlock, starter()), []);
 });
 
 test('ports: fails when the starter preset lacks a port', () => {
@@ -251,11 +251,11 @@ test('env example: the real page origins are in the starter example', () => {
 });
 
 const envStarter = (example) => starter({ '.env.example': example });
-const fence = (lang, ...lines) => ['```' + lang, ...lines, '```'].join('\n');
+const codeBlock = (lang, ...lines) => ['```' + lang, ...lines, '```'].join('\n');
 const docPage = (...parts) => ({ 'docs/guides/x.md': parts.join('\n\n') });
 
 test('env vars: pass when inline code and process.env names are in the starter .env.example', () => {
-  const pages = docPage('Set `SPACE_API_URL` in `.env`.', fence('ts', 'const u = process.env.PUBLIC_BASE_URL;'));
+  const pages = docPage('Set `SPACE_API_URL` in `.env`.', codeBlock('ts', 'const u = process.env.PUBLIC_BASE_URL;'));
   assert.deepEqual(checkEnvVars(pages, envStarter('SPACE_API_URL=a\nPUBLIC_BASE_URL=b\n')), []);
 });
 
@@ -266,18 +266,18 @@ test('env vars: fail for an inline-code name the starter lacks, and name the pag
   assert.match(problems[0], /SPACE_BASE_URL/);
 });
 
-test('env vars: fail for a process.env name in a code fence that the starter lacks', () => {
-  const problems = checkEnvVars(docPage(fence('ts', 'const k = process.env.MODEL_API_KEY;')), envStarter('SPACE_API_URL=a\n'));
+test('env vars: fail for a process.env name in a code block that the starter lacks', () => {
+  const problems = checkEnvVars(docPage(codeBlock('ts', 'const k = process.env.MODEL_API_KEY;')), envStarter('SPACE_API_URL=a\n'));
   assert.match(problems[0], /MODEL_API_KEY/);
 });
 
-test('env vars: a name that the page assigns in a shell fence needs no starter entry', () => {
-  const pages = docPage(fence('bash', "echo 'MODEL_API_KEY=YOUR_KEY' >> .env"), fence('ts', 'const k = process.env.MODEL_API_KEY;'));
+test('env vars: a name that the page assigns in a shell code block needs no starter entry', () => {
+  const pages = docPage(codeBlock('bash', "echo 'MODEL_API_KEY=YOUR_KEY' >> .env"), codeBlock('ts', 'const k = process.env.MODEL_API_KEY;'));
   assert.deepEqual(checkEnvVars(pages, envStarter('')), []);
 });
 
 test('env vars: a name that another page assigns does not count', () => {
-  const pages = { ...docPage('Read `MODEL_API_KEY`.'), 'docs/guides/y.md': fence('bash', 'MODEL_API_KEY=1') };
+  const pages = { ...docPage('Read `MODEL_API_KEY`.'), 'docs/guides/y.md': codeBlock('bash', 'MODEL_API_KEY=1') };
   assert.equal(checkEnvVars(pages, envStarter('')).length, 1);
 });
 
@@ -286,8 +286,8 @@ test('env vars: a name that the starter .npmrc reads counts as known', () => {
   assert.deepEqual(checkEnvVars(docPage('Export `GITHUB_PACKAGES_TOKEN`.'), root), []);
 });
 
-test('env vars: placeholders in fences, error codes and plain words are not variables', () => {
-  const pages = docPage('The call returns `UNAVAILABLE_ACTION`. Use `CAPABILITY` and `Result`.', fence('bash', 'curl http://localhost:<SERVER_PORT>/api'));
+test('env vars: placeholders in code blocks, error codes and plain words are not variables', () => {
+  const pages = docPage('The call returns `UNAVAILABLE_ACTION`. Use `CAPABILITY` and `Result`.', codeBlock('bash', 'curl http://localhost:<SERVER_PORT>/api'));
   assert.deepEqual(checkEnvVars(pages, envStarter('')), []);
 });
 
