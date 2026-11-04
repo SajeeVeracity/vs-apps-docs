@@ -36,11 +36,11 @@ function treeOf({ axes }, uri) {
 }
 
 /**
- * The search theme as a `themes` entry. The search plugin indexes a tree only under its own prefix, so a reader on
- * a tree page would not find neutral pages. After the plugin's build, the wrapper rewrites each context index to hold
- * every page whose flavours agree with the context: a pair gets its own trees, the client-only and server-only
- * pages of its flavours, and the neutral pages. A context that names one axis leaves the other axis open.
- * The flavourless stubs stay in the root index only, where they send a neutral-page reader to the saved choice.
+ * The search theme as a `themes` entry. The search plugin indexes a tree only under its own prefix, so the wrapper
+ * rewrites each context index after the plugin's build to hold every page whose flavours agree with the context:
+ * a pair gets its own trees, the client-only and server-only pages of its flavours, and the neutral pages. A context
+ * that names one axis leaves the other axis open. The flavourless stubs stay in the root index only, where they send
+ * a neutral-page reader to the saved choice.
  */
 export function searchTheme(flavours) {
   const contexts = contextsOf(flavours);
@@ -76,8 +76,7 @@ export function searchTheme(flavours) {
       docsRouteBasePath: '/',
       indexBlog: false,
       hashed: true,
-      // A neutral page has no context. Without this, its reader gets only neutral pages and the stubs, and `/search`
-      // lists a pair that does not match the results. With it, the root index holds every page and `/search` offers "Everywhere".
+      // A neutral page has no context, so the root index holds every page and `/search` offers "Everywhere".
       useAllContextsWithNoSearchContext: true,
       searchContextByPaths: contexts.map(({ path, label }) => ({ path, label })),
     },
