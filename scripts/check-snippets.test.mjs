@@ -1,18 +1,31 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { checkSnippets, isStarterCodeBlock } from './check-snippets.mjs';
+import { checkSnippets as check, isStarterCodeBlock } from './check-snippets.mjs';
+import { generate } from './generate.mjs';
 
 const ticks = '```';
 
+const config = {
+  docsRoot: 'docs',
+  outDir: 'docs-gen',
+  todoCap: 5,
+  axes: { client: { react: 'React' }, server: { node: 'Node.js + TypeScript', nest: 'Nest.js' } },
+  defaults: { client: 'react', server: 'node' },
+};
+
+/** Typechecks a fixture project: `docs-gen` sits beside its `docs`. */
+const checkSnippets = ({ docsDir, stampFile }) =>
+  check({ docsDir, genDir: join(docsDir, '..', 'docs-gen'), config, stampFile });
+
 function docsDir(body) {
   const root = mkdtempSync(join(tmpdir(), 'snip-'));
-  const docs = join(root, 'docs');
-  mkdirSync(docs);
-  writeFileSync(join(docs, 'page.md'), body);
-  return { docs, stamp: join(root, 'stamp.json') };
+  mkdirSync(join(root, 'docs'));
+  writeFileSync(join(root, 'docs', 'page.md'), body);
+  generate({ root, config });
+  return { docs: join(root, 'docs'), stamp: join(root, 'stamp.json') };
 }
 
 test('passes a valid snippet and writes the stamp', () => {
@@ -53,6 +66,7 @@ test('passes a decorator snippet on a page in the Nest folder', () => {
     const { docs, stamp } = docsDir('');
     mkdirSync(join(docs, 'nest'));
     writeFileSync(join(docs, 'nest', name), decorated);
+    generate({ root: join(docs, '..'), config });
     const result = checkSnippets({ docsDir: docs, stampFile: stamp });
     assert.equal(result.ok, true, result.output);
   }
@@ -123,6 +137,7 @@ function pageIn(folder, body) {
   const { docs, stamp } = docsDir('');
   mkdirSync(join(docs, folder));
   writeFileSync(join(docs, folder, 'page.md'), body);
+  generate({ root: join(docs, '..'), config });
   return { docs, stamp };
 }
 
@@ -149,4 +164,84 @@ test('skips untitled code blocks and code blocks outside recipes and guides', ()
   assert.equal(checkSnippets({ docsDir: untitled.docs, stampFile: untitled.stamp }).ok, true);
   const reference = pageIn('reference', `${ticks}ts title="src/a.ts"\nexport const a = 1;\n${ticks}\n`);
   assert.equal(checkSnippets({ docsDir: reference.docs, stampFile: reference.stamp }).ok, true);
+});
+
+/** A project with `pages` (path under docs to text), generated and ready for `checkSnippets`. */
+function project(pages) {
+  const root = mkdtempSync(join(tmpdir(), 'snip-'));
+  for (const [path, body] of Object.entries(pages)) {
+    mkdirSync(dirname(join(root, 'docs', path)), { recursive: true });
+    writeFileSync(join(root, 'docs', path), body);
+  }
+  generate({ root, config });
+  return { docs: join(root, 'docs'), stamp: join(root, 'stamp.json') };
+}
+
+const good = `${ticks}ts title="server/ok.ts"\nexport const ok = 1;\n${ticks}`;
+const bad = `${ticks}ts title="server/bad.ts"\nconst n: number = 'x';\n${ticks}`;
+const flavoured = (node, nest) =>
+  `# Page\n\n<!-- flavour node -->\n${node}\n<!-- /flavour -->\n\n<!-- flavour nest -->\n${nest}\n<!-- /flavour -->\n`;
+
+test('a failing Node snippet fails the react+node project only', () => {
+  const { docs, stamp } = project({ 'quickstart.md': flavoured(bad, good) });
+  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.failed, ['react+node']);
+  assert.match(result.output, /node\/quickstart\.md block 1/);
+  assert.throws(() => readFileSync(stamp));
+});
+
+test('a failing Nest snippet fails the react+nest project only', () => {
+  const { docs, stamp } = project({ 'quickstart.md': flavoured(good, bad) });
+  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+  assert.deepEqual(result.failed, ['react+nest']);
+  assert.match(result.output, /nest\/quickstart\.md block 1/);
+});
+
+test('decorators typecheck in the Nest project and fail in the Node project', () => {
+  const nestOnly = project({ 'quickstart.md': flavoured(good, decorated) });
+  assert.equal(checkSnippets({ docsDir: nestOnly.docs, stampFile: nestOnly.stamp }).ok, true);
+  const nodeToo = project({ 'quickstart.md': flavoured(decorated, good) });
+  assert.deepEqual(checkSnippets({ docsDir: nodeToo.docs, stampFile: nodeToo.stamp }).failed, ['react+node']);
+});
+
+test('a client-only snippet is checked in every pair that shows it', () => {
+  const page = `<!-- flavour react -->\n${bad}\n<!-- /flavour -->\n`;
+  const { docs, stamp } = project({ 'recipes/list.md': page });
+  assert.deepEqual(checkSnippets({ docsDir: docs, stampFile: stamp }).failed, ['react+node', 'react+nest']);
+});
+
+test('a neutral snippet is checked once, from source', () => {
+  const { docs, stamp } = project({ 'plain.md': bad, 'quickstart.md': flavoured(good, good) });
+  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+  assert.deepEqual(result.failed, ['neutral']);
+  assert.equal(result.output.match(/plain\.md block 1/g).length, 1);
+});
+
+test('counts each snippet once per project that checks it', () => {
+  const { docs, stamp } = project({ 'plain.md': good, 'quickstart.md': flavoured(good, good) });
+  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+  assert.equal(result.count, 3);
+});
+
+test('title prefixes are checked on the source page, markers included', () => {
+  const page = flavoured(`${ticks}ts title="src/a.ts"\nexport const a = 1;\n${ticks}`, good);
+  const { docs, stamp } = project({ 'recipes/page.md': page });
+  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+  assert.equal(result.ok, false);
+  assert.match(result.output, /recipes\/page\.md: src\/a\.ts/);
+});
+
+test('titled blocks of one tree page resolve each other and the shared package', () => {
+  const sharedBlock = `${ticks}ts title="shared/src/index.ts"\nexport const name = 'x';\n${ticks}`;
+  const serverBlock = `${ticks}ts title="server/src/a.ts"\nimport { name } from '@hello-app/shared';\nexport const n: string = name;\n${ticks}`;
+  const { docs, stamp } = project({ 'recipes/page.md': flavoured(`${sharedBlock}\n\n${serverBlock}`, `${sharedBlock}\n\n${serverBlock}`) });
+  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
+  assert.equal(result.ok, true, result.output);
+});
+
+test('stops with a pointer to the generator when the trees are missing', () => {
+  const { docs, stamp } = project({ 'plain.md': good });
+  rmSync(join(docs, '..', 'docs-gen'), { recursive: true });
+  assert.throws(() => checkSnippets({ docsDir: docs, stampFile: stamp }), /pnpm generate/);
 });

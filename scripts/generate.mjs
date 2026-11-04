@@ -42,7 +42,7 @@ function parse(text, where, knownFlavour, errors) {
 }
 
 /** Every value combination of the axes in `names`, as objects of axis to flavour. */
-const combinations = (axes, names) =>
+export const combinations = (axes, names) =>
   names.reduce((acc, axis) => acc.flatMap((c) => Object.keys(axes[axis]).map((f) => ({ ...c, [axis]: f }))), [{}]);
 
 const splitFrontMatter = (text) => {
