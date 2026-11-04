@@ -205,10 +205,18 @@ test('a flavour name must belong to one axis', () => {
   fails('plain\n', /flavour name "node" is on both axis "client" and axis "server"/, { axes });
 });
 
-test('a tree path that a neutral page already holds fails', () => {
+test('a flavour name must differ from every top-level docs folder', () => {
+  assert.throws(() => run({ 'nest/a.md': '# A\n' }), /flavour name "nest" is also a top-level folder of docs/);
+});
+
+test('a nested folder named like a flavour is allowed', () => {
+  assert.doesNotThrow(() => run({ 'guides/nest/a.md': '# A\n' }));
+});
+
+test('a source file that the generator also writes fails', () => {
   assert.throws(
-    () => run({ 'a.md': server(), 'node/a.md': '# Clash\n' }),
-    /node\/a\.md is written by both docs\/a\.md and docs\/node\/a\.md/,
+    () => run({ 'a.md': server(), 'flavours.json': '{}' }),
+    /flavours\.json is written by both docs\/flavours\.json and the generator/,
   );
 });
 

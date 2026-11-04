@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { after, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import { generate } from './generate.mjs';
 import { headScript, storageKey } from '../src/flavours/head-script.mjs';
@@ -179,6 +180,25 @@ test('the site table adds old addresses from the config', () => {
 test('an old address that names no flavoured page is an error', () => {
   const legacy = [{ from: '/nest/x', to: '/guides/missing' }];
   assert.throws(() => siteOf({ 'guides/call.md': serverOnly }, { legacyRedirects: legacy }), /\/guides\/missing/);
+});
+
+test('every address of the removed docs/nest folder redirects to its page in the Nest.js tree, whatever the saved choice', () => {
+  const repo = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const shipped = JSON.parse(readFileSync(join(repo, 'flavours.config.json'), 'utf8'));
+  const out = mkdtempSync(join(tmpdir(), 'redirect-site-'));
+  sandboxes.push(out);
+  generate({ root: repo, config: { ...shipped, outDir: relative(repo, out) } });
+  const shipSite = { ...loadFlavourSite({ root: repo, config: { ...shipped, outDir: relative(repo, out) } }), baseUrl: '/' };
+  const expected = {
+    '/nest/nest-adapter': '/react/nest/quickstart',
+    '/nest/call-space-from-your-server': '/nest/guides/call-space-from-your-server',
+    '/nest/call-a-model-from-your-server': '/nest/guides/call-a-model-from-your-server',
+    '/nest/open-route-and-read-caller': '/nest/guides/open-route-and-read-caller',
+    '/nest/handle-connector-events': '/nest/guides/handle-connector-events',
+  };
+  for (const saved of [null, { client: 'react', server: 'node' }, { client: 'react', server: 'nest' }]) {
+    for (const [from, to] of Object.entries(expected)) assert.equal(redirectTarget({ ...shipSite, pathname: from, saved }), to, `${from} ${JSON.stringify(saved)}`);
+  }
 });
 
 test('a trigger label is the part of the flavour name before the plus', () => {

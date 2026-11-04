@@ -164,7 +164,7 @@ Agent2Agent. An open protocol that lets one agent find another through an agent 
 
 The secret Space creates for each pair of app and space and pushes to the app at `POST /api/provision`. The app trades it for an app token.
 
-- Maps to: `getServiceSecret` in `createSpaceAiConfigProvider`, and the credential store of `nest-adapter`.
+- Maps to: `getServiceSecret` in `createSpaceAiConfigProvider`, and the credential store of the `/nest` adapter.
 - Owner: Space creates it. The SDK stores and exchanges it.
 
 ### app token

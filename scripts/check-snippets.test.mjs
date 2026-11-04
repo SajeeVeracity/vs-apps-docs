@@ -54,22 +54,11 @@ export class X {
 ${ticks}
 `;
 
-test('fails a decorator snippet on a page that is not the Nest page', () => {
+test('fails a decorator snippet on a neutral page', () => {
   const { docs, stamp } = docsDir(decorated);
   const result = checkSnippets({ docsDir: docs, stampFile: stamp });
   assert.equal(result.ok, false);
   assert.match(result.output, /page\.md block 1/);
-});
-
-test('passes a decorator snippet on a page in the Nest folder', () => {
-  for (const name of ['nest-adapter.md', 'another-page.md']) {
-    const { docs, stamp } = docsDir('');
-    mkdirSync(join(docs, 'nest'));
-    writeFileSync(join(docs, 'nest', name), decorated);
-    generate({ root: join(docs, '..'), config });
-    const result = checkSnippets({ docsDir: docs, stampFile: stamp });
-    assert.equal(result.ok, true, result.output);
-  }
 });
 
 test('fails a decorator snippet on a recipe page', () => {
@@ -102,18 +91,6 @@ test('isStarterCodeBlock reads the starter word in the code block meta, not in a
   assert.equal(isStarterCodeBlock(''), false);
 });
 
-test('resolves @hello-app/shared to the shared/src/index.ts block on a Nest page', () => {
-  const { docs, stamp } = docsDir('');
-  mkdirSync(join(docs, 'nest'));
-  writeFileSync(
-    join(docs, 'nest', 'nest-adapter.md'),
-    `${ticks}ts title="shared/src/index.ts"\nexport const CAPABILITY = 'hello:view';\n${ticks}\n\n` +
-      `${ticks}ts title="server/src/use.ts"\nimport { CAPABILITY } from '@hello-app/shared';\nexport const c: string = CAPABILITY;\n${ticks}\n`,
-  );
-  const result = checkSnippets({ docsDir: docs, stampFile: stamp });
-  assert.equal(result.ok, true, result.output);
-});
-
 test('resolves @hello-app/shared to the shared/src/index.ts block of the same recipe page', () => {
   const { docs, stamp } = pageIn(
     'recipes',
@@ -141,8 +118,8 @@ function pageIn(folder, body) {
   return { docs, stamp };
 }
 
-test('fails a recipe, guide or Nest snippet whose title is outside client, server and shared, and writes no stamp', () => {
-  for (const folder of ['recipes', 'guides', 'nest']) {
+test('fails a recipe or guide snippet whose title is outside client, server and shared, and writes no stamp', () => {
+  for (const folder of ['recipes', 'guides']) {
     const { docs, stamp } = pageIn(folder, `${ticks}ts title="src/actions.ts"\nexport const a = 1;\n${ticks}\n`);
     const result = checkSnippets({ docsDir: docs, stampFile: stamp });
     assert.equal(result.ok, false);
@@ -151,9 +128,9 @@ test('fails a recipe, guide or Nest snippet whose title is outside client, serve
   }
 });
 
-test('passes a Nest snippet titled under client, server or shared', () => {
+test('passes a guide snippet titled under client, server or shared', () => {
   for (const title of ['client/src/a.ts', 'server/src/a.ts', 'shared/src/a.ts']) {
-    const { docs, stamp } = pageIn('nest', `${ticks}ts title="${title}"\nexport const a = 1;\n${ticks}\n`);
+    const { docs, stamp } = pageIn('guides', `${ticks}ts title="${title}"\nexport const a = 1;\n${ticks}\n`);
     const result = checkSnippets({ docsDir: docs, stampFile: stamp });
     assert.equal(result.ok, true, result.output);
   }

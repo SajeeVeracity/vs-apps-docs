@@ -23,7 +23,7 @@ How to write a page that differs by flavour. Terms: axis, flavour, pair, flavour
 
 - `pnpm generate` reads `docs/` and writes `docs-gen/`, which Docusaurus publishes. `docs-gen/` is generated and git-ignored.
 - `flavours.config.json` holds `docsRoot` (the source folder), `outDir`, the `axes` with their flavour names and labels, the `defaults` and `todoCap` (the most `todo` blocks allowed).
-- The generator fails on a marker error and when the `todo` blocks exceed `todoCap`. `pnpm check`, `pnpm build` and `pnpm start` run it first.
+- The generator fails on a marker error, on a flavour name that equals a top-level folder of `docs/` and when the `todo` blocks exceed `todoCap`. `pnpm check`, `pnpm build` and `pnpm start` run it first.
 - `docs-gen/flavours.json` lists each flavoured page with its stub address and its tree addresses.
 - Outputs: a neutral page at its own path; a flavoured page at `<server>/`, `<client>/` or `<client>/<server>/` plus its path; a stub at its own path.
 

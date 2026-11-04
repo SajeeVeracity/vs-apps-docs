@@ -37,8 +37,8 @@ for (const name of ['open-route-and-read-caller', 'handle-connector-events']) {
     assert.doesNotMatch(nest, /@Inject\(/);
   });
 
-  test(`${name}: Next step is one link to the quickstart Part 2`, () => {
-    assert.deepEqual(nextLinks(nest).map((l) => l.replace(/^(\.\.\/)+/, '')), ['quickstart.md#part-2-add-the-app-to-a-space']);
+  test(`${name}: Next step is one link to the quickstart`, () => {
+    assert.deepEqual(nextLinks(nest).map((l) => l.replace(/^(\.\.\/)+/, '')), ['quickstart.md']);
   });
 }
 

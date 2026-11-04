@@ -69,7 +69,7 @@ One row of the flavour picker: `client` or `server`. A page varies on the axes w
 
 ### flavour
 
-One value of an axis: client `react`; server `node` (Node.js + TypeScript) or `nest` (Nest.js). A flavour name is lowercase, belongs to one axis and never equals a doc folder name.
+One value of an axis: client `react`; server `node` (Node.js + TypeScript) or `nest` (Nest.js). A flavour name is lowercase, belongs to one axis and never equals a top-level folder of `docs/`.
 
 - Maps to: a key under an axis in `flavours.config.json`, the name in a `<!-- flavour <name> -->` marker, and one template directory of the starter.
 - Owner: docs.

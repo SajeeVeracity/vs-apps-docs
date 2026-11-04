@@ -44,16 +44,6 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
-      label: 'Nest',
-      link: {
-        type: 'generated-index',
-        slug: '/category/nest',
-        description: 'Pages for servers built with NestJS, the framework behind the @vectoragents/vs-apps/nest adapter.',
-      },
-      items: ['nest/nest-adapter'],
-    },
-    {
-      type: 'category',
       label: 'Reference',
       link: {
         type: 'generated-index',

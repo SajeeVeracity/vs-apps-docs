@@ -52,10 +52,9 @@ const anchorsOf = (text) =>
 const walk = (dir) =>
   readdirSync(dir, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : /\.mdx?$/.test(e.name) ? [join(dir, e.name)] : []));
 
-// docs/nest/ is excluded: its links to the quickstart carry anchors that a stub lacks.
 test('every anchored link in the generated site lands on a heading of the generated target', () => {
   const bad = [];
-  for (const file of walk(gen).filter((f) => !f.startsWith(join(gen, 'nest')))) {
+  for (const file of walk(gen)) {
     const text = readFileSync(file, 'utf8');
     for (const [, target, anchor] of text.matchAll(/\]\((\.[^)#]*\.mdx?)#([^)]+)\)/g)) {
       const path = join(dirname(file), target);

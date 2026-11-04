@@ -18,14 +18,19 @@ const listed = [
   ...categories.flatMap((category) => category.items.map(idOf)),
 ];
 
+test('no Nest section and no page in a nest folder remain', () => {
+  assert.ok(!categories.some((category) => category.label === 'Nest'));
+  assert.deepEqual(pageIds.filter((id) => id.startsWith('nest/')), []);
+});
+
 test('every page in the docs folder appears exactly once', () => {
   assert.deepEqual([...listed].sort(), [...pageIds].sort());
 });
 
-test('sections run Get started, Recipes, Guides, Nest, Reference', () => {
+test('sections run Get started, Recipes, Guides, Reference', () => {
   assert.deepEqual(
     categories.map((category) => category.label),
-    ['Get started', 'Recipes', 'Guides', 'Nest', 'Reference'],
+    ['Get started', 'Recipes', 'Guides', 'Reference'],
   );
 });
 
@@ -37,38 +42,25 @@ test('Glossary is the last Reference item', () => {
   assert.equal(idOf(categories.at(-1).items.at(-1)), 'glossary');
 });
 
-test('the Nest section holds the nest-adapter recipe first', () => {
-  const nest = categories.find((category) => category.label === 'Nest');
-  assert.equal(idOf(nest.items[0]), 'nest/nest-adapter');
-});
-
-test('the Guides section lists the open-route and connector-events guides, and the Nest section no longer does', () => {
-  const ids = (label) => categories.find((category) => category.label === label).items.map(idOf);
-  for (const id of ['guides/open-route-and-read-caller', 'guides/handle-connector-events']) {
-    assert.ok(ids('Guides').includes(id), id);
+test('the Guides section lists the open-route, connector-events, call-a-model and Call Space guides', () => {
+  const guides = categories.find((category) => category.label === 'Guides').items.map(idOf);
+  for (const id of [
+    'guides/open-route-and-read-caller',
+    'guides/handle-connector-events',
+    'guides/call-a-model-from-your-server',
+    'guides/call-space-from-your-server',
+  ]) {
+    assert.ok(guides.includes(id), id);
   }
-  assert.deepEqual(ids('Nest').filter((id) => /open-route|handle-connector/.test(id)), []);
 });
 
-test('the Guides section lists the call-a-model guide and the Nest section lists no twin of it', () => {
-  const ids = (label) => categories.find((c) => c.label === label).items.map(idOf);
-  assert.ok(ids('Guides').includes('guides/call-a-model-from-your-server'));
-  assert.ok(!ids('Nest').includes('nest/call-a-model-from-your-server'));
-});
-
-test('Recipes, Guides, Nest and Reference open on a generated-index page with a description', () => {
-  for (const label of ['Recipes', 'Guides', 'Nest', 'Reference']) {
+test('Recipes, Guides and Reference open on a generated-index page with a description', () => {
+  for (const label of ['Recipes', 'Guides', 'Reference']) {
     const { link } = categories.find((category) => category.label === label);
     assert.equal(link?.type, 'generated-index', label);
     assert.ok(link.description?.length > 0, label);
     assert.equal(link.slug, `/category/${label.toLowerCase()}`, label);
   }
-});
-
-test('the Guides section lists the Call Space guide and the Nest section lists no twin of it', () => {
-  const ids = (label) => categories.find((category) => category.label === label).items.map(idOf);
-  assert.ok(!ids('Nest').includes('nest/call-space-from-your-server'));
-  assert.ok(ids('Guides').includes('guides/call-space-from-your-server'));
 });
 
 test('the Guides section lists the A2A guide', () => {

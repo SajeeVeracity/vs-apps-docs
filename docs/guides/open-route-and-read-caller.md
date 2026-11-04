@@ -15,7 +15,7 @@ End with two routes on the server of the quickstart app: `GET /api/open`, which 
 
 ## Prerequisites
 
-- The Nest.js app from [Part 1 of the quickstart](../quickstart.md#part-1-run-the-app-locally), running with `npm run dev:space`. [Part 2, step 1](../quickstart.md#1-point-the-app-at-your-space) sets up the `.env` file that command reads.
+- The Nest.js app from Part 1 of the [quickstart](../quickstart.md), running with `npm run dev:space`. Part 2, step 1 of the quickstart sets up the `.env` file that command reads.
 - Background: the [server primitives](../reference/root.md) that the adapter wraps.
 
 ## Steps
@@ -103,7 +103,7 @@ The server answers `/api/open` for anyone. It answers `/api/caller` only for a r
 
 ## Next step
 
-Register the app in Space with [Part 2 of the quickstart](../quickstart.md#part-2-add-the-app-to-a-space), so that a page of the app sends a real user token to `/api/caller`.
+Register the app in Space with Part 2 of the [quickstart](../quickstart.md), so that a page of the app sends a real user token to `/api/caller`.
 <!-- /flavour -->
 <!-- flavour node todo -->
 <!-- /flavour -->

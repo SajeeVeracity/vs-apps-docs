@@ -354,7 +354,7 @@ test('main: a page with a stale SDK version exits 1', async () => {
   assert.equal(await run({ pages: [stale] }), 1);
 });
 
-test('main: only recipes, guides and Nest pages are checked for env vars', async () => {
+test('main: only recipes and guides are checked for env vars', async () => {
   const text = 'Set `SPACE_BASE_URL`.';
   assert.equal(await run({ pages: [record({ source: 'guides/x.md', path: 'docs/guides/x.md', text })] }), 1);
   assert.equal(await run({ pages: [record({ source: 'reference/x.md', path: 'docs/reference/x.md', text })] }), 0);

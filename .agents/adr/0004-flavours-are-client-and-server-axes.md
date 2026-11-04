@@ -8,7 +8,7 @@ The published docs assume TypeScript 5 with `strict`, Node 20.19+ and `npm` for 
 
 - **Markers.** One source page per topic under `docs/`. Text between `<!-- flavour <name> -->` and `<!-- /flavour -->` belongs to one flavour. `<!-- flavour <name> todo -->` marks a block nobody has written. Blocks do not nest, and prose outside blocks is shared.
 - **Generator.** `scripts/generate.mjs` reads the source pages and `flavours.config.json` and writes the published tree to `docs-gen/`. It runs first in `pnpm check`, and before `pnpm build` and `pnpm start`.
-- **URL rule.** A page's URL carries the axes its blocks use: `/<server>/...`, `/<client>/...`, `/<client>/<server>/...`, or no prefix for a neutral page. A page is emitted once per value combination of those axes. Flavour names are lowercase and differ across axes and from doc folders, so the first URL segment is unambiguous.
+- **URL rule.** A page's URL carries the axes its blocks use: `/<server>/...`, `/<client>/...`, `/<client>/<server>/...`, or no prefix for a neutral page. A page is emitted once per value combination of those axes. Flavour names are lowercase and differ across axes and from the top-level folders of `docs/`, so the first URL segment is unambiguous.
 - **Stubs and links.** A flavoured page also has a flavourless stub at its old address, which carries its sidebar entry. Authors write relative links. Inside a tree they point into the same tree, except to a page that uses an axis the tree lacks, which gets the stub. A neutral page keeps links to the stub.
 - **Saved choice.** The choice lives in `localStorage`, applies only on flavourless URLs, and starts as `react` + `node`. A shared link always wins and overwrites it.
 - **Search.** One index per pair, scoped with `searchContextByPaths` through a local wrapper plugin. The search plugin version is pinned because the wrapper imports its internals. A test after `docusaurus build` checks each index.
@@ -24,7 +24,7 @@ The published docs assume TypeScript 5 with `strict`, Node 20.19+ and `npm` for 
 
 ## Consequences
 
-- Node.js pages use `node:http` on the SDK's `/server` subpath. Nest pages use `/nest`. Nest.js is an equal server flavour, so a page names Nest in a `nest` block and `docs/nest/` goes away.
+- Node.js pages use `node:http` on the SDK's `/server` subpath. Nest pages use `/nest`. Nest.js is an equal server flavour, so a page names Nest in a `nest` block, and `docs/` holds no Nest folder.
 - The guard test bans `Vite`, `Express`, `Fastify`, `pnpm` and `yarn` in published pages, with the quickstart's Vite allowance. `.agents/` files are exempt. The guard no longer sees a flavour term in neutral prose or in another flavour's block.
 - Node 20.19+ is the oldest version that Vite 8 supports, and it is newer than 20.6, where `--env-file` starts to work. The SDK declares no `engines` field, so the number has no SDK source.
 - The harness dev routes exist only as a Nest controller in the SDK. The harness page ships a hand-written `node:http` handler until the SDK has a framework-free one, and the Nest template sets `devIssuer` from `VA_DEV_ISSUER`.

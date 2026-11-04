@@ -104,6 +104,11 @@ export function generate({ root, config }) {
     }
   }
 
+  const topFolders = new Set(readdirSync(source, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name));
+  for (const flavour of axisOrder.flatMap((a) => Object.keys(axes[a]))) {
+    if (topFolders.has(flavour)) errors.push(`flavour name "${flavour}" is also a top-level folder of ${config.docsRoot}`);
+  }
+
   const pages = new Map();
   for (const rel of walk(source)) {
     const where = `${config.docsRoot}/${rel}`;

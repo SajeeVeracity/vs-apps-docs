@@ -6,9 +6,8 @@ import { fileMeta, readEmbedded } from '../src/plugins/embed-file.mjs';
 import { combinations } from './generate.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const nestDir = 'nest';
 const titleRoots = /^(client|server|shared)\//;
-const titleFolders = /^(recipes|guides|nest)\//;
+const titleFolders = /^(recipes|guides)\//;
 const codeBlock = /^```(ts|tsx)\b([^\n]*)\n([\s\S]*?)^```/gm;
 
 /** True when the code block meta has the `starter` word outside its title. */
@@ -57,7 +56,7 @@ export function checkSnippets({
     for (const { file, doc } of sources) {
       for (const [, , meta] of readFileSync(file, 'utf8').matchAll(codeBlock)) {
         const title = /title="([^"]+)"/.exec(meta)?.[1];
-        // Recipes, guides and Nest pages build on the quickstart app, so their file paths use its layout.
+        // Recipes and guides build on the quickstart app, so their file paths use its layout.
         if (title && titleFolders.test(doc) && !titleRoots.test(title)) badTitles.push(`${doc}: ${title}`);
       }
     }
@@ -66,8 +65,8 @@ export function checkSnippets({
       return { ok: false, count: 0, failed: [], output };
     }
 
-    /** Writes the blocks of `pages` into the project folder `name`; `sharedRoot` puts every titled block at the folder root. */
-    const writeProject = (name, pages, { sharedRoot = false } = {}) => {
+    /** Writes the blocks of `pages` into the project folder `name`. */
+    const writeProject = (name, pages) => {
       for (const [fileIndex, { file, doc }] of pages.entries()) {
         let index = 0;
         const titled = new Set();
@@ -81,11 +80,11 @@ export function checkSnippets({
           // A titled block is written at its title path so relative imports between a page's blocks resolve.
           const placed = title && !titled.has(title);
           if (placed) titled.add(title);
-          const path = placed ? (sharedRoot ? title : `page-${fileIndex}/${title}`) : `snippet-${fileIndex}-${index}.${lang}`;
+          const path = placed ? `page-${fileIndex}/${title}` : `snippet-${fileIndex}-${index}.${lang}`;
           blocks.push({ name: `${name}/${path}`, code, origin: `${doc} block ${index}` });
         }
         // A page that writes `shared/src/index.ts` resolves `@hello-app/shared` to it, as the starter's workspace does.
-        if (!sharedRoot && titled.has('shared/src/index.ts')) {
+        if (titled.has('shared/src/index.ts')) {
           const stub = join(work, name, `page-${fileIndex}`, 'node_modules', '@hello-app', 'shared');
           mkdirSync(stub, { recursive: true });
           writeFileSync(join(stub, 'index.ts'), "export * from '../../../shared/src/index';\n");
@@ -100,15 +99,7 @@ export function checkSnippets({
     };
 
     const projects = [];
-    const inNestFolder = ({ doc }) => doc.startsWith(`${nestDir}/`);
-    const neutral = sources.filter(({ doc }) => !flavouredSources.has(doc));
-    projects.push({ name: 'neutral', pages: neutral.filter((page) => !inNestFolder(page)) });
-    projects.push({
-      name: nestDir,
-      pages: neutral.filter(inNestFolder),
-      sharedRoot: true,
-      options: { ...flavourOptions.nest, paths: { '@hello-app/shared': ['./shared/src/index.ts'] } },
-    });
+    projects.push({ name: 'neutral', pages: sources.filter(({ doc }) => !flavouredSources.has(doc)) });
 
     // A pair project holds every tree page whose flavours the pair contains.
     for (const pair of combinations(config.axes, Object.keys(config.axes))) {
@@ -126,9 +117,9 @@ export function checkSnippets({
 
     let output = '';
     const failed = [];
-    for (const { name, pages, sharedRoot, options = {} } of projects) {
+    for (const { name, pages, options = {} } of projects) {
       const before = origins.size;
-      writeProject(name, pages, { sharedRoot });
+      writeProject(name, pages);
       if (origins.size === before) continue;
       writeFileSync(
         join(work, name, 'tsconfig.json'),

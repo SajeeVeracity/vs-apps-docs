@@ -8,7 +8,6 @@ import { codeOf, linksOf, nextLinks, section, snippetsOf, titledSnippets, treesO
 const docs = join(dirname(fileURLToPath(import.meta.url)), '..', 'docs');
 // The Next-step chain order of the five client recipes.
 const recipeNames = ['add-page-and-capability', 'gate-by-capability', 'read-app-context', 'list-members', 'expose-agent-actions'];
-const nestRecipe = 'nest-adapter';
 const openRouteGuide = 'open-route-and-read-caller';
 const modelGuide = 'call-a-model-from-your-server';
 const connectorGuide = 'handle-connector-events';
@@ -22,16 +21,12 @@ const guideFiles = existsSync(join(docs, 'guides')) ? pagesIn('guides') : [];
 // Pages with a Nest block and a todo Node.js block: scripts/flavoured-guides.test.mjs checks their content.
 const nestBlockGuides = guideFiles.filter((page) => [openRouteGuide, connectorGuide].includes(page.name));
 const guides = guideFiles.filter((page) => !nestBlockGuides.includes(page));
-const nest = existsSync(join(docs, 'nest')) ? pagesIn('nest') : [];
-const all = [...recipes, ...nest, ...guides, ...nestBlockGuides];
+const all = [...recipes, ...guides, ...nestBlockGuides];
 
-test('has one recipe per ranked task, the Nest recipe, the two guides with a Nest block and the call-a-model guide', () => {
+test('has one recipe per ranked task, the two guides with a Nest block and the call-a-model guide, and no docs/nest folder', () => {
   assert.deepEqual(recipes.map((r) => r.name).sort(), [...recipeNames].sort());
-  const sixRecipes = [...recipes, ...nest.filter((page) => page.name === nestRecipe)].map((page) => page.name);
-  assert.deepEqual(sixRecipes.sort(), [...recipeNames, nestRecipe].sort());
-  assert.ok(nest.some((page) => page.name === nestRecipe));
   assert.equal(nestBlockGuides.length, 2);
-  assert.deepEqual(nest.map((page) => page.name), [nestRecipe]);
+  assert.ok(!existsSync(join(docs, 'nest')));
   assert.ok(guides.some((page) => page.name === modelGuide));
 });
 
@@ -81,7 +76,7 @@ const slugOf = (heading) => {
 const anchorsOf = (text) =>
   new Set([...text.replace(/^```[\s\S]*?^```/gm, '').matchAll(/^#{1,6} (.+)$/gm)].map(([, heading]) => slugOf(heading)));
 
-test('every #anchor link from a recipe, guide or Nest page targets a heading that exists', () => {
+test('every #anchor link from a recipe or guide targets a heading that exists', () => {
   let checked = 0;
   for (const { path, name, text } of all) {
     for (const [, target, anchor] of text.matchAll(/\]\((\.[^)#]*\.md)#([^)]+)\)/g)) {
@@ -124,13 +119,6 @@ test('no page names a script the starter lacks or the old Part 2 anchor', () => 
     const text = readFileSync(path, 'utf8');
     assert.doesNotMatch(text, /check:server|dev:server|#part-2-add-the-app-to-space\b/, path);
   }
-});
-
-test('nest-adapter checks the server with dev:space and two curl lines', () => {
-  const { text } = nest.find((r) => r.name === nestRecipe);
-  assert.match(text, /npm run dev:space/);
-  assert.match(text, /curl .*localhost:<SERVER_PORT>\/api\/client-config/);
-  assert.match(text, /curl .*localhost:<SERVER_PORT>\/api\/manifest\/hello-app/);
 });
 
 const gate = recipes.find((r) => r.name === 'gate-by-capability');
@@ -177,46 +165,6 @@ test('gate-by-capability closes by sharing one fallback across at least two page
 
 const readContext = recipes.find((r) => r.name === 'read-app-context');
 
-test('nest-adapter claims no bodyParser setting and warns that the credential store is in memory', () => {
-  const { text } = nest.find((r) => r.name === nestRecipe);
-  assert.doesNotMatch(text, /bodyParser/);
-  const warning = text.split('\n').filter((line) => /in memory/.test(line) && /loses them on restart/.test(line));
-  assert.equal(warning.length, 1);
-  assert.match(warning[0], /`AppCredentialStore`/);
-  assert.match(warning[0], /your own storage/);
-  assert.match(warning[0], /persistent store before production/);
-});
-
-test('nest-adapter next step links quickstart Part 2, then the open-route guide', () => {
-  const { text } = nest.find((r) => r.name === nestRecipe);
-  const next = text.split(/^## /m).at(-1);
-  assert.match(next, /^Next step\n/);
-  assert.deepEqual(
-    [...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]),
-    ['../quickstart.md#part-2-add-the-app-to-a-space', `../guides/${openRouteGuide}.md`],
-  );
-});
-
-test('Nest pages share one snippet project, so no two Nest pages use the same snippet title', () => {
-  const owners = new Map();
-  for (const { name, text } of nest) {
-    for (const [, title] of text.matchAll(/^```(?:tsx?|json)[^\n]*title="([^"]+)"/gm)) {
-      assert.ok(!owners.has(title) || owners.get(title) === name, `${title} is in ${owners.get(title)} and ${name}`);
-      owners.set(title, name);
-    }
-  }
-});
-
-test('every link to nest-adapter points at its Nest folder location', () => {
-  for (const path of docFiles(docs)) {
-    const text = readFileSync(path, 'utf8');
-    for (const [, target] of text.matchAll(/\]\(([^)#]*nest-adapter\.md)/g)) {
-      assert.match(target, /(^|\/)nest\/nest-adapter\.md$|^\.\/nest-adapter\.md$/, `${path}: ${target}`);
-      assert.ok(existsSync(join(dirname(path), target)), `${path}: ${target}`);
-    }
-  }
-});
-
 const expose = recipes.find((r) => r.name === 'expose-agent-actions');
 const exposeCode = snippetsOf(expose.text);
 
@@ -252,9 +200,8 @@ test('expose-agent-actions limits description and mounted-action claims to the S
 const callSpaceName = 'call-space-from-your-server';
 const callSpace = Object.fromEntries(treesOf(`guides/${callSpaceName}.md`).map(({ tree, text }) => [tree.split('/')[0], text]));
 
-test('Call Space from your server has a Node.js and a Nest.js tree, and no twin in the Nest folder', () => {
+test('Call Space from your server has a Node.js and a Nest.js tree, ', () => {
   assert.deepEqual(Object.keys(callSpace), ['node', 'nest']);
-  assert.ok(!nest.some((page) => page.name === callSpaceName));
 });
 
 test('the Nest.js Call Space tree shows SpaceClientService, SpaceS2sService and AppActionsService in labelled server files', () => {
@@ -460,7 +407,6 @@ test('the A2A guide checks the card and a refused call', () => {
 
 const trees = guides.find((r) => r.name === 'agent-action-trees');
 const filterNav = guides.find((r) => r.name === 'filter-navigation-by-capability');
-const nestAdapter = nest.find((r) => r.name === nestRecipe);
 const sharedKeys = (text) => [...snippetsOf(text).matchAll(/\b(?:key|capability|pageId): '([^']+)'/g)].map(([, key]) => key);
 
 test('agent-action-trees uses the leads page and the shared action ids', () => {
@@ -481,15 +427,8 @@ test('filter-navigation-by-capability names the leads-app start and its scaffold
   assert.doesNotMatch(text, /recipes\/leads-app|git clone/);
 });
 
-test('nest-adapter gates with the shared lead:manage capability', () => {
-  assert.match(nestAdapter.text, /refuses a token that lacks the `lead:manage` \[capability\]/);
-  assert.match(snippetsOf(nestAdapter.text), /@RequireCapability\('lead:manage'\)/);
-  assert.match(snippetsOf(nestAdapter.text), /export const CAPABILITY = 'lead:manage';/);
-  assert.deepEqual(sharedKeys(nestAdapter.text).filter((k) => !['hello-app', 'leads', 'lead:manage'].includes(k)), []);
-});
-
 test('each guide Next step has one link that resolves', () => {
-  for (const page of [...guides, ...nestBlockGuides, ...nest.filter((p) => p.name !== nestRecipe)]) {
+  for (const page of [...guides, ...nestBlockGuides]) {
     const links = nextLinks(page.text);
     assert.equal(links.length, 1, page.path);
     assert.ok(existsSync(join(dirname(page.path), links[0].split('#')[0])), `${page.path}: ${links[0]}`);
@@ -554,7 +493,7 @@ test('a starter-owned key is allowed only on a page whose snippets still use it'
   }
 });
 
-test('no recipe, guide or Nest page except read-app-context names an SDR key', () => {
+test('no recipe or guide except read-app-context names an SDR key', () => {
   for (const { name, text } of all.filter((page) => page.name !== 'read-app-context')) assert.doesNotMatch(text, /sdr/i, name);
 });
 
@@ -570,12 +509,8 @@ test('the guides that moved start from the leads-app overlay and scaffold it for
   }
 });
 
-test('no moved page keeps a link into the deleted Nest twins', () => {
-  for (const path of docFiles(docs)) {
-    const text = readFileSync(path, 'utf8');
-    assert.doesNotMatch(text, /nest\/(call-space-from-your-server|call-a-model-from-your-server)/, path);
-    if (path.includes(`${join(docs, 'nest')}`)) assert.doesNotMatch(text, /\]\(\.\/(call-space-from-your-server|call-a-model-from-your-server)\.md/, path);
-  }
+test('no page links into the deleted Nest folder', () => {
+  for (const path of docFiles(docs)) assert.doesNotMatch(readFileSync(path, 'utf8'), /\]\([^)]*\bnest\/[\w-]+\.md/, path);
 });
 
 const prerequisiteLinks = (page) => linksOf(section(page.text, 'Prerequisites'));

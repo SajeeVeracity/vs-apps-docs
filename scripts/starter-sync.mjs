@@ -130,7 +130,7 @@ const INLINE_NAME = '[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+';
 // Inline code that is an UPPER_SNAKE name but an error code of the SDK, not an environment variable.
 const ERROR_CODES = new Set(['UNAVAILABLE_ACTION', 'INVALID_PARAMS']);
 const SHELL_LANGS = new Set(['bash', 'sh', 'shell', 'env', 'dotenv']);
-const ENV_PAGE_DIRS = ['recipes', 'guides', 'nest'];
+const ENV_PAGE_DIRS = ['recipes', 'guides'];
 const RUN_STEP_PAGE = 'quickstart.md';
 
 /** Names that a page assigns (`NAME=` in a shell or env code block). */
@@ -150,7 +150,7 @@ export function usedEnvNames(text) {
 const readNames = (path, pattern) => (existsSync(path) ? [...readFileSync(path, 'utf8').matchAll(pattern)].map((m) => m[1]) : []);
 
 /**
- * Fails for every environment variable that a recipe, guide or Nest page uses when neither the starter nor the page defines it.
+ * Fails for every environment variable that a recipe or guide uses when neither the starter nor the page defines it.
  * The starter defines a name in `.env.example` (`NAME=`) or `.npmrc` (`${NAME}`); the page defines it with `NAME=` in a shell code block.
  */
 export function checkEnvVars(pages, starterDir) {
