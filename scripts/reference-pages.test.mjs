@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { section } from './page-helpers.mjs';
+import { section, treesOf } from './page-helpers.mjs';
 
 const read = (name) => {
   const url = new URL(`../docs/reference/${name}.md`, import.meta.url);
@@ -25,8 +25,23 @@ test('the description sentence states SDK guarantees only', () => {
   assert.match(read('agent-react'), /reports the mounted actions/);
 });
 
+const serverTrees = treesOf('reference/server.md');
+const serverTree = (name) => serverTrees.find(({ tree }) => tree === name).text;
+
+test('the server reference is emitted once for each server', () => {
+  assert.deepEqual(serverTrees.map(({ tree }) => tree), ['node', 'nest']);
+});
+
+test('the Nest.js tree of the server reference keeps the signature and shows a notice instead of the example', () => {
+  const nest = serverTree('nest');
+  const ping = section(nest, '`pingSpaceManifests`');
+  for (const heading of ['Signature', 'Behaviour', 'Example']) assert.ok(ping.includes(`### ${heading}`), heading);
+  assert.match(nest, /^:::warning\nNot yet written for Nest\.js\. Read the \[Node\.js \+ TypeScript version\]\(\.\.\/\.\.\/node\/reference\/server\.md\)\.\n:::$/m);
+  assert.doesNotMatch(nest, /src\/ping\.ts|defineApp/);
+});
+
 test('the server reference documents pingSpaceManifests', () => {
-  const text = read('server');
+  const text = serverTree('node');
   assert.match(text, /^title: Server reference$/m);
   const ping = section(text, '`pingSpaceManifests`');
   assert.deepEqual(
@@ -37,5 +52,5 @@ test('the server reference documents pingSpaceManifests', () => {
     assert.ok(ping.includes(term), term);
   }
   assert.match(ping, /never throws/i);
-  assert.match(text, /\]\(\.\.\/glossary\.md#manifest\)/);
+  assert.match(text, /\]\((\.\.\/)+glossary\.md#manifest\)/);
 });

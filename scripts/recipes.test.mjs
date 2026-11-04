@@ -18,17 +18,19 @@ const pagesIn = (dir) =>
     .map((name) => ({ path: join(docs, dir, name), name: name.replace(/\.md$/, ''), text: readFileSync(join(docs, dir, name), 'utf8') }));
 
 const recipes = existsSync(join(docs, 'recipes')) ? pagesIn('recipes') : [];
-const guides = existsSync(join(docs, 'guides')) ? pagesIn('guides') : [];
+const guideFiles = existsSync(join(docs, 'guides')) ? pagesIn('guides') : [];
+// Pages with a Nest block and a todo Node.js block: scripts/flavoured-guides.test.mjs checks their content.
+const nestBlockGuides = guideFiles.filter((page) => [openRouteGuide, connectorGuide].includes(page.name));
+const guides = guideFiles.filter((page) => !nestBlockGuides.includes(page));
 const nest = existsSync(join(docs, 'nest')) ? pagesIn('nest') : [];
-const all = [...recipes, ...nest, ...guides];
+const all = [...recipes, ...nest, ...guides, ...nestBlockGuides];
 
 test('has one recipe per ranked task, the Nest recipe and the Nest guides in the Nest folder and at least one guide', () => {
   assert.deepEqual(recipes.map((r) => r.name).sort(), [...recipeNames].sort());
   const sixRecipes = [...recipes, ...nest.filter((page) => page.name === nestRecipe)].map((page) => page.name);
   assert.deepEqual(sixRecipes.sort(), [...recipeNames, nestRecipe].sort());
   assert.ok(nest.some((page) => page.name === nestRecipe));
-  assert.ok(nest.some((page) => page.name === openRouteGuide));
-  assert.ok(nest.some((page) => page.name === connectorGuide));
+  assert.equal(nestBlockGuides.length, 2);
   assert.ok(nest.some((page) => page.name === modelGuide));
   assert.ok(guides.some((page) => page.name === modelGuide));
 });
@@ -164,7 +166,7 @@ test('nest-adapter next step links quickstart Part 2, then the open-route guide'
   assert.match(next, /^Next step\n/);
   assert.deepEqual(
     [...next.matchAll(/\]\(([^)]+)\)/g)].map((m) => m[1]),
-    ['../quickstart.md#part-2-add-the-app-to-a-space', `./${openRouteGuide}.md`],
+    ['../quickstart.md#part-2-add-the-app-to-a-space', `../guides/${openRouteGuide}.md`],
   );
 });
 
@@ -176,57 +178,6 @@ test('Nest pages share one snippet project, so no two Nest pages use the same sn
       owners.set(title, name);
     }
   }
-});
-
-const guide = () => nest.find((r) => r.name === openRouteGuide)?.text ?? '';
-
-test('the open-route guide shows @Public, appCaller and AppRequest in labelled server files', () => {
-  const code = [...guide().matchAll(/^```tsx?\s+title="(server\/[^"]+)"\n([\s\S]*?)^```/gm)];
-  assert.ok(code.length >= 1);
-  const body = code.map(([, , b]) => b).join('\n');
-  assert.match(body, /@Public\(\)/);
-  assert.match(body, /\bappCaller\(/);
-  assert.match(body, /\bAppRequest\b/);
-  assert.match(body, /\bimport \{[^}]*\bappCaller\b[^}]*\} from '@vectoragents\/vs-apps\/nest'/);
-});
-
-test('the open-route guide checks that the open route answers 200 and the caller route answers 401 with no token', () => {
-  const steps = section(guide(), 'Steps');
-  const curls = [...steps.matchAll(/^curl .*localhost:<SERVER_PORT>\/api\/([\w-]+)$/gm)].map((m) => m[1]);
-  assert.equal(curls.length, 2);
-  assert.match(steps, /\*\*Check\*\*:[^\n]*`200`[^\n]*`401`/);
-});
-
-const connector = () => nest.find((r) => r.name === connectorGuide)?.text ?? '';
-const connectorCode = () =>
-  titledSnippets(connector()).filter(({ title }) => /^(server|shared)\//.test(title)).map(({ body }) => body).join('\n');
-
-test('the connector-events guide says in one line why it has no plain twin', () => {
-  const lines = connector().split('\n').filter((line) => /no plain twin/.test(line));
-  assert.equal(lines.length, 1);
-  assert.match(lines[0], /`assertSpaceEvents`/);
-  assert.match(lines[0], /`\/server`/);
-});
-
-test('the connector-events guide registers a handler with ConnectorEventsService and checks a ConnectorExecuteResult', () => {
-  const body = connectorCode();
-  assert.match(body, /\bimport \{[^}]*\bConnectorEventsService\b[^}]*\} from '@vectoragents\/vs-apps\/nest'/);
-  assert.match(body, /\.on\(\s*\{[^}]*\bappKey\b[^}]*\bslot\b[^}]*\bhandler\b/);
-  assert.match(body, /\bimport type \{[^}]*\bConnectorExecuteResult\b[^}]*\} from '@vectoragents\/vs-apps'/);
-  assert.match(body, /\bPromise<ConnectorExecuteResult>/);
-  assert.match(body, /\.status\b/);
-});
-
-test('the connector-events guide declares the slot with a handler key that the code registers', () => {
-  const declared = [...connector().matchAll(/^\s+key: '([\w-]+)',\n\s+label: '[^']+',\n\s+defaultEventTypes/gm)].map((m) => m[1]);
-  assert.equal(declared.length, 1);
-  assert.match(connectorCode(), new RegExp(`handler: '${declared[0]}'`));
-});
-
-test('the connector-events guide checks that the events route refuses a request with no token', () => {
-  const steps = section(connector(), 'Steps');
-  assert.equal([...steps.matchAll(/^curl .*localhost:<SERVER_PORT>\/api\/events\/hello-app$/gm)].length, 1);
-  assert.match(steps, /\*\*Check\*\*:[^\n]*`401`/);
 });
 
 test('every link to nest-adapter points at its Nest folder location', () => {
@@ -479,7 +430,7 @@ test('the Nest pages gate with the shared lead:manage capability and name no hel
 });
 
 test('each guide Next step has one link that resolves', () => {
-  for (const page of [...guides, ...nest.filter((p) => p.name !== nestRecipe)]) {
+  for (const page of [...guides, ...nestBlockGuides, ...nest.filter((p) => p.name !== nestRecipe)]) {
     const links = nextLinks(page.text);
     assert.equal(links.length, 1, page.path);
     assert.ok(existsSync(join(dirname(page.path), links[0].split('#')[0])), `${page.path}: ${links[0]}`);
@@ -552,7 +503,7 @@ const nestGuides = nest.filter((page) => page.name !== nestRecipe);
 const prerequisiteLinks = (page) => linksOf(section(page.text, 'Prerequisites'));
 
 test('every Nest guide names nest-adapter and every plain guide names expose-agent-actions as prerequisite', () => {
-  assert.ok(nestGuides.length >= 4);
+  assert.ok(nestGuides.length >= 2);
   for (const page of nestGuides) assert.ok(prerequisiteLinks(page).includes('./nest-adapter.md'), page.name);
   assert.ok(guides.length >= 5);
   for (const page of guides) assert.ok(prerequisiteLinks(page).includes('../recipes/expose-agent-actions.md'), page.name);

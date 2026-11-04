@@ -38,6 +38,8 @@ const sidebars: SidebarsConfig = {
         'guides/call-space-from-your-server',
         'guides/call-a-model-from-your-server',
         'guides/expose-app-as-a2a-agent',
+        'guides/open-route-and-read-caller',
+        'guides/handle-connector-events',
       ],
     },
     {
@@ -50,8 +52,6 @@ const sidebars: SidebarsConfig = {
       },
       items: [
         'nest/nest-adapter',
-        'nest/open-route-and-read-caller',
-        'nest/handle-connector-events',
         'nest/call-space-from-your-server',
         'nest/call-a-model-from-your-server',
       ],

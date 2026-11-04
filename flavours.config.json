@@ -6,5 +6,9 @@
     "client": { "react": "React" },
     "server": { "node": "Node.js + TypeScript", "nest": "Nest.js" }
   },
-  "defaults": { "client": "react", "server": "node" }
+  "defaults": { "client": "react", "server": "node" },
+  "legacyRedirects": [
+    { "from": "/nest/open-route-and-read-caller", "to": "/guides/open-route-and-read-caller", "fixed": { "server": "nest" } },
+    { "from": "/nest/handle-connector-events", "to": "/guides/handle-connector-events", "fixed": { "server": "nest" } }
+  ]
 }

@@ -1,9 +1,28 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { section } from './page-helpers.mjs';
+import { section, treesOf } from './page-helpers.mjs';
 
-const text = readFileSync(new URL('../docs/reference/harness.md', import.meta.url), 'utf8');
+const trees = treesOf('reference/harness.md');
+const text = trees.find(({ tree }) => tree === 'node').text;
+const nestText = trees.find(({ tree }) => tree === 'nest').text;
+
+test('the page is emitted once for each server', () => {
+  assert.deepEqual(trees.map(({ tree }) => tree), ['node', 'nest']);
+});
+
+test('the Nest.js tree shows a notice that links the Node.js version, and no dev-issuer setup', () => {
+  assert.match(nestText, /^:::warning\nNot yet written for Nest\.js\. Read the \[Node\.js \+ TypeScript version\]\(\.\.\/\.\.\/node\/reference\/harness\.md\)\.\n:::$/m);
+  assert.equal(section(nestText, 'Accept dev tokens'), '');
+  assert.doesNotMatch(nestText, /createDevIssuer|AppPlatformModule|devIssuer|node:http/);
+});
+
+test('both trees keep the shared reference text', () => {
+  for (const tree of [text, nestText]) {
+    for (const heading of ['`VectorAppsHarness`', 'Dev routes', 'Turn the harness on and off', 'Limits']) assert.ok(section(tree, heading), heading);
+    assert.match(tree, /GET \/api\/__dev\/manifests/);
+    assert.match(tree, /VA_DEV_ISSUER=true/);
+  }
+});
 
 test('prerequisites state React 18 and the dev-issuer flag', () => {
   const prerequisites = text.split(/^## /m).find((s) => s.startsWith('Prerequisites'));
