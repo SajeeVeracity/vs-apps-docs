@@ -68,7 +68,7 @@ Scope: `docs/quickstart.md` only. `scripts/voice.mjs` checks the TU1 hard cap, T
 
 Scope: `docs/recipes/`, and `docs/nest/nest-adapter.md`.
 
-- **R1 Sorting rule.** A recipe starts from the starter app (`main`, or a start folder such as `recipes/leads-app/`) and ends with something you run. If the page needs a result from an earlier page, it is a guide.
+- **R1 Sorting rule.** A recipe starts from a project the starter CLI generates (`--start hello`, or an overlay such as `--start leads-app`) and ends with something you run. If the page needs a result from an earlier page, it is a guide.
 - **R2 Layout.** Front matter `title`, an opening paragraph, then the sections Goal, Prerequisites, Steps, Result, Next step, in that order.
 - **R3 Goal.** Starts with "End with" and names what runs when the recipe is done.
 - **R4 Prerequisites.** Names the start state (`main` or the start folder), the tokens and accounts the steps need, and a closing "Background:" line of links. It does not name another recipe as a requirement.

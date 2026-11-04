@@ -1,5 +1,7 @@
 # The quickstart clones a starter repo
 
+Superseded by [ADR 0003](0003-quickstart-runs-create-app-from-github-packages.md).
+
 The quickstart tells the reader to clone a working app from the starter repo, run it in the harness, then read its code in a tour of excerpts. The reader edits no file in Part 1. A clone gives a running app at once, where an empty folder needs four `package.json` files, four `tsconfig` files, `.npmrc` and `.gitignore` first. The repo lives at `VectorAgents/vector-app-quickstart`, owned by Vector. The clone URL is the single value `STARTER_URL` in `scripts/starter-url.mjs`, shared by the page, its test and CI. The ref is `main`.
 
 ## Considered options
