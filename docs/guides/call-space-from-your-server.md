@@ -164,7 +164,7 @@ The store keeps the secrets in memory and loses them on restart. `AppCredentialS
 
 The agent route passes the request to `AppActionsService`, which sends the caller's own token. The connectors route sends an app token, which no user limits. Its `@RequireCapability` check therefore decides who may use the route.
 
-`getToken` takes the `appId` and the `spaceId` that `appCaller` reads from the verified claims, as in [open a route and read the caller](../nest/open-route-and-read-caller.md). A failed Space call reaches your caller as an HTTP error with the status that Space sent.
+`getToken` takes the `appId` and the `spaceId` that `appCaller` reads from the verified claims, as in [open a route and read the caller](./open-route-and-read-caller.md). A failed Space call reaches your caller as an HTTP error with the status that Space sent.
 
 ```ts title="server/src/space-calls.controller.ts"
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';

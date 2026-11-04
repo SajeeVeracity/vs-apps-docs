@@ -110,10 +110,11 @@ An invalid request returns status `400`. The harness shows the response text in 
 
 ### `GET /api/__dev/jwks.json`
 
-Returns status `200` and the public key set of the dev issuer, the value of `devIssuer.jwks()` in the example below. The set verifies the tokens that `POST /api/__dev/token` signs.
+Returns status `200` and the public key set of the dev issuer. The set verifies the tokens that `POST /api/__dev/token` signs.
 
 ### Example
 
+<!-- flavour node -->
 `createDevIssuer` signs tokens and verifies them, so one object serves both. It reads or creates the key file `vs-apps-dev-issuer.pem` in the OS temp directory, which every process on the machine shares, so the example creates it only when `VA_DEV_ISSUER` is `true`. Call `handleDevRoute` first in your request handler. It returns `true` when it answered the request. It returns `false` for every other request, and always when the dev issuer does not exist.
 
 ```ts title="server/src/dev-routes.ts"
@@ -176,6 +177,9 @@ export const verifier = devIssuer ?? createSpaceTokenVerifier({ jwksUrl: process
 ```
 
 When the page works, the harness card shows the user, the space and the capabilities of the token, and a request to your server succeeds.
+<!-- /flavour -->
+<!-- flavour nest todo -->
+<!-- /flavour -->
 
 ## Turn the harness on and off
 

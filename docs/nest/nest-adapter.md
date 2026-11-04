@@ -181,4 +181,4 @@ The NestJS server answers `client-config` with `200` and `manifest/hello-app` wi
 
 ## Next step
 
-Continue with [Part 2 of the quickstart](../quickstart.md#part-2-add-the-app-to-a-space) to register the app in Space. Then [open a route and read the caller](./open-route-and-read-caller.md).
+Continue with [Part 2 of the quickstart](../quickstart.md#part-2-add-the-app-to-a-space) to register the app in Space. Then [open a route and read the caller](../guides/open-route-and-read-caller.md).

@@ -195,7 +195,7 @@ export async function completePrompt(config: AiClientConfig, prompt: string): Pr
 }
 ```
 
-The controller reads the caller with `appCaller`, as in [open a route and read the caller](../nest/open-route-and-read-caller.md). The `appId` and `spaceId` claims name the app and the Space that the token came from.
+The controller reads the caller with `appCaller`, as in [open a route and read the caller](./open-route-and-read-caller.md). The `appId` and `spaceId` claims name the app and the Space that the token came from.
 
 `SpaceAiService` throws a `SpaceActionError` that carries the status, so the controller turns it into an `HttpException` with the same status.
 

@@ -42,14 +42,12 @@ test('the Nest section holds the nest-adapter recipe first', () => {
   assert.equal(idOf(nest.items[0]), 'nest/nest-adapter');
 });
 
-test('the Nest section lists the open-route guide after nest-adapter', () => {
-  const nest = categories.find((category) => category.label === 'Nest');
-  assert.deepEqual(nest.items.map(idOf).slice(0, 2), ['nest/nest-adapter', 'nest/open-route-and-read-caller']);
-});
-
-test('the Nest section lists the connector-events guide after the open-route guide', () => {
-  const nest = categories.find((category) => category.label === 'Nest');
-  assert.equal(idOf(nest.items[2]), 'nest/handle-connector-events');
+test('the Guides section lists the open-route and connector-events guides, and the Nest section no longer does', () => {
+  const ids = (label) => categories.find((category) => category.label === label).items.map(idOf);
+  for (const id of ['guides/open-route-and-read-caller', 'guides/handle-connector-events']) {
+    assert.ok(ids('Guides').includes(id), id);
+  }
+  assert.deepEqual(ids('Nest').filter((id) => /open-route|handle-connector/.test(id)), []);
 });
 
 test('the Guides section lists the call-a-model guide and the Nest section lists no twin of it', () => {
