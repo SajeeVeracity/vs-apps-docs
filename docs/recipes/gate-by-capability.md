@@ -10,7 +10,7 @@ End with one capability enforced twice: `RequireCapability` hides the `leads` pa
 
 ## Prerequisites
 
-- A GitHub package token in `GITHUB_PACKAGES_TOKEN`, as in [step 1 of the quickstart](../quickstart.md#1-clone-the-starter-and-install). The install below reads it.
+- A GitHub package token in `GITHUB_PACKAGES_TOKEN`, as in [step 0 of the quickstart](../quickstart.md#0-set-up-access-to-the-package-registry). The install below reads it.
 - The start folder `recipes/leads-app` from `main` of the public starter. It is `hello-app` with an ungated `leads` page. Clone the starter and work inside that folder.
 
 ```bash
