@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { section } from './page-helpers.mjs';
-import { checkCodeBlocks } from './starter-sync.mjs';
-import { STARTER_URL } from './starter-url.mjs';
+import { STARTER_REPO } from './starter-source.mjs';
 import { voiceViolations } from './voice.mjs';
 
+const STARTER_URL = `https://github.com/${STARTER_REPO}.git`;
 const text = readFileSync(new URL('../docs/quickstart.md', import.meta.url), 'utf8');
 const sections = text.split(/^## /m).slice(1);
 const titles = sections.map((s) => s.split('\n')[0]);
@@ -326,9 +326,4 @@ test('follows the writing standard', () => {
   assert.doesNotMatch(text, /—|–/);
   assert.doesNotMatch(text, /\b(we|our|let's)\b/i);
   assert.doesNotMatch(text, /\b(simply|just|easy|easily)\b/i);
-});
-
-// STARTER_DIR names a clone of the starter repo.
-test('every starter code block is a verbatim substring of the starter file it names', { skip: !process.env.STARTER_DIR }, () => {
-  assert.deepEqual(checkCodeBlocks(text, process.env.STARTER_DIR), []);
 });

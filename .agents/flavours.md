@@ -26,3 +26,9 @@ How to write a page that differs by flavour. Terms: axis, flavour, pair, flavour
 - The generator fails on a marker error and when the `todo` blocks exceed `todoCap`. `pnpm check`, `pnpm build` and `pnpm start` run it first.
 - `docs-gen/flavours.json` lists each flavoured page with its stub address and its tree addresses.
 - Outputs: a neutral page at its own path; a flavoured page at `<server>/`, `<client>/` or `<client>/<server>/` plus its path; a stub at its own path.
+
+## Starter check
+
+- `pnpm check:starter` generates a project for each pair with the starter CLI and checks every flavoured page in each of its trees against that project (SDK pin, `starter` code blocks, directory tree, ports, environment variables). A neutral page is checked against the default pair.
+- A page that starts from the `leads-app` overlay says so in front matter: `start: leads-app`. The default is `hello`.
+- It fails when a block names a flavour that no starter template names in `flavour.json`, or when a template of an axis has no block or `todo` on a flavoured page that uses the axis.

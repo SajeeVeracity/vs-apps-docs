@@ -10,7 +10,7 @@
     "build": "node scripts/generate.mjs && node scripts/check-snippets.mjs && docusaurus build",
     "check:snippets": "node scripts/check-snippets.mjs",
     "check": "pnpm generate && pnpm check:snippets && pnpm typecheck && pnpm test",
-    "check:starter": "node scripts/starter-sync.mjs",
+    "check:starter": "pnpm generate && node scripts/starter-sync.mjs",
     "test": "node --test scripts/*.test.mjs",
     "pretypecheck": "node scripts/ensure-stamp.mjs",
     "typecheck": "tsc --noEmit"
