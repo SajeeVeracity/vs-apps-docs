@@ -269,8 +269,10 @@ test('every link to nest-adapter points at its Nest folder location', () => {
 const expose = recipes.find((r) => r.name === 'expose-agent-actions');
 const exposeCode = snippetsOf(expose.text);
 
-test('expose-agent-actions starts from recipes/leads-app and installs zod 3', () => {
-  assert.match(section(expose.text, 'Prerequisites'), /`recipes\/leads-app\/`/);
+test('expose-agent-actions starts from the leads-app overlay and installs zod 3', () => {
+  assert.match(expose.text, /^---\n[\s\S]*?^start: leads-app$[\s\S]*?\n---\n/m);
+  assert.match(section(expose.text, 'Prerequisites'), /^npm create @vectoragents\/app leads-app -- --client react --server node --start leads-app$/m);
+  assert.doesNotMatch(expose.text, /recipes\/leads-app|git clone/);
   assert.match(expose.text, /^npm install zod@3\b.*$/m);
 });
 
@@ -519,6 +521,13 @@ test('agent-action-trees uses the leads page and the shared action ids', () => {
 test('filter-navigation-by-capability gates leads and icp and leaves home ungated', () => {
   assert.doesNotMatch(filterNav.text, /hello:view/);
   for (const key of ['leads', 'icp', 'lead:manage', 'icp:manage']) assert.ok(snippetsOf(filterNav.text).includes(`'${key}'`), key);
+});
+
+test('filter-navigation-by-capability names the leads-app start and its scaffold command, not the old folder', () => {
+  assert.match(filterNav.text, /^---\n[\s\S]*?^start: leads-app$[\s\S]*?\n---\n/m);
+  const [{ text }] = treesOf('guides/filter-navigation-by-capability.md');
+  assert.match(section(text, 'Prerequisites'), /`npm create @vectoragents\/app leads-app -- --client react --server node --start leads-app`/);
+  assert.doesNotMatch(text, /recipes\/leads-app|git clone/);
 });
 
 test('nest-adapter gates with the shared lead:manage capability', () => {

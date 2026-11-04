@@ -2,6 +2,7 @@
 title: Read the user and capabilities
 ---
 
+<!-- flavour react -->
 Show who is signed in, branch on a [capability](../glossary.md#capability) and refresh the token. The example is the header of the SDR app.
 
 ## Goal
@@ -65,3 +66,4 @@ The header shows the signed-in user and space, and the ICP link appears only for
 ## Next step
 
 Resolve user ids to names with [list members](./list-members.md).
+<!-- /flavour -->

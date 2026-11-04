@@ -2,6 +2,7 @@
 title: Agent-react reference
 ---
 
+<!-- flavour react -->
 Reference for `@vectoragents/vs-apps/agent-react` 0.2.4. The subpath binds page handlers to [agent actions](../glossary.md#agent-action), so the Space agent can drive a page. `AppProvider` from [`/react`](./react.md) already mounts the registry. Apps call `useAgentAction` and rarely touch the rest.
 
 Every symbol below follows one layout: signature, behaviour, example. Each example is a complete file and is typechecked against the installed package.
@@ -236,3 +237,4 @@ A page component that binds `leads.open_lead_list` with `useAgentAction`, and a 
 ## Next step
 
 Continue with the [server reference](./server.md).
+<!-- /flavour -->

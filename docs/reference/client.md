@@ -2,7 +2,7 @@
 title: Client reference
 ---
 
-Reference for `@vectoragents/vs-apps/client` 0.2.4. The subpath holds the browser boot config and the user directory types. It also exports the iframe bridge and token verifier that [`AppProvider`](./react.md#appprovider) drives. An app imports four symbols from it.
+Reference for `@vectoragents/vs-apps/client` 0.2.4. The subpath holds the browser boot config and the user directory types. It also exports the iframe bridge and token verifier that [`AppProvider`](./react.md) drives. An app imports four symbols from it.
 
 Every symbol below follows one layout: signature, behaviour, example. Each example is a complete file and is typechecked against the installed package.
 
