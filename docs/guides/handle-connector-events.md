@@ -2,7 +2,10 @@
 title: Handle connector events
 ---
 
-Receive an inbound event from a connector in a NestJS server, and answer it through the same connector. The guide uses `ConnectorEventsService` and the `ConnectorExecuteResult` type from the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary.md#sdk).
+Receive an inbound event from a connector in your server, and answer it through the same connector.
+
+<!-- flavour nest -->
+The guide uses `ConnectorEventsService` and the `ConnectorExecuteResult` type from the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary.md#sdk).
 
 A [connector slot](../glossary.md#connector-slot) can declare event handlers. When a [space manager](../glossary.md#space-manager) routes an event type of the attached connector to a handler, [Space](../glossary.md#space) sends each event to your server. `ConnectorEventsService` holds the function that runs for each handler. `ConnectorExecuteResult` is what a call back to the connector returns.
 
@@ -12,8 +15,8 @@ End with a handler for the inbound events of one connector slot. The handler rep
 
 ## Prerequisites
 
-- The NestJS server from [`nest-adapter`](./nest-adapter.md), installed and running with `npm run dev:space`.
-- Background: the [server primitives](../reference/root.md) and the [connector slot fields](../app-definition.md#resourcesconnectors) of the app definition. This guide has no plain twin, because the framework-free `/server` subpath has only `assertSpaceEvents`: no handler registry and no events route.
+- The Nest.js app from Part 1 of the [quickstart](../quickstart.md), running with `npm run dev:space`. Part 2, step 1 of the quickstart sets up the `.env` file that command reads.
+- Background: the [server primitives](../reference/root.md) and the [connector slot fields](../app-definition.md#resourcesconnectors) of the app definition. The framework-free `/server` subpath has only `assertSpaceEvents`: no handler registry and no events route, so this guide has no Node.js version yet.
 
 ## Steps
 
@@ -152,4 +155,7 @@ The server mounts `POST /api/events/hello-app`, verifies the events token of eac
 
 ## Next step
 
-Register the app in Space with [Part 2 of the quickstart](../quickstart.md#part-2-add-the-app-to-a-space), so that a space manager can attach a connector to the `support` slot and route its events.
+Register the app in Space with Part 2 of the [quickstart](../quickstart.md), so that a space manager can attach a connector to the `support` slot and route its events.
+<!-- /flavour -->
+<!-- flavour node todo -->
+<!-- /flavour -->

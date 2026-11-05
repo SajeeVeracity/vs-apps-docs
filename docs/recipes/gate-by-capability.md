@@ -1,5 +1,6 @@
 ---
 title: Gate a page and an endpoint by capability
+start: leads-app
 ---
 
 Hide a [page](../glossary.md#page) from members who lack a [capability](../glossary.md#capability) and refuse the same members on the server. The example gates the `leads` page of `hello-app` with `lead:manage`.
@@ -10,27 +11,34 @@ End with one capability enforced twice: `RequireCapability` hides the `leads` pa
 
 ## Prerequisites
 
-- A GitHub package token in `GITHUB_PACKAGES_TOKEN`, as in [step 1 of the quickstart](../quickstart.md#1-clone-the-starter-and-install). The install below reads it.
-- The start folder `recipes/leads-app` from `main` of the public starter. It is `hello-app` with an ungated `leads` page. Clone the starter and work inside that folder.
+- A GitHub package token in `GITHUB_PACKAGES_TOKEN`, as in [step 0 of the quickstart](../quickstart.md#0-set-up-access-to-the-package-registry). The scaffold command reads it.
+- The `leads-app` start of the starter. It is `hello-app` with an ungated `leads` page. Scaffold it and work inside the new folder.
 
+<!-- flavour node -->
 ```bash
-git clone https://github.com/VectorAgents/vector-app-quickstart.git
-cd vector-app-quickstart/recipes/leads-app
-npm install
+npm create @vectoragents/app leads-app -- --client react --server node --start leads-app
+cd leads-app
 ```
+<!-- /flavour -->
+<!-- flavour nest -->
+```bash
+npm create @vectoragents/app leads-app -- --client react --server nest --start leads-app
+cd leads-app
+```
+<!-- /flavour -->
 
 - A member who holds the capability and one who does not. A [space manager](../glossary.md#space-manager) [grants](../glossary.md#grant) capabilities in [Space](../glossary.md#space).
 - Background: [`RequireCapability` on the client](../reference/react.md#requirecapability).
 
 ## Steps
 
-Each snippet is a complete file. The start folder already declares the `lead:manage` and `icp:manage` capabilities and the `leads` page, and this recipe changes what is listed below.
+Each snippet is a complete file. The `leads-app` start already declares the `lead:manage` and `icp:manage` capabilities and the `leads` page, and this recipe changes what is listed below.
 
 ### 1. Gate the pages in the definition
 
 A page names its capability in `capability`. `defineApp` does not check that the name exists in `capabilities`, so keep the two keys identical.
 
-In the start folder the `leads` page has no `capability`. Add it, and add an `icp` page gated by `icp:manage`, which step 5 uses as the second page. Replace the definition in `shared/src/index.ts`.
+In the start the `leads` page has no `capability`. Add it, and add an `icp` page gated by `icp:manage`, which step 5 uses as the second page. Replace the definition in `shared/src/index.ts`.
 
 ```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
@@ -54,8 +62,9 @@ export const definition = defineApp({
 });
 ```
 
-The `CAPABILITY` export stays, because `server/src/main.ts` and `HelloPage.tsx` use it.
+The `CAPABILITY` export stays, because the `/api/hello` route and `HelloPage.tsx` use it.
 
+<!-- flavour react -->
 ### 2. Gate the page in the browser
 
 `RequireCapability` renders its children only when the token holds the capability. A function `fallback` receives the missing capability name. Replace `client/src/LeadsPage.tsx`.
@@ -79,9 +88,11 @@ export function LeadsPage() {
 ```
 
 This check shapes the UI only. A member can still call the endpoint directly.
+<!-- /flavour -->
 
 ### 3. Enforce the capability on the server
 
+<!-- flavour node -->
 `requireCapability` in `server/src/auth.ts` verifies the user token. It throws `AppAuthError` with status `403` when the claims lack the named capability. Add the leads handler in a new file. It receives the verified claims.
 
 ```ts title="server/src/leads.ts"
@@ -92,7 +103,32 @@ export function listLeads(claims: UserTokenClaims) {
 }
 ```
 
-In `server/src/main.ts`, import `listLeads` and add this entry to the `routes` map: `'/api/leads': async (req) => listLeads(await requireCapability(req, 'lead:manage')),`. The existing `catch` block turns the `403` into the response. For the decorator form, see the [framework adapter page](../nest/nest-adapter.md).
+In `server/src/main.ts`, import `listLeads` and add this entry to the `routes` map: `'/api/leads': async (req) => listLeads(await requireCapability(req, 'lead:manage')),`. The existing `catch` block turns the `403` into the response.
+<!-- /flavour -->
+<!-- flavour nest -->
+The `RequireCapability` decorator refuses a token that lacks the capability, and the global guard of `AppPlatformModule` answers `403`. `CurrentUser` hands the controller the verified claims. Add the leads handler in a new controller.
+
+```ts title="server/src/leads.controller.ts"
+import { Controller, Get } from '@nestjs/common';
+import { CurrentUser, RequireCapability } from '@vectoragents/vs-apps/nest';
+import type { UserTokenClaims } from '@vectoragents/vs-apps';
+
+@Controller('leads')
+export class LeadsController {
+  @Get()
+  @RequireCapability('lead:manage')
+  list(@CurrentUser() user: UserTokenClaims) {
+    return { spaceId: user.spaceId, leads: [] };
+  }
+}
+```
+
+In `server/src/app.module.ts`, import `LeadsController` from `./leads.controller`. Add it to the `controllers` array, next to `HelloController`.
+
+```text
+controllers: [HelloController, LeadsController],
+```
+<!-- /flavour -->
 
 ### 4. Check both gates
 
@@ -102,6 +138,7 @@ In the dev panel, remove `lead:manage` from the capability set. The page shows t
 
 For the server, mint a development token without `lead:manage` through the [harness token route](../reference/harness.md). Call `GET /api/leads` with it. The server answers `403` with `Missing capability: lead:manage`. A token that holds the capability gets `200`.
 
+<!-- flavour react -->
 ### 5. Share one fallback across pages
 
 Each page that repeats `fallback` can drift from the others. Wrap `RequireCapability` once, and every gated page shows the same message.
@@ -139,6 +176,7 @@ export function IcpPage() {
 ```
 
 In `client/src/App.tsx`, render `<IcpPage />` when `window.location.pathname` is `/icp`, the way the file does for `/leads`. Both pages now show one fallback. To change the message, edit `GatedPage.tsx`.
+<!-- /flavour -->
 
 ## Result
 

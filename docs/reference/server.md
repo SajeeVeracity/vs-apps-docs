@@ -45,6 +45,7 @@ function pingSpaceManifests(options: {
 
 ### Example
 
+<!-- flavour node -->
 ```ts title="src/ping.ts"
 import { defineApp } from '@vectoragents/vs-apps';
 import { buildManifests, pingSpaceManifests } from '@vectoragents/vs-apps/server';
@@ -67,6 +68,9 @@ if (process.env.SPACE_API_URL) {
   void pingSpaceManifests({ spaceBaseUrl, manifests });
 }
 ```
+<!-- /flavour -->
+<!-- flavour nest todo -->
+<!-- /flavour -->
 
 ## Result
 

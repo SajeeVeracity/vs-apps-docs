@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { checkEnvExamples, checkEnvVars, checkCodeBlocks, checkPageVersions, checkPorts, checkSdkPin, checkStartFolders, checkTree, installedSdkVersion, main, pageTreePaths, usedEnvNames } from './starter-sync.mjs';
+import { checkCodeBlocks, checkEnvExamples, checkEnvVars, checkFlavourSet, checkPageVersions, checkPorts, checkSdkPin, checkTree, cliCommand, installedSdkVersion, main, pageTreePaths, readPages, readTemplates, startOf, usedEnvNames } from './starter-sync.mjs';
 
 const tree = ['hello-app/', '├── .env.example', '├── client/', '│   ├── index.html', '│   └── src/', '│       └── main.tsx', '└── shared/', '    └── src/', '        └── index.ts'].join('\n');
 const page = [
@@ -32,7 +32,7 @@ const write = (root, path, content) => {
   writeFileSync(join(root, path), content);
 };
 
-/** A starter fixture that satisfies every check against `page`. */
+/** A generated-project fixture that satisfies every check against `page`. */
 function starter(overrides = {}) {
   const root = mkdtempSync(join(tmpdir(), 'starter-'));
   const pin = (version) => JSON.stringify({ dependencies: { '@vectoragents/vs-apps': version } });
@@ -46,19 +46,13 @@ function starter(overrides = {}) {
     'client/package.json': pin('0.2.4'),
     'server/package.json': pin('0.2.4'),
     'shared/package.json': pin('0.2.4'),
-    'package-lock.json': JSON.stringify({ packages: { 'node_modules/@vectoragents/vs-apps': { version: '0.2.4' } } }),
-    'recipes/leads-app/package.json': '{}',
-    'recipes/leads-app/client/package.json': pin('0.2.4'),
-    'recipes/leads-app/server/package.json': pin('0.2.4'),
-    'recipes/leads-app/shared/package.json': pin('0.2.4'),
-    'recipes/leads-app/package-lock.json': JSON.stringify({ packages: { 'node_modules/@vectoragents/vs-apps': { version: '0.2.4' } } }),
     ...overrides,
   };
   for (const [path, content] of Object.entries(files)) if (content !== null) write(root, path, content);
   return root;
 }
 
-test('SDK pin: passes when every package.json and the lockfile pin the installed version', () => {
+test('SDK pin: passes when every package.json pins the installed version', () => {
   assert.deepEqual(checkSdkPin(starter(), '0.2.4'), []);
 });
 
@@ -70,61 +64,9 @@ test('SDK pin: fails when a package.json pins another version', () => {
   assert.match(problems[0], /0\.2\.5/);
 });
 
-test('SDK pin: fails when the lockfile resolves another version', () => {
-  const root = starter({ 'package-lock.json': JSON.stringify({ packages: { 'node_modules/@vectoragents/vs-apps': { version: '0.2.3' } } }) });
-  const problems = checkSdkPin(root, '0.2.4');
-  assert.equal(problems.length, 1);
-  assert.match(problems[0], /package-lock\.json/);
-});
-
 test('SDK pin: fails when no file pins the SDK at all', () => {
-  const root = starter({ 'client/package.json': '{}', 'server/package.json': '{}', 'shared/package.json': '{}', 'package-lock.json': null });
+  const root = starter({ 'client/package.json': '{}', 'server/package.json': '{}', 'shared/package.json': '{}' });
   assert.equal(checkSdkPin(root, '0.2.4').length, 1);
-});
-
-test('start folders: pass when recipes/leads-app exists and pins the installed version', () => {
-  assert.deepEqual(checkStartFolders(starter(), '0.2.4'), []);
-});
-
-test('start folders: fail when recipes/leads-app is missing', () => {
-  const root = starter({
-    'recipes/leads-app/package.json': null,
-    'recipes/leads-app/client/package.json': null,
-    'recipes/leads-app/server/package.json': null,
-    'recipes/leads-app/shared/package.json': null,
-    'recipes/leads-app/package-lock.json': null,
-  });
-  const problems = checkStartFolders(root, '0.2.4');
-  assert.equal(problems.length, 1);
-  assert.match(problems[0], /recipes\/leads-app is missing from the starter/);
-});
-
-test('start folders: fail when the folder pins another version, and name the folder', () => {
-  const root = starter({ 'recipes/leads-app/server/package.json': JSON.stringify({ dependencies: { '@vectoragents/vs-apps': '0.2.5' } }) });
-  const problems = checkStartFolders(root, '0.2.4');
-  assert.equal(problems.length, 1);
-  assert.match(problems[0], /recipes\/leads-app: server\/package\.json pins .* 0\.2\.5/);
-});
-
-test('start folders: fail when the folder lockfile resolves another version', () => {
-  const root = starter({ 'recipes/leads-app/package-lock.json': JSON.stringify({ packages: { 'node_modules/@vectoragents/vs-apps': { version: '0.2.3' } } }) });
-  assert.match(checkStartFolders(root, '0.2.4')[0], /recipes\/leads-app: package-lock\.json/);
-});
-
-test('main: a starter without the start folder exits 1', async () => {
-  const root = starter({
-    'recipes/leads-app/package.json': null,
-    'recipes/leads-app/client/package.json': null,
-    'recipes/leads-app/server/package.json': null,
-    'recipes/leads-app/shared/package.json': null,
-    'recipes/leads-app/package-lock.json': null,
-  });
-  assert.equal(await main({ env: { STARTER_DIR: root }, page, sdkVersion: '0.2.4', ...silent }), 1);
-});
-
-test('main: a start folder with another pin exits 1', async () => {
-  const root = starter({ 'recipes/leads-app/client/package.json': JSON.stringify({ dependencies: { '@vectoragents/vs-apps': '0.2.5' } }) });
-  assert.equal(await main({ env: { STARTER_DIR: root }, page, sdkVersion: '0.2.4', ...silent }), 1);
 });
 
 test('installedSdkVersion matches the exact pin in this repo package.json', () => {
@@ -215,6 +157,10 @@ test('ports: a comment line inside a code block does not end the run step', () =
   assert.deepEqual(checkPorts(withCodeBlock, starter()), []);
 });
 
+test('ports: a page without the run step fails', () => {
+  assert.match(checkPorts('## Goal', starter())[0], /no run step/);
+});
+
 test('ports: fails when the starter preset lacks a port', () => {
   const root = starter({ 'scripts/env-preset.mjs': 'export const x = 1;\n' });
   assert.match(checkPorts(page, root)[0], /SERVER_PORT/);
@@ -301,6 +247,38 @@ const failingClone = () => {
   throw new Error('fatal: unable to access');
 };
 
+const config = {
+  docsRoot: 'docs',
+  outDir: 'docs-gen',
+  axes: { client: { react: 'React' }, server: { node: 'Node.js + TypeScript', nest: 'Nest.js' } },
+  defaults: { client: 'react', server: 'node' },
+};
+
+/** A starter checkout fixture that holds one template directory with a manifest per name. */
+function starterRepo(names = ['client-react', 'server-node', 'server-nest']) {
+  const root = mkdtempSync(join(tmpdir(), 'starter-repo-'));
+  for (const name of names) {
+    const row = name.split('-')[0];
+    write(root, `templates/${name}/flavour.json`, JSON.stringify({ schemaVersion: 1, row, label: name, dev: 'x', needsShared: false }));
+  }
+  write(root, 'templates/base/package.json', '{}');
+  return root;
+}
+
+/** Stands in for the CLI: copies a project fixture into `dir` and records each call. `projects` maps `client+server+start` to overrides. */
+function fakeScaffold(projects = {}) {
+  const calls = [];
+  const scaffold = ({ dir, client, server, start }) => {
+    calls.push(`${client}+${server}+${start}`);
+    cpSync(starter(projects[`${client}+${server}+${start}`]), dir, { recursive: true });
+  };
+  return { scaffold, calls };
+}
+
+const record = (over = {}) => ({ source: 'quickstart.md', path: 'docs/quickstart.md', text: page, pair: { client: 'react', server: 'node' }, start: 'hello', ...over });
+const noPages = { pages: [] };
+const run = (over = {}) => main({ env: { STARTER_DIR: starterRepo() }, config, manifest: noPages, pages: [record()], sdkVersion: '0.2.4', ...fakeScaffold(), ...silent, ...over });
+
 test('main: a clone failure exits 1 when CI is set', async () => {
   assert.equal(await main({ env: { CI: 'true' }, clone: failingClone, ...silent }), 1);
 });
@@ -312,16 +290,79 @@ test('main: a clone failure warns and exits 0 when CI is unset', async () => {
   assert.match(warnings.join('\n'), /skipp/i);
 });
 
-test('main: STARTER_DIR is used without cloning, and problems exit 1', async () => {
-  const clone = () => assert.fail('clone must not run');
-  const bad = starter({ 'client/package.json': JSON.stringify({ dependencies: { '@vectoragents/vs-apps': '9.9.9' } }) });
-  assert.equal(await main({ env: { STARTER_DIR: bad }, clone, page: real, ...silent }), 1);
+test('main: STARTER_DIR is used without cloning', async () => {
+  assert.equal(await run({ clone: () => assert.fail('clone must not run') }), 0);
 });
 
-test('main: a clean starter exits 0', async () => {
-  const clone = () => assert.fail('clone must not run');
-  const ok = await main({ env: { STARTER_DIR: starter() }, clone, page, sdkVersion: '0.2.4', envPages: {}, ...silent });
-  assert.equal(ok, 0);
+test('main: runs the CLI once per pair, with the hello start', async () => {
+  const { scaffold, calls } = fakeScaffold();
+  assert.equal(await run({ scaffold }), 0);
+  assert.deepEqual(calls.sort(), ['react+nest+hello', 'react+node+hello']);
+});
+
+test('main: a pair whose flavour has no template is not scaffolded', async () => {
+  const { scaffold, calls } = fakeScaffold();
+  assert.equal(await run({ scaffold, env: { STARTER_DIR: starterRepo(['client-react', 'server-node']) } }), 0);
+  assert.deepEqual(calls, ['react+node+hello']);
+});
+
+test('main: a page that asks for the overlay is checked against the overlay project', async () => {
+  const { scaffold, calls } = fakeScaffold({ 'react+node+leads-app': { 'client/src/LeadsPage.tsx': 'export {};\n' } });
+  const leads = record({ source: 'guides/leads.md', path: 'docs/guides/leads.md', start: 'leads-app', text: '```tsx title="client/src/LeadsPage.tsx" starter\nexport {};\n```\n' });
+  assert.equal(await run({ scaffold, pages: [leads] }), 0);
+  assert.ok(calls.includes('react+node+leads-app'));
+  const stale = record({ source: 'guides/leads.md', path: 'docs/guides/leads.md', start: 'leads-app', text: '```tsx title="client/src/LeadsPage.tsx" starter\nother\n```\n' });
+  assert.equal(await run({ scaffold, pages: [stale] }), 1);
+});
+
+test('main: problems name the page and the pair', async () => {
+  const errors = [];
+  const stale = record({ path: 'docs-gen/react/nest/quickstart.md', pair: { client: 'react', server: 'nest' }, text: page.replace('port 3101', 'port 3001') });
+  assert.equal(await run({ pages: [stale], error: (m) => errors.push(m) }), 1);
+  assert.match(errors.join('\n'), /docs-gen\/react\/nest\/quickstart\.md \(react\+nest\).*port 3101/);
+});
+
+test('main: every pair is checked for the SDK pin, even without a page', async () => {
+  const bad = { 'server/package.json': JSON.stringify({ dependencies: { '@vectoragents/vs-apps': '9.9.9' } }) };
+  const errors = [];
+  const { scaffold } = fakeScaffold({ 'react+nest+hello': bad });
+  assert.equal(await run({ scaffold, pages: [], error: (m) => errors.push(m) }), 1);
+  assert.match(errors.join('\n'), /react\+nest.*server\/package\.json pins .* 9\.9\.9/);
+});
+
+test('main: a CLI failure exits 1 and names the pair', async () => {
+  const errors = [];
+  const scaffold = () => {
+    throw new Error('Unknown server');
+  };
+  assert.equal(await run({ scaffold, error: (m) => errors.push(m) }), 1);
+  assert.match(errors.join('\n'), /react\+node.*Unknown server/);
+});
+
+test('main: the flavour-set drift check fails the run', async () => {
+  const manifest = { pages: [{ source: 'recipes/x.md', axes: ['server'], trees: [{ flavours: { server: 'node' } }, { flavours: { server: 'nest' } }] }] };
+  assert.equal(await run({ manifest, env: { STARTER_DIR: starterRepo(['client-react', 'server-node']) } }), 1);
+  assert.equal(await run({ manifest }), 0);
+});
+
+test('main: a page with a stale port exits 1', async () => {
+  assert.equal(await run({ pages: [record({ text: page.replace('port 3101', 'port 3001') })] }), 1);
+});
+
+test('main: a page with a stale SDK version exits 1', async () => {
+  const stale = record({ text: '@vectoragents/vs-apps@0.1.0' });
+  assert.equal(await run({ pages: [stale] }), 1);
+});
+
+test('main: only recipes and guides are checked for env vars', async () => {
+  const text = 'Set `SPACE_BASE_URL`.';
+  assert.equal(await run({ pages: [record({ source: 'guides/x.md', path: 'docs/guides/x.md', text })] }), 1);
+  assert.equal(await run({ pages: [record({ source: 'reference/x.md', path: 'docs/reference/x.md', text })] }), 0);
+});
+
+test('main: the run step is checked on the quickstart only', async () => {
+  const stale = record({ source: 'guides/x.md', path: 'docs/guides/x.md', text: runStep('port 1.') });
+  assert.equal(await run({ pages: [stale] }), 0);
 });
 
 test('page versions: passes when every SDK version string on the pages is the installed version', () => {
@@ -344,21 +385,120 @@ test('page versions: fails for each string that names another version', () => {
 });
 
 test('page versions: the real quickstart and harness pages name the installed version', () => {
-  assert.deepEqual(checkPageVersions(undefined, installedSdkVersion()), []);
+  const pages = Object.fromEntries(['quickstart.md', 'reference/harness.md'].map((file) => [file, readFileSync(new URL(`../docs/${file}`, import.meta.url), 'utf8')]));
+  assert.deepEqual(checkPageVersions(pages, installedSdkVersion()), []);
 });
 
-test('main: a page with a stale port exits 1', async () => {
-  const stale = page.replace('port 3101', 'port 3001');
-  assert.equal(await main({ env: { STARTER_DIR: starter() }, page: stale, sdkVersion: '0.2.4', ...silent }), 1);
+
+const flavourPage = (source, axes, trees) => ({ source, axes, trees: trees.map((flavours) => ({ flavours })) });
+const templates = [
+  { row: 'client', name: 'react' },
+  { row: 'server', name: 'node' },
+  { row: 'server', name: 'nest' },
+];
+const serverPage = flavourPage('guides/x.md', ['server'], [{ server: 'node' }, { server: 'nest' }]);
+
+test('flavour set: passes when templates and the flavours of every flavoured page match', () => {
+  assert.deepEqual(checkFlavourSet([serverPage, flavourPage('quickstart.md', ['client', 'server'], [{ client: 'react', server: 'node' }, { client: 'react', server: 'nest' }])], templates), []);
 });
 
-test('main: a page with a stale SDK version exits 1', async () => {
-  const stale = { 'docs/quickstart.md': '@vectoragents/vs-apps@0.1.0' };
-  const code = await main({ env: { STARTER_DIR: starter() }, page, sdkVersion: '0.2.4', versionPages: stale, ...silent });
-  assert.equal(code, 1);
+test('flavour set: fails when a flavour a page names has no template', () => {
+  const problems = checkFlavourSet([serverPage], templates.filter((t) => t.name !== 'nest'));
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /guides\/x\.md names server flavour "nest".*no template/);
 });
 
-test('main: a page with an env var that the starter lacks exits 1', async () => {
-  const envPages = docPage('Set `SPACE_BASE_URL`.');
-  assert.equal(await main({ env: { STARTER_DIR: starter() }, page, sdkVersion: '0.2.4', envPages, ...silent }), 1);
+test('flavour set: fails when a server template has no block or todo on a flavoured page', () => {
+  const only = flavourPage('guides/x.md', ['server'], [{ server: 'node' }]);
+  const problems = checkFlavourSet([only], templates);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /server-nest.*no block or todo.*guides\/x\.md/);
+});
+
+test('flavour set: a template of an axis the page does not use needs no block', () => {
+  const clientOnly = flavourPage('recipes/y.md', ['client'], [{ client: 'react' }]);
+  assert.deepEqual(checkFlavourSet([clientOnly], templates), []);
+});
+
+test('flavour set: no flavoured page needs no template', () => {
+  assert.deepEqual(checkFlavourSet([], []), []);
+});
+
+test('templates: read from the manifests, named by the directory suffix', () => {
+  const root = starterRepo(['client-react', 'server-node']);
+  assert.deepEqual(
+    readTemplates(root).sort((a, b) => a.name.localeCompare(b.name)),
+    [{ row: 'server', name: 'node' }, { row: 'client', name: 'react' }].sort((a, b) => a.name.localeCompare(b.name)),
+  );
+});
+
+test('start: front matter `start` selects the overlay, hello otherwise', () => {
+  assert.equal(startOf('---\ntitle: X\nstart: leads-app\n---\nbody'), 'leads-app');
+  assert.equal(startOf('---\ntitle: X\n---\nbody'), 'hello');
+  assert.equal(startOf('no front matter\nstart: leads-app'), 'hello');
+});
+
+test('cliCommand: a local starter runs its own CLI against its templates, without install', () => {
+  const { command, args } = cliCommand({ starterDir: '/s', dir: '/p/a', client: 'react', server: 'nest', start: 'leads-app' });
+  assert.equal(command, process.execPath);
+  assert.deepEqual(args, ['/s/packages/create-app/bin/create-app.mjs', '/p/a', '--client', 'react', '--server', 'nest', '--start', 'leads-app', '--starter', '/s', '--no-install']);
+});
+
+test('cliCommand: without a local starter the published CLI downloads the ref', () => {
+  const { command, args } = cliCommand({ dir: '/p/a', client: 'react', server: 'node', start: 'hello', ref: 'v2' });
+  assert.equal(command, 'npm');
+  assert.deepEqual(args, ['exec', '--yes', '--package=@vectoragents/create-app@latest', '--', 'create-app', '/p/a', '--client', 'react', '--server', 'node', '--start', 'hello', '--ref', 'v2', '--no-install']);
+});
+
+/** A docs root with source pages and a generated tree, as `pnpm generate` leaves them. */
+function docsRoot(files) {
+  const root = mkdtempSync(join(tmpdir(), 'docs-root-'));
+  for (const [path, content] of Object.entries(files)) write(root, path, content);
+  return root;
+}
+
+test('pages: neutral pages take the default pair and their own start; flavoured pages come from the trees', () => {
+  const root = docsRoot({
+    'docs/quickstart.md': 'quick',
+    'docs/reference/harness.md': 'harness',
+    'docs/recipes/a.md': '---\nstart: leads-app\n---\nrecipe',
+    'docs/guides/x.md': 'flavoured source',
+    'docs-gen/nest/guides/x.md': 'nest tree',
+    'docs-gen/node/guides/x.md': 'node tree',
+  });
+  const manifest = { pages: [flavourPage('guides/x.md', ['server'], [{ server: 'node' }, { server: 'nest' }])] };
+  const pages = readPages({ root, config, manifest });
+  const by = (path) => pages.find((p) => p.path === path);
+  assert.equal(pages.length, 5);
+  assert.deepEqual(by('docs/recipes/a.md').pair, { client: 'react', server: 'node' });
+  assert.equal(by('docs/recipes/a.md').start, 'leads-app');
+  assert.equal(by('docs/quickstart.md').start, 'hello');
+  assert.equal(by('docs-gen/nest/guides/x.md').text, 'nest tree');
+  assert.deepEqual(by('docs-gen/nest/guides/x.md').pair, { client: 'react', server: 'nest' });
+  assert.equal(by('docs-gen/nest/guides/x.md').source, 'guides/x.md');
+  assert.equal(pages.some((p) => p.path === 'docs/guides/x.md'), false);
+});
+
+test('pages: a flavoured page without a generated tree is an error', () => {
+  const root = docsRoot({ 'docs/quickstart.md': 'quick', 'docs/reference/harness.md': 'harness' });
+  const manifest = { pages: [flavourPage('guides/x.md', ['server'], [{ server: 'node' }])] };
+  assert.throws(() => readPages({ root, config, manifest }), /node\/guides\/x\.md/);
+});
+
+// STARTER_DIR names a starter checkout; the CLI runs for real.
+test('the real CLI scaffolds a project that satisfies the SDK pin check', { skip: !process.env.STARTER_DIR }, async () => {
+  const { scaffoldWith } = await import('./starter-sync.mjs');
+  const dir = join(mkdtempSync(join(tmpdir(), 'cli-')), 'p');
+  scaffoldWith({ starterDir: process.env.STARTER_DIR })({ dir, client: 'react', server: 'nest', start: 'leads-app' });
+  assert.ok(readFileSync(join(dir, 'client/src/LeadsPage.tsx'), 'utf8').length > 0);
+  assert.deepEqual(checkSdkPin(dir, installedSdkVersion()), []);
+});
+
+test('the real CLI and templates pass main for a flavoured page that asks for the overlay', { skip: !process.env.STARTER_DIR }, async () => {
+  const starterDir = process.env.STARTER_DIR;
+  const excerpt = readFileSync(join(starterDir, 'overlays/leads-app/client/src/LeadsPage.tsx'), 'utf8').split('\n').slice(0, 3).join('\n');
+  const text = `---\nstart: leads-app\n---\n\`\`\`tsx title="client/src/LeadsPage.tsx" starter\n${excerpt}\n\`\`\`\n`;
+  const pages = ['node', 'nest'].map((server) => record({ source: 'guides/leads.md', path: `docs-gen/react/${server}/guides/leads.md`, pair: { client: 'react', server }, start: startOf(text), text }));
+  const manifest = { pages: [flavourPage('guides/leads.md', ['client', 'server'], [{ client: 'react', server: 'node' }, { client: 'react', server: 'nest' }])] };
+  assert.equal(await main({ env: { STARTER_DIR: starterDir }, config, manifest, pages, ...silent }), 0);
 });

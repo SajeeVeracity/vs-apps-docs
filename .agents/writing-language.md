@@ -66,27 +66,27 @@ Scope: `docs/quickstart.md` only. `scripts/voice.mjs` checks the TU1 hard cap, T
 
 ## Recipe page
 
-Scope: `docs/recipes/`, and `docs/nest/nest-adapter.md`.
+Scope: `docs/recipes/`.
 
-- **R1 Sorting rule.** A recipe starts from the starter app (`main`, or a start folder such as `recipes/leads-app/`) and ends with something you run. If the page needs a result from an earlier page, it is a guide.
+- **R1 Sorting rule.** A recipe starts from a project the starter CLI generates (`--start hello`, or an overlay such as `--start leads-app`) and ends with something you run. If the page needs a result from an earlier page, it is a guide.
 - **R2 Layout.** Front matter `title`, an opening paragraph, then the sections Goal, Prerequisites, Steps, Result, Next step, in that order.
 - **R3 Goal.** Starts with "End with" and names what runs when the recipe is done.
-- **R4 Prerequisites.** Names the start state (`main` or the start folder), the tokens and accounts the steps need, and a closing "Background:" line of links. It does not name another recipe as a requirement.
+- **R4 Prerequisites.** Names the start state (the `--start` value of the generated project), the tokens and accounts the steps need, and a closing "Background:" line of links. It does not name another recipe as a requirement.
 - **R5 Steps.** Numbered `###` headings, each a verb phrase (H2). Snippet titles start with `client/`, `server/` or `shared/`. Show the diff against the start state, not the whole file.
 - **R6 Shared toy app.** Use the app `hello-app`, pages `leads` and `icp`, and capabilities `lead:manage` and `icp:manage`.
 - **R7 Result.** One paragraph that says what now works, in the present tense.
-- **R8 Next step.** One link. Recipes form a chain, so the link is the next recipe or guide. `nest-adapter` has two: quickstart Part 2, then the open-route guide.
+- **R8 Next step.** One link. Recipes form a chain, so the link is the next recipe or guide.
 
 ## Guide page
 
-Scope: `docs/guides/` and `docs/nest/` except `nest-adapter.md`.
+Scope: `docs/guides/`.
 
 - **G1 Sorting rule.** A guide starts from the result of a prior recipe. Its Prerequisites name that recipe. If the page starts from the starter app, it is a recipe.
 - **G2 Layout.** Same as R2.
-- **G3 Prerequisites.** First item names the prior recipe and the state its result leaves: `expose-agent-actions` for a plain guide, `nest-adapter` for a Nest guide. Then a "Background:" line of links.
+- **G3 Prerequisites.** First item names the prior recipe and the state its result leaves: `expose-agent-actions`. A guide that builds on the quickstart app alone names Part 1 of the quickstart and the state it leaves. A guide on the `leads-app` start sets `start: leads-app` in front matter and shows the scaffold command with `--start leads-app` for each server flavour. Then a "Background:" line of links.
 - **G4 Goal, Steps, Result.** As R3, R5 and R7.
 - **G5 Next step.** One link to one related page. Guides are not a chain.
-- **G6 Plain or Nest.** A guide outside `docs/nest/` uses plain `node:http` and does not name Nest. A Nest guide and its plain twin link each other in Background.
+- **G6 Flavours.** A guide that differs by server puts the Node.js text in a `node` block and the Nest.js text in a `nest` block of one page. Nest snippets keep type-only constructor injection with no `@Inject`.
 
 ## Not in this checklist
 

@@ -2,6 +2,7 @@
 title: React reference
 ---
 
+<!-- flavour react -->
 Reference for `@vectoragents/vs-apps/react` 0.2.4. The subpath holds the client runtime of an [app](../glossary.md#app): the provider that completes the handshake with [Space](../glossary.md#space), the hook that reads the result, and two gates.
 
 Every symbol below follows one layout: signature, behaviour, example. Each example is a complete file and is typechecked against the installed package.
@@ -257,3 +258,4 @@ A root component that mounts `AppProvider`, waits on `BootGate`, reads the user 
 ## Next step
 
 Continue with the [agent-react reference](./agent-react.md).
+<!-- /flavour -->

@@ -2,18 +2,21 @@
 title: Open a route and read the caller
 ---
 
-Leave one route of a NestJS server open to anyone, and read who is calling on another route. Both use the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary.md#sdk).
+Leave one route of your server open to anyone, and read who is calling on another route.
+
+<!-- flavour nest -->
+Both use the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary.md#sdk).
 
 By default the adapter's global guard verifies the user token of every route. `@Public` opts one route out of that check. `appCaller` returns the verified claims and the raw token for a route that stays behind the guard.
 
 ## Goal
 
-End with two routes on the server from [`nest-adapter`](./nest-adapter.md): `GET /api/open`, which answers with no token, and `GET /api/caller`, which answers with the caller's claims and refuses a request with no token.
+End with two routes on the server of the quickstart app: `GET /api/open`, which answers with no token, and `GET /api/caller`, which answers with the caller's claims and refuses a request with no token.
 
 ## Prerequisites
 
-- The NestJS server from [`nest-adapter`](./nest-adapter.md), installed and running with `npm run dev:space`.
-- Background: the [server primitives](../reference/root.md) that the adapter wraps, and the [quickstart](../quickstart.md) that the server serves.
+- The Nest.js app from Part 1 of the [quickstart](../quickstart.md), running with `npm run dev:space`. Part 2, step 1 of the quickstart sets up the `.env` file that command reads.
+- Background: the [server primitives](../reference/root.md) that the adapter wraps.
 
 ## Steps
 
@@ -39,7 +42,7 @@ export class OpenRouteController {
 
 ### 2. Read the caller with `appCaller`
 
-`CurrentUser` from `nest-adapter` gives a controller the verified claims. `appCaller` gives the claims and the raw token string, and works in any function that receives the request.
+`CurrentUser`, which the quickstart controller uses, gives a controller the verified claims. `appCaller` gives the claims and the raw token string, and works in any function that receives the request.
 
 `AppRequest` is the request type that `appCaller` takes. It lists only the fields the SDK reads, so you need no HTTP framework types. Inject the request with `@Req()` and type it as `AppRequest`.
 
@@ -96,8 +99,11 @@ curl -s -o /dev/null -w '%{http_code}\n' http://localhost:<SERVER_PORT>/api/call
 
 ## Result
 
-The server answers `/api/open` for anyone. It answers `/api/caller` only for a request that carries a valid user token, and returns that caller's `sub`, `appKey`, `spaceId` and `capabilities`. To add a capability check to the caller route, use `RequireCapability` as in `nest-adapter`.
+The server answers `/api/open` for anyone. It answers `/api/caller` only for a request that carries a valid user token, and returns that caller's `sub`, `appKey`, `spaceId` and `capabilities`. To add a capability check to the caller route, use `RequireCapability`, as the quickstart controller does.
 
 ## Next step
 
-Register the app in Space with [Part 2 of the quickstart](../quickstart.md#part-2-add-the-app-to-a-space), so that a page of the app sends a real user token to `/api/caller`.
+Register the app in Space with Part 2 of the [quickstart](../quickstart.md), so that a page of the app sends a real user token to `/api/caller`.
+<!-- /flavour -->
+<!-- flavour node todo -->
+<!-- /flavour -->

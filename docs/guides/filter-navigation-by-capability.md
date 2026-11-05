@@ -1,7 +1,9 @@
 ---
 title: Filter navigation by capability
+start: leads-app
 ---
 
+<!-- flavour react -->
 Advanced configuration of the app navigation: build your own [page](../glossary.md#page) list from the definition and show only the pages a member may open.
 
 ## Goal
@@ -10,7 +12,7 @@ End with a navigation component that lists the pages of the `hello-app` definiti
 
 ## Prerequisites
 
-- The app from [`expose-agent-actions`](../recipes/expose-agent-actions.md), which starts from the `recipes/leads-app/` folder of the starter. Its definition declares the `leads` page and the `lead:manage` and `icp:manage` capabilities.
+- The app from [`expose-agent-actions`](../recipes/expose-agent-actions.md), which starts from the `leads-app` start of the starter, scaffolded with `npm create @vectoragents/app leads-app -- --client react --server node --start leads-app` (`--server nest` for a Nest.js server). Its definition declares the `leads` page and the `lead:manage` and `icp:manage` capabilities.
 - Background: [`appPages`](../reference/root.md#apppages), and the [quickstart](../quickstart.md).
 
 ## Steps
@@ -79,3 +81,4 @@ The navigation lists Home for every member, and Leads and ICP only for members w
 ## Next step
 
 Gate each page body with [gate a page and an endpoint](../recipes/gate-by-capability.md).
+<!-- /flavour -->

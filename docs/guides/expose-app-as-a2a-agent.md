@@ -1,5 +1,6 @@
 ---
 title: Expose your app as an A2A agent
+start: leads-app
 ---
 
 Let another agent find your app and call it. The guide uses the [A2A](../glossary.md#a2a) protocol (Agent2Agent), where an agent publishes an agent card and answers calls in JSON Remote Procedure Call (JSON-RPC), a message format built on JSON. An agent card is a JSON file that names the agent, lists its skills and says where to send calls.
@@ -12,33 +13,48 @@ End with two routes on the server from [`expose-agent-actions`](../recipes/expos
 
 ## Prerequisites
 
-- The `recipes/leads-app/` server from [`expose-agent-actions`](../recipes/expose-agent-actions.md), installed and running with `npm run dev:space`.
+- The app from [`expose-agent-actions`](../recipes/expose-agent-actions.md), running with `npm run dev:space`. Work in its folder. If you do not have it, set up registry access as in step 0 of the [quickstart](../quickstart.md), then scaffold the `leads-app` start of the starter into a new folder. The folder name `leads-guide` differs from `leads-app`, the folder of the recipe, so the two do not clash:
+
+<!-- flavour node -->
+```bash
+npm create @vectoragents/app leads-guide -- --client react --server node --start leads-app
+cd leads-guide
+```
+<!-- /flavour -->
+<!-- flavour nest -->
+```bash
+npm create @vectoragents/app leads-guide -- --client react --server nest --start leads-app
+cd leads-guide
+```
+<!-- /flavour -->
+
 - Background: the [server primitives](../reference/root.md), the [quickstart](../quickstart.md) that registers the app in Space, and the [`/server` reference](../reference/server.md).
 
 ## Steps
 
+<!-- flavour node -->
 ### 1. Declare the agent
 
 An entry in `agents` tells Space where to find the card. `cardUrlTemplate` is an absolute URL with two tokens. `buildManifests` replaces `{publicBaseUrl}` with the `PUBLIC_BASE_URL` of your server. Space replaces `{spaceId}` with the identifier of each space.
 
-`key` is a lowercase name with hyphens that stays the same across versions. Replace `shared/src/index.ts` with this file. `CAPABILITY` stays an export, because the starter server and `HelloPage.tsx` use it. It now holds `lead:manage`.
+`key` is a lowercase name with hyphens that stays the same across versions. Replace `shared/src/index.ts` with this file. It is the definition of the `leads-app` start with an `agents` entry added.
 
 ```ts title="shared/src/index.ts"
 import { defineApp } from '@vectoragents/vs-apps';
 
-export const CAPABILITY = 'lead:manage';
+export const CAPABILITY = 'hello:view';
 
 export const definition = defineApp({
   key: 'hello-app',
   name: 'Hello app',
   version: '0.1.0',
   pages: [
-    { key: 'home', label: 'Home', path: '/' },
-    { key: 'leads', label: 'Leads', path: '/leads', capability: CAPABILITY },
-    { key: 'icp', label: 'ICP', path: '/icp', capability: 'icp:manage' },
+    { key: 'home', label: 'Home', path: '/', capability: CAPABILITY },
+    { key: 'leads', label: 'Leads', path: '/leads' },
   ],
   capabilities: [
-    { key: CAPABILITY, label: 'Manage Leads', effect: 'write' },
+    { key: CAPABILITY, label: 'View hello', effect: 'read' },
+    { key: 'lead:manage', label: 'Manage Leads', effect: 'write' },
     { key: 'icp:manage', label: 'Manage ICP', effect: 'write' },
   ],
   agents: [
@@ -164,7 +180,10 @@ curl -s -o /dev/null -w '%{http_code}\n' -X POST http://localhost:<SERVER_PORT>/
 
 **Check**: the first command prints a card whose `url` ends in `/api/a2a/1`. The second prints `401`, because the route verifies a token from Space before it reads the call.
 
-A manifest change waits as a pending review, as in [add a page and a capability](../recipes/add-page-and-capability.md#4-let-space-read-the-manifest). Ask Vector to apply it, so Space reads the new `agents` entry.
+A manifest change waits as a pending review, as in step 4 of [add a page and a capability](../recipes/add-page-and-capability.md). Ask Vector to apply it, so Space reads the new `agents` entry.
+<!-- /flavour -->
+<!-- flavour nest todo -->
+<!-- /flavour -->
 
 ## Result
 

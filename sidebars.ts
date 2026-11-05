@@ -38,22 +38,8 @@ const sidebars: SidebarsConfig = {
         'guides/call-space-from-your-server',
         'guides/call-a-model-from-your-server',
         'guides/expose-app-as-a2a-agent',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Nest',
-      link: {
-        type: 'generated-index',
-        slug: '/category/nest',
-        description: 'Pages for servers built with NestJS, the framework behind the @vectoragents/vs-apps/nest adapter.',
-      },
-      items: [
-        'nest/nest-adapter',
-        'nest/open-route-and-read-caller',
-        'nest/handle-connector-events',
-        'nest/call-space-from-your-server',
-        'nest/call-a-model-from-your-server',
+        'guides/open-route-and-read-caller',
+        'guides/handle-connector-events',
       ],
     },
     {

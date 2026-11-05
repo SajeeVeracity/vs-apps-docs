@@ -8,7 +8,7 @@ import DiagramControls from '@site/src/components/DiagramControls';
 
 ## Goal
 
-You clone a working app, run it in the [harness](./glossary.md#harness) on your machine, then ask Vector to register it so you can open it in a real Space. The app has one page, and only users who hold the `hello:view` capability, a permission that Space grants to a user, can see it.
+You scaffold a working app with one command, run it in the [harness](./glossary.md#harness) on your machine, then ask Vector to register it so you can open it in a real Space. The app has one page, and only users who hold the `hello:view` capability, a permission that Space grants to a user, can see it.
 
 Space signs a short-lived token, the user token, for the person who opens the page, and your app checks that token before it trusts anything in it.
 
@@ -41,23 +41,58 @@ Space mints the token and posts it to your client. Your client sends it to your 
 
 ## Prerequisites
 
-- [ ] Git, `npm` and the current [Node.js LTS](https://nodejs.org/en/download) release.
+- [ ] `npm` and the current [Node.js LTS](https://nodejs.org/en/download) release, version 20.19 or later.
 - [ ] A GitHub personal access token (classic) with the `read:packages` scope. [Create one](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic).
 
 ## Part 1: Run the app locally
 
-### 1. Clone the starter and install
+### 0. Set up access to the package registry
 
-The starter is a working app. You start from running code instead of an empty project. Clone it, export your package token and install the dependencies. `.npmrc` reads the token from the `GITHUB_PACKAGES_TOKEN` environment variable during install.
+The scaffold command and the `@vectoragents/vs-apps` package come from GitHub Packages, the package registry of GitHub. GitHub Packages answers only a request that carries your token. Tell `npm` where to find the `@vectoragents` packages, then give it your token.
 
-```bash
-git clone https://github.com/VectorAgents/vector-app-quickstart.git hello-app
-cd hello-app
-export GITHUB_PACKAGES_TOKEN=YOUR_GITHUB_PACKAGES_TOKEN
-npm install
+Add these two lines to the file `~/.npmrc` in your home folder. On Windows the file is `%USERPROFILE%\.npmrc`. Create it if it does not exist. The project does not exist yet, so the lines go in your home folder and not in a project.
+
+```text title="~/.npmrc"
+@vectoragents:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}
 ```
 
-In PowerShell, run `$env:GITHUB_PACKAGES_TOKEN = "YOUR_GITHUB_PACKAGES_TOKEN"` instead of the `export` line.
+Write the second line as shown. `npm` reads the token from the environment variable `GITHUB_PACKAGES_TOKEN` when it runs, so the file holds no secret. The project that the scaffold command creates has its own `.npmrc` with the same two lines.
+
+Export your token in the terminal where you run the next commands.
+
+```bash
+export GITHUB_PACKAGES_TOKEN=YOUR_GITHUB_PACKAGES_TOKEN
+```
+
+In PowerShell, run `$env:GITHUB_PACKAGES_TOKEN = "YOUR_GITHUB_PACKAGES_TOKEN"` instead of the `export` line. Export the token again in every new terminal.
+
+**Check**: run `npm view @vectoragents/vs-apps version`. The command prints a version number. An `E401` error means GitHub rejected the token: create a new classic token with the `read:packages` scope.
+
+### 1. Scaffold the app
+
+The scaffold command writes a working app, so you start from running code instead of an empty project. The flags choose the framework of your client and of your server.
+
+<!-- flavour node -->
+The address of this page names your pair: React for the client and Node.js + TypeScript for the server. To change the pair, use the picker in the navigation bar.
+
+```bash
+npm create @vectoragents/app hello-app -- --client react --server node
+```
+<!-- /flavour -->
+<!-- flavour nest -->
+The address of this page names your pair: React for the client and Nest.js for the server. To change the pair, use the picker in the navigation bar.
+
+```bash
+npm create @vectoragents/app hello-app -- --client react --server nest
+```
+<!-- /flavour -->
+
+The `--` passes the flags to the scaffold command instead of to `npm`. The command copies the project into `hello-app` and runs `npm install` as its last step. Then change into the folder.
+
+```bash
+cd hello-app
+```
 
 **Check**: run `npm ls @vectoragents/vs-apps`. The command exits with 0 and shows the package in all three workspaces.
 
@@ -71,8 +106,9 @@ hello-app@0.1.0 /path/to/hello-app
   └── @vectoragents/vs-apps@0.2.4 deduped
 ```
 
-The clone holds these files. The tour reads the ones that carry the token path.
+The project holds these files. The tour reads the ones that carry the token path.
 
+<!-- flavour node -->
 ```text
 hello-app/
 ├── .env.example
@@ -97,6 +133,34 @@ hello-app/
     └── src/
         └── index.ts
 ```
+<!-- /flavour -->
+<!-- flavour nest -->
+```text
+hello-app/
+├── .env.example
+├── .npmrc
+├── package.json
+├── client/
+│   ├── harness.html
+│   ├── index.html
+│   ├── vite.config.ts
+│   └── src/
+│       ├── App.tsx
+│       ├── HelloPage.tsx
+│       ├── main.tsx
+│       └── token.ts
+├── server/
+│   └── src/
+│       ├── app.module.ts
+│       ├── credential-store.ts
+│       ├── hello.controller.ts
+│       ├── main.ts
+│       └── manifests.ts
+└── shared/
+    └── src/
+        └── index.ts
+```
+<!-- /flavour -->
 
 ### 2. Run the app in the harness
 
@@ -191,6 +255,7 @@ export const manifests = buildManifests([definition], {
 
 `catalogPath` points at `agent-catalog.json`, the [agent catalog](./glossary.md#agent-catalog) file. The Hello app has no agent pages or actions. The starter ships it empty.
 
+<!-- flavour node -->
 The auth module holds the verifier and the checks that protected routes run. `extractBearer` reads the `Authorization` header, `verifyAppUserToken` verifies the token and returns its claims, and `assertCapability` refuses a token that lacks the capability you name. The verifier reads the Space key set from `SPACE_JWKS_URL`, which Part 2 sets. In harness mode it uses `devIssuer` instead, the dev issuer that `dev-routes.ts` defines.
 
 ```ts title="server/src/auth.ts" starter
@@ -258,7 +323,100 @@ if (process.env.SPACE_API_URL) {
   void pingSpaceManifests({ spaceBaseUrl, manifests });
 }
 ```
+<!-- /flavour -->
+<!-- flavour nest -->
+The `@vectoragents/vs-apps/nest` entry point wraps the same checks in a module, a guard and decorators. `AppPlatformModule` serves `GET /api/client-config`, the manifest route and the two provisioning routes, so you write none of them. A global guard verifies every user token against the key set at `SPACE_JWKS_URL`, which Part 2 sets. A missing or invalid token gets status 401, and a token that lacks the capability gets status 403.
 
+The `RequireCapability` decorator refuses a token that lacks the capability, in place of `assertCapability`. `CurrentUser` hands the controller the verified claims. `GET /api/hello` returns them.
+
+```ts title="server/src/hello.controller.ts" starter
+import { Controller, Get } from '@nestjs/common';
+import { CurrentUser, RequireCapability } from '@vectoragents/vs-apps/nest';
+import type { UserTokenClaims } from '@vectoragents/vs-apps';
+import { CAPABILITY } from '@hello-app/shared';
+
+@Controller('hello')
+export class HelloController {
+  @Get()
+  @RequireCapability(CAPABILITY)
+  hello(@CurrentUser() user: UserTokenClaims) {
+    return { sub: user.sub, spaceId: user.spaceId };
+  }
+}
+```
+
+The module takes its settings from the environment. The `devIssuer` option turns on the dev issuer: `npm run dev` sets `VA_DEV_ISSUER` to `true`, and `npm run dev:space` leaves it unset. The module needs the origin of Space, so the code removes `/api` from `SPACE_API_URL`. When the server starts, the module also tells Space which manifests it holds, so a restart refreshes the manifest in Space.
+
+```ts title="server/src/app.module.ts" starter
+import { Module } from '@nestjs/common';
+import { AppPlatformModule } from '@vectoragents/vs-apps/nest';
+import { MemoryCredentialStore } from './credential-store';
+import { HelloController } from './hello.controller';
+import { manifests } from './manifests';
+
+@Module({
+  imports: [
+    AppPlatformModule.forRoot({
+      options: () => ({
+        // The platform module takes the Space origin; SPACE_API_URL ends in /api.
+        spaceBaseUrl: (process.env.SPACE_API_URL ?? '').replace(/\/api\/?$/, ''),
+        spaceJwksUrl: process.env.SPACE_JWKS_URL ?? '',
+        allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN ?? '',
+      }),
+      manifests,
+      credentialStore: MemoryCredentialStore,
+      // Harness mode has no Space JWKS: the module mints its own tokens. dev:space leaves VA_DEV_ISSUER unset.
+      devIssuer: process.env.VA_DEV_ISSUER === 'true',
+    }),
+  ],
+  controllers: [HelloController],
+})
+export class AppModule {}
+```
+
+Space calls `POST /api/provision` and `DELETE /api/deprovision` when a space manager, the person who adds apps to a Space, adds or removes the app. The module stores the secret that Space sends in the credential store you pass to `forRoot`. The store below keeps the secrets in memory and loses them on restart, so implement `AppCredentialStore` over your own storage before production. The harness run does not call these routes.
+
+```ts title="server/src/credential-store.ts" starter
+import { Injectable } from '@nestjs/common';
+import type { AppCredentialStore } from '@vectoragents/vs-apps/nest';
+
+/** Keeps secrets in memory and loses them on restart. Implement AppCredentialStore over real storage before production. */
+@Injectable()
+export class MemoryCredentialStore implements AppCredentialStore {
+  private readonly secrets = new Map<string, string>();
+
+  async upsert(appId: string, spaceId: number, secret: string): Promise<void> {
+    this.secrets.set(`${appId}:${spaceId}`, secret);
+  }
+
+  async remove(appId: string, spaceId: number): Promise<void> {
+    this.secrets.delete(`${appId}:${spaceId}`);
+  }
+
+  async get(appId: string, spaceId: number): Promise<string | null> {
+    return this.secrets.get(`${appId}:${spaceId}`) ?? null;
+  }
+}
+```
+
+`main.ts` starts the server. The `api` prefix gives every route its `/api` path, and `SERVER_PORT` sets the port.
+
+```ts title="server/src/main.ts" starter
+import 'reflect-metadata';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api');
+  await app.listen(Number(process.env.SERVER_PORT));
+}
+
+bootstrap();
+```
+<!-- /flavour -->
+
+<!-- flavour react -->
 ### 5. Read the token in the page
 
 The page needs the token to call your server. It also reads the claims from that token to show the browser lines. `loadAppClientConfig` fetches `GET /api/client-config`. `AppProvider` starts the iframe bridge, the channel on which Space sends tokens, verifies each token Space sends and exposes the claims. `BootGate` shows `fallback` and does not show the page until the first verified token arrives.
@@ -337,6 +495,7 @@ export function HelloPage() {
   );
 }
 ```
+<!-- /flavour -->
 
 ## Part 2: Add the app to a Space
 
@@ -372,7 +531,8 @@ cp .env.example .env
 npm run dev:space
 ```
 
-With `SPACE_API_URL` set, the server pings Space each time it starts. `npm run dev` clears `SPACE_API_URL`, so only `npm run dev:space` sends the ping. The server prints nothing when the ping works. If the ping fails, the server logs a line such as `manifest ping for "hello-app" got 500` and tries again after 5 seconds and after 15 seconds. The server keeps running in every case.
+With `SPACE_API_URL` set, the server pings Space each time it starts. `npm run dev` clears `SPACE_API_URL`, so only `npm run dev:space` sends the ping.
+If the ping fails, the server logs a line such as `manifest ping for "hello-app" got 500` and tries again after 5 seconds and after 15 seconds. The server keeps running in every case.
 
 **Check**: in a second terminal, run this command. It prints the HTTP status and the first 9 characters of the response.
 
@@ -394,7 +554,7 @@ Only Vector registers an app and allows it in an organization license. Send the 
 - The iframe URL: `http://localhost:` followed by `CLIENT_PORT`. Your browser loads it, so `localhost` is your own machine. It is the client origin, not the server origin.
 - The name of your organization.
 
-Space fetches the manifest with a provisioning token. The manifest route calls `requireProvisioning`, which verifies that token.
+Space fetches the manifest with a provisioning token. Your server verifies that token before it answers.
 
 Contact your Vector representative. Vector creates the [app registration](./glossary.md#app-registration), enables it and allows it in your organization license.
 

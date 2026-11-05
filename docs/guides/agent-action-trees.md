@@ -11,7 +11,7 @@ End with a child action `leads.export_leads` that the agent can call only after 
 ## Prerequisites
 
 - The app from [`expose-agent-actions`](../recipes/expose-agent-actions.md), with the `leads` page, the action `leads.open_lead_list` and the [agent catalog](../glossary.md#agent-catalog) that lists it.
-- Background: [`defineAgentPage`](../reference/root.md#defineagentpage) and [`AgentActionRegistryProvider`](../reference/agent-react.md#agentactionregistryprovider). The [quickstart](../quickstart.md) covers the app setup.
+- Background: [`defineAgentPage`](../reference/root.md#defineagentpage) and [`AgentActionRegistryProvider`](../reference/agent-react.md). The [quickstart](../quickstart.md) covers the app setup.
 
 ## Steps
 

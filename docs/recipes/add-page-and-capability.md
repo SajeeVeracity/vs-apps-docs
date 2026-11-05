@@ -2,6 +2,7 @@
 title: Add a page and a capability
 ---
 
+<!-- flavour react -->
 Grow the `hello-app` definition by two [pages](../glossary.md#page) and the [capabilities](../glossary.md#capability) that gate them, link the pages without a reload, then see them in a [Space](../glossary.md#space).
 
 ## Goal
@@ -10,7 +11,7 @@ End with the `leads` and `icp` pages in the Space navigation, gated by the new `
 
 ## Prerequisites
 
-- The app from the [quickstart](../quickstart.md), registered in a Space ([Part 2](../quickstart.md#part-2-add-the-app-to-a-space)) and run with `npm run dev:space`.
+- The app from the [quickstart](../quickstart.md), registered in a Space (Part 2) and run with `npm run dev:space`.
 - `SPACE_API_URL` in `.env`, set to the Space API origin followed by `/api`, for example `https://space-api.example.com/api`. Step 4 uses it.
 - Background: the [app definition](../app-definition.md) page, the [`RequireCapability` reference](../reference/react.md#requirecapability).
 
@@ -191,3 +192,4 @@ The definition declares three pages and three capabilities. The Space shows `lea
 ## Next step
 
 Check the same capabilities on the server and share one fallback across pages with [gate a page and an endpoint](./gate-by-capability.md).
+<!-- /flavour -->

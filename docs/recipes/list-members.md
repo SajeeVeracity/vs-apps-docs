@@ -2,6 +2,7 @@
 title: List and pick members
 ---
 
+<!-- flavour react -->
 Show the owners of leads by name, let a member pick an owner and list the people in each group. The data comes from the [space](../glossary.md#space) directory.
 
 ## Goal
@@ -10,7 +11,7 @@ End with an owners list built with `useUsers`, a member picker built with the di
 
 ## Prerequisites
 
-- The app from the [quickstart](../quickstart.md), added to a Space as in [Part 2](../quickstart.md#part-2-add-the-app-to-a-space) and run with `npm run dev:space`. The harness has no directory, because `npm run dev` clears `SPACE_API_URL`.
+- The app from the [quickstart](../quickstart.md), added to a Space (Part 2) and run with `npm run dev:space`. The harness has no directory, because `npm run dev` clears `SPACE_API_URL`.
 - `SPACE_API_URL` in `.env`, set to the Space API origin followed by `/api`, for example `https://space-api.example.com/api`. The starter returns it as `spaceApiUrl` in `/api/client-config`. Without it, `useApp().directory` is `null`.
 - Background: [`useUsers`](../reference/react.md#useusers), [`DirectoryUser` and `DirectoryGroup`](../reference/client.md#directoryuser).
 
@@ -177,3 +178,4 @@ Owner identifiers render as names, a search box returns members for a picker wit
 ## Next step
 
 Let the Space agent drive these pages with [expose agent actions](./expose-agent-actions.md).
+<!-- /flavour -->

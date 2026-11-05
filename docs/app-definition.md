@@ -77,10 +77,10 @@ flowchart TB
 3. **Generate and serve the manifest.** `buildManifests` turns each definition into a manifest at boot. The server serves it each time Space reads the manifest.
 4. **List agent-callable routes.** Routes the server marks as agent-callable are listed in the manifest at boot.
 5. **Merge the [agent catalog](./glossary.md#agent-catalog).** At boot, the build-time agent catalog is merged into the manifest, joined on page keys.
-6. **Keep the server's app registry.** The registry is the server's list of app definitions. The server holds each definition beside its server module, mounts the module and serves the definition's manifest.
-7. **Check the token.** Controllers compare the `appKey` in a Space token with the definition `key` before they answer.
-8. **Register connector event handlers.** A [connector slot](./glossary.md#connector-slot) declares handler keys in the definition. Register a handler for every declared handler key. The [software development kit (SDK)](./glossary.md#sdk) acknowledges an unregistered handler as `{ handled: false }` and never retries it.
-9. **Look up a model slot.** Code asks Space for a model by [model slot](./glossary.md#model-slot) key. The SDK refuses a slot that the manifest does not declare. If no one sets a slot, the SDK refuses it too.
+6. **Keep the server's app registry.** The registry is the list of definitions you pass to `buildManifests`. A duplicate `key` throws at boot.
+7. **Check the token.** Your server compares the `appKey` in a Space token with the definition `key` before it answers.
+8. **Receive connector events.** A [connector slot](./glossary.md#connector-slot) can declare handler keys in the definition. If it does, the manifest gets an `eventsUrl`, and Space sends events to that address. Your server must answer at that address.
+9. **Look up a model slot.** Code asks Space for a model by [model slot](./glossary.md#model-slot) key. The [software development kit (SDK)](./glossary.md#sdk) refuses a slot that the manifest does not declare. If no one sets a slot, the SDK refuses it too.
 
 ### In Space
 
