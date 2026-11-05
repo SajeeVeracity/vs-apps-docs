@@ -31,7 +31,7 @@ test('prerequisites state React 18 and the dev-issuer flag', () => {
   assert.doesNotMatch(prerequisites, /React 19/);
 });
 
-test('both dev routes have a shape and the handler uses createDevIssuer on node:http', () => {
+test('both dev routes have a shape and the example bridges node:http to the platform', () => {
   for (const route of ['GET /api/__dev/manifests', 'POST /api/__dev/token']) assert.match(text, new RegExp(route));
   for (const field of ['appKey', 'appId', 'manifest', 'token', 'expiresIn', 'claims', 'kind', 'ttlSeconds']) {
     assert.match(text, new RegExp(`\`${field}\``), field);
@@ -58,17 +58,23 @@ test('has no quickstart-specific main.ts paragraph or quickstart proxy wording',
   assert.doesNotMatch(text, /only when `VA_DEV_ISSUER=true`/);
 });
 
-test('documents the three changes that make the app accept dev tokens', () => {
+test('documents the changes that make the app accept dev tokens', () => {
   const changes = section(text, 'Accept dev tokens');
   assert.ok(changes, 'section "Accept dev tokens"');
   assert.match(changes, /ALLOWED_PARENT_ORIGIN/);
   assert.match(changes, /harness origin/);
+  assert.match(changes, /handlePlatformRoute/);
   assert.match(changes, /client-config/);
   assert.match(changes, /spaceJwksUrl/);
   assert.match(changes, /\/api\/__dev\/jwks\.json/);
-  assert.match(changes, /server\/src\/auth\.ts/);
-  assert.match(changes, /verifyAppUserToken/);
-  assert.match(changes, /devIssuer/);
+  assert.match(changes, /verifyUserToken/);
+  assert.match(changes, /platform\.verifier/);
+});
+
+test('the Node.js example builds the platform with a dev issuer and serves it through Fetch', () => {
+  assert.match(text, /createAppPlatform/);
+  assert.match(text, /devIssuer: process\.env\.VA_DEV_ISSUER === 'true' \? await createDevIssuer\(\) : undefined/);
+  assert.match(text, /platform\.fetch\(/);
 });
 
 test('harness.html has a root element and loads harness.tsx', () => {

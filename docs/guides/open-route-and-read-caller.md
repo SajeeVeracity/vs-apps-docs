@@ -65,7 +65,7 @@ export class CallerController {
 }
 ```
 
-`appCaller` returns `{ userJwt, claims }`. `userJwt` is the token string the caller sent. `claims` is the verified payload, with `sub` (the user identifier), `appKey`, `spaceId` and `capabilities`.
+`appCaller` returns `{ userToken, claims, headers }`. `userToken` is the token string the caller sent. `headers` are the headers of the request. `claims` is the verified payload, with `sub` (the user identifier), `appKey`, `spaceId` and `capabilities`.
 
 The guard attaches both values to every route that is not `@Public`. On a `@Public` route the guard attaches nothing, so `appCaller` throws a `401` there.
 

@@ -3,7 +3,7 @@ title: React reference
 ---
 
 <!-- flavour react -->
-Reference for `@vectoragents/vs-apps/react` 0.2.4. The subpath holds the client runtime of an [app](../glossary.md#app): the provider that completes the handshake with [Space](../glossary.md#space), the hook that reads the result, and two gates.
+Reference for `@vectoragents/vs-apps/react` 0.4.0. The subpath binds the [browser runtime](./browser.md) of an [app](../glossary.md#app) to React: the provider that completes the handshake with [Space](../glossary.md#space), the hooks that read the result, two gates, and the bindings that let the Space agent drive a page through [agent actions](../glossary.md#agent-action). The [harness](./harness.md) is the `@vectoragents/vs-apps/react/harness` subpath.
 
 Every symbol below follows one layout: signature, behaviour, example. Each example is a complete file and is typechecked against the installed package.
 
@@ -12,6 +12,8 @@ Every symbol below follows one layout: signature, behaviour, example. Each examp
 - `@vectoragents/vs-apps` installed with a registry token.
 - React 19 with TypeScript.
 - An [app definition](../glossary.md#app-definition) that declares the [capability](../glossary.md#capability) the examples check, `leads:read`.
+- An action declared with `defineAgentPage`, covered in the [root reference](./root.md), for the agent action examples.
+- `zod` version 3, installed with `npm install zod@3`, for the parameter schema of an action. Zod 4 gives an empty `paramsJsonSchema`, so the agent sees no parameters.
 
 ## `AppProvider`
 
@@ -33,24 +35,25 @@ interface AppProviderProps {
 
 | Prop | Meaning |
 | --- | --- |
-| `config` | Boot config, or a promise of it. `loadAppClientConfig()` from `@vectoragents/vs-apps/client` returns it. |
+| `config` | Boot config, or a promise of it. `loadAppClientConfig()` from [`/browser`](./browser.md) returns it. |
 | `navigate` | Called when Space asks the app to open a path. |
 | `onToken` | Called with each verified token, and with `null` on unmount. Use it to attach the token to your own API client. |
 | `onTheme` | Called with `'light'` or `'dark'` when Space changes theme. |
 
 ### Behaviour
 
-- Starts the iframe bridge to the parent window once the config resolves. The bridge accepts messages only from `allowedParentOrigin`.
+- Starts the app session of [`/browser`](./browser.md), `startAppSession`, once the config resolves. The session starts the iframe bridge to the parent window. The bridge accepts messages only from `allowedParentOrigin`.
 - Verifies each token Space sends against its signing keys. A token that fails verification is logged to the console and ignored, so `useApp().claims` stays `null`.
 - Opens the user directory on the first verified token, when the config sets `spaceApiUrl`.
 - Reports the document height to Space through a `ResizeObserver`.
 - Registers [agent actions](../glossary.md#agent-action) by wrapping the tree in `AgentActionRegistryProvider`. Do not add a second one.
+- Restarts the session when `config` changes, so create `config` once.
 - A config promise that rejects is logged to the console. No token ever arrives, so a `BootGate` stays on its fallback.
 
 ### Example
 
 ```tsx title="src/Root.tsx"
-import { loadAppClientConfig } from '@vectoragents/vs-apps/client';
+import { loadAppClientConfig } from '@vectoragents/vs-apps/browser';
 import { AppProvider } from '@vectoragents/vs-apps/react';
 import type { ReactNode } from 'react';
 
@@ -73,14 +76,14 @@ Create `config` once at module scope. A new promise on every render restarts the
 
 ## `useApp`
 
-Reads the verified user context.
+Reads the verified user context. `AppSessionState` comes from [`/browser`](./browser.md).
 
 ### Signature
 
 ```typescript
-function useApp(): AppContextValue;
+function useApp(): AppSessionState;
 
-interface AppContextValue {
+interface AppSessionState {
   claims: UserTokenClaims | null;
   capabilities: ReadonlySet<string>;
   hasCapability: (capability: string) => boolean;
@@ -251,11 +254,168 @@ export function LeadsPage() {
 }
 ```
 
+## `useAgentAction`
+
+Binds a handler to an action definition while the component is mounted.
+
+### Signature
+
+```typescript
+function useAgentAction<S extends z.ZodTypeAny>(
+  def: AgentActionDef<S>,
+  handler: AgentActionHandler<S>,
+): void;
+
+type AgentActionHandler<S extends z.ZodTypeAny = z.ZodTypeAny> = (
+  params: z.infer<S>,
+  context?: AgentActionContext,
+) => void | Promise<void>;
+
+interface AgentActionContext {
+  parentSpanId?: string;
+}
+```
+
+| Parameter | Meaning |
+| --- | --- |
+| `def` | The handle returned by `page.action(...)` or `action.child(...)`. |
+| `handler` | Runs when the agent calls the action. Receives the params parsed by the action's schema. |
+
+### Behaviour
+
+- Registers the handler on mount and removes it on unmount. An action is available to the agent only while a component that binds it is mounted.
+- Passes the dispatch `context` to the handler as its second argument. `context.parentSpanId` links the work of the handler to the agent run that called the action.
+- Keeps the latest `handler` in a ref. A new closure on each render does not re-register the action.
+- Re-registers when `def` changes, so pass a module-level handle.
+- A child action is available only while its parent is mounted. Calling it without the parent returns `UNAVAILABLE_ACTION` with `missingParent`.
+- Parses the params with the action's schema before the handler runs. A failure returns `INVALID_PARAMS` and the handler is not called.
+- A handler that throws, or rejects, returns `HANDLER_ERROR` with the error message.
+- Throws `useAgentActionRegistry must be used within AgentActionRegistryProvider` outside the registry. `AppProvider` supplies it.
+
+### Example
+
+```tsx title="src/LeadListsPage.tsx"
+import { defineAgentPage } from '@vectoragents/vs-apps';
+import { useAgentAction } from '@vectoragents/vs-apps/react';
+import { useState } from 'react';
+import { z } from 'zod';
+
+const leadsPage = defineAgentPage({
+  pageId: 'leads',
+  description: 'SDR leads: people and companies found by lead searches, kept in Lead Lists.',
+});
+
+const openLeadListAction = leadsPage.action({
+  id: 'open_lead_list',
+  description: "Open one Lead List's page.",
+  params: z.object({ leadListId: z.string() }),
+});
+
+export function LeadListsPage() {
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  useAgentAction(openLeadListAction, ({ leadListId }) => {
+    setOpenId(leadListId);
+  });
+
+  return <p>{openId ? `Lead List ${openId} is open.` : 'Pick a Lead List.'}</p>;
+}
+```
+
+In an app the definition lives in a shared `actions.ts`, so the [agent catalog](../glossary.md#agent-catalog) extractor and the component import the same handle.
+
+## `AgentActionRegistryProvider`
+
+Creates the registry that `useAgentAction` writes to and exposes it to the tree.
+
+### Signature
+
+```typescript
+function AgentActionRegistryProvider(props: {
+  children?: ReactNode;
+}): ReturnType<typeof createElement>;
+```
+
+### Behaviour
+
+- Creates one [`AgentActionRegistry`](./root.md#createagentactionregistry) per mount and keeps it for the life of the provider.
+- `AppProvider` already wraps its tree in this provider. A second one splits the registry, so actions bound below it are invisible to Space.
+- Mount it directly only in a test or a story that renders a page without `AppProvider`.
+
+### Example
+
+```tsx title="src/LeadListsPage.test-harness.tsx"
+import { defineAgentPage } from '@vectoragents/vs-apps';
+import { AgentActionRegistryProvider, useAgentAction } from '@vectoragents/vs-apps/react';
+
+const dashboardPage = defineAgentPage({
+  pageId: 'sdr-dashboard-harness',
+  description: 'SDR dashboard shown without Space.',
+});
+
+const refreshAction = dashboardPage.action({
+  id: 'refresh',
+  description: 'Reload the dashboard.',
+});
+
+function Dashboard() {
+  useAgentAction(refreshAction, () => {
+    console.log('refreshed');
+  });
+
+  return <h1>Dashboard</h1>;
+}
+
+export function DashboardHarness() {
+  return (
+    <AgentActionRegistryProvider>
+      <Dashboard />
+    </AgentActionRegistryProvider>
+  );
+}
+```
+
+## `useAgentActionRegistry`
+
+Returns the registry from the nearest provider.
+
+### Signature
+
+```typescript
+function useAgentActionRegistry(): AgentActionRegistry;
+```
+
+### Behaviour
+
+- Throws `useAgentActionRegistry must be used within AgentActionRegistryProvider` outside a provider.
+- Returns the same instance on every render.
+- The registry methods are in the [root reference](./root.md#createagentactionregistry).
+- Reading the registry does not subscribe to it. `getMountedActions()` is a snapshot at call time.
+
+### Example
+
+```tsx title="src/MountedActions.tsx"
+import { useAgentActionRegistry } from '@vectoragents/vs-apps/react';
+
+export function MountedActions() {
+  const registry = useAgentActionRegistry();
+  const actions = registry.getMountedActions();
+
+  return (
+    <ul>
+      {actions.map((action) => (
+        <li key={action.id}>{action.id}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
 ## Result
 
-A root component that mounts `AppProvider`, waits on `BootGate`, reads the user with `useApp` and `useUsers`, and gates content with `RequireCapability`.
+A root component that mounts `AppProvider`, waits on `BootGate`, reads the user with `useApp` and `useUsers`, and gates content with `RequireCapability`. A page component that binds `leads.open_lead_list` with `useAgentAction`, and a debugging component that lists and dispatches mounted actions through the registry.
 
 ## Next step
 
-Continue with the [agent-react reference](./agent-react.md).
+Continue with the [harness reference](./harness.md).
 <!-- /flavour -->

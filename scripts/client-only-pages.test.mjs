@@ -9,16 +9,15 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const gen = join(root, 'docs-gen');
 const { pages } = JSON.parse(readFileSync(join(gen, 'flavours.json'), 'utf8'));
 
-// Pages whose body is React-specific. reference/client stays neutral: the /client subpath has no React code.
+// Pages whose body is React-specific. reference/browser stays neutral: the /browser subpath has no React code.
 const clientOnly = [
   'recipes/add-page-and-capability',
   'recipes/read-app-context',
   'recipes/list-members',
   'guides/filter-navigation-by-capability',
   'reference/react',
-  'reference/agent-react',
 ];
-const neutral = ['reference/client', 'reference/root', 'glossary', 'app-definition', 'examples'];
+const neutral = ['reference/browser', 'reference/root', 'glossary', 'app-definition', 'examples'];
 
 for (const name of clientOnly) {
   test(`${name} is client-only: one react tree, a stub at the old address`, () => {

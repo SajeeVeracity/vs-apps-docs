@@ -101,15 +101,15 @@ export function agentCard(spaceId: number) {
 
 The handler answers `message/send` with one JSON body. It answers `message/stream` with a function that writes the events, so your route sets the stream headers. Any other method gets a "Method not found" error.
 
-`assertSpaceS2s` checks the bearer token against Space's public keys. It pins the token to one space and one app, so a token for another space or app gets `403`. A call with no token gets `401`. The second argument of the handler, `ctx`, carries the space identifier into `generate`.
+`verifyS2sToken` checks the bearer token against Space's public keys. It pins the token to one space and one app, so a token for another space or app gets `403`. A call with no token gets `401`. The second argument of the handler, `ctx`, carries the space identifier into `generate`.
 
 ```ts title="server/src/a2a.ts"
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
-  assertSpaceS2s,
+  verifyS2sToken,
   createA2aRequestHandler,
   createSpaceTokenVerifier,
-  extractBearer,
+  readBearer,
   readJsonBody,
   type A2aGenerateInput,
 } from '@vectoragents/vs-apps/server';
@@ -142,7 +142,7 @@ export async function handleA2aRoute(req: IncomingMessage, res: ServerResponse):
   }
   if (req.method !== 'POST') return false;
 
-  await assertSpaceS2s(verifier, { token: extractBearer(req.headers), kind: 'a2a', spaceId, appKey: 'hello-app' });
+  await verifyS2sToken(verifier, { token: readBearer(req.headers), kind: 'a2a', spaceId, appKey: 'hello-app' });
   const result = await handleCall(await readJsonBody(req), { spaceId });
   if (result.kind === 'json') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -163,7 +163,7 @@ The card route needs no token, because the card holds no secret. The call route 
 
 ### 4. Register the route
 
-In `server/src/main.ts`, import `handleA2aRoute` from `./a2a`. Add the line below next to the call to `handleDevRoute`, inside the `try`. A token failure then reaches the existing `catch`, which answers with the status of the `AppAuthError`.
+In `server/src/main.ts`, import `handleA2aRoute` from `./a2a`. Add the line below inside the `try`, after the `platform.fetch` check and before the check for `/api/hello`. A token failure then reaches the existing `catch`, which answers with the status of the `AppAuthError`.
 
 ```text
 if (await handleA2aRoute(req, res)) return;

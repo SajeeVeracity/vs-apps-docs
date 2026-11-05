@@ -2,24 +2,24 @@
 title: Server reference
 ---
 
-Reference for `@vectoragents/vs-apps/server` 0.2.4. This page covers the one symbol of the subpath that reaches out to [Space](../glossary.md#space): `pingSpaceManifests`. It tells Space that your [manifests](../glossary.md#manifest) changed, so Space does not wait for a staff refresh.
+Reference for `@vectoragents/vs-apps/server` 0.4.0. This page covers the one symbol of the subpath that reaches out to [Space](../glossary.md#space): `pingManifests`. It tells Space that your [manifests](../glossary.md#manifest) changed, so Space does not wait for a staff refresh.
 
 Every symbol below follows one layout: signature, behaviour, example. Each example is a complete file and is typechecked against the installed package.
 
 ## Prerequisites
 
 - `@vectoragents/vs-apps` installed with a registry token.
-- A server that builds its manifests with `buildManifests`, covered in the [app definition guide](../app-definition.md).
+- A server that builds its manifests with `buildManifests`, covered in the [app definition guide](../app-definition.md). `buildManifests` takes the agent catalog that [`readExtractedAgentCatalog`](./extract.md) reads.
 - The origin of a Space the server can reach, for example `https://space.example.com`.
 
-## `pingSpaceManifests`
+## `pingManifests`
 
 Sends Space the current hash of each manifest at boot.
 
 ### Signature
 
 ```typescript
-function pingSpaceManifests(options: {
+function pingManifests(options: {
   spaceBaseUrl: string;
   manifests: Record<string, AppManifest>;
   log?: (message: string) => void;
@@ -34,7 +34,7 @@ function pingSpaceManifests(options: {
 
 ### Behaviour
 
-- Call it once at boot, after `buildManifests`.
+- Call it once at boot, after `buildManifests`. A server that runs `createAppPlatform` calls `platform.pingManifests()` instead. It sends the same ping with the platform's own `spaceBaseUrl` and `manifests`, and does nothing while the platform holds a dev issuer.
 - Sends `POST {spaceBaseUrl}/api/apps/manifest-ping` once for each manifest. The body is JSON with `appKey` and `manifestHash`, the SHA-256 hex digest of the manifest as the server serves it.
 - Space re-pulls the manifest of each app whose hash changed.
 - Stops on a status from 200 to 299 or on `429`, which means Space is already pulling that app.
@@ -48,7 +48,8 @@ function pingSpaceManifests(options: {
 <!-- flavour node -->
 ```ts title="src/ping.ts"
 import { defineApp } from '@vectoragents/vs-apps';
-import { buildManifests, pingSpaceManifests } from '@vectoragents/vs-apps/server';
+import { readExtractedAgentCatalog } from '@vectoragents/vs-apps/extract';
+import { buildManifests, pingManifests } from '@vectoragents/vs-apps/server';
 
 const definition = defineApp({
   key: 'hello-app',
@@ -58,14 +59,14 @@ const definition = defineApp({
 });
 
 const manifests = buildManifests([definition], {
-  catalogPath: 'agent-catalog.json',
+  catalog: readExtractedAgentCatalog('agent-catalog.json'),
   publicBaseUrl: process.env.PUBLIC_BASE_URL ?? '',
 });
 
 if (process.env.SPACE_API_URL) {
   // A value that ends in /api is the API root, not the origin.
   const spaceBaseUrl = process.env.SPACE_API_URL.replace(/\/api\/?$/, '');
-  void pingSpaceManifests({ spaceBaseUrl, manifests });
+  void pingManifests({ spaceBaseUrl, manifests });
 }
 ```
 <!-- /flavour -->
@@ -78,4 +79,4 @@ A boot step that tells Space the hash of every manifest, and does nothing when n
 
 ## Next step
 
-Return to the [root reference](./root.md).
+Continue with the [oRPC reference](./orpc.md).

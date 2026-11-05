@@ -19,7 +19,7 @@ npm create @vectoragents/app leads-app -- --client react --server node --start l
 cd leads-app
 ```
 
-- Background: [`defineAgentPage`](../reference/root.md#defineagentpage), and [`useAgentAction`](../reference/agent-react.md). `AppProvider` already mounts the action registry.
+- Background: [`defineAgentPage`](../reference/root.md#defineagentpage), and [`useAgentAction`](../reference/react.md). `AppProvider` already mounts the action registry.
 
 ## Steps
 
@@ -61,7 +61,7 @@ The action identifier is `leads.open_lead_list`. `id` must be a snake_case local
 The action is available to the agent only while a component that binds it is mounted. The handler receives the parameters parsed by the schema. Replace `client/src/LeadsPage.tsx` with this file.
 
 ```tsx title="client/src/LeadsPage.tsx"
-import { useAgentAction } from '@vectoragents/vs-apps/agent-react';
+import { useAgentAction } from '@vectoragents/vs-apps/react';
 import { useState } from 'react';
 import { openLeadListAction } from './actions';
 
@@ -83,7 +83,7 @@ export function LeadsPage() {
 
 ### 4. Write the catalog
 
-`buildManifests` reads `server/agent-catalog.json`, which the app ships empty. The app has no entry that fills it.
+`server/src/manifests.ts` reads `server/agent-catalog.json` with `readExtractedAgentCatalog` and passes it to `buildManifests`. The app ships the file empty and has no entry that fills it.
 
 Add the entry below. It loads `actions.ts`, so the page and the action register, and then writes the file. The import ends in `.js` because TypeScript requires an extension there. The command resolves it to `actions.ts`.
 

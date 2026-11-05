@@ -2,7 +2,7 @@
 title: Root reference
 ---
 
-Reference for `@vectoragents/vs-apps` 0.2.4, the package root. The root holds the [app definition](../glossary.md#app-definition) and the schemas shared by client and server. A client imports two symbols from it: `defineAgentPage` and `appPages`. `defineApp` is covered in the [app definition guide](../app-definition.md).
+Reference for `@vectoragents/vs-apps` 0.4.0, the package root. The root holds the [app definition](../glossary.md#app-definition) and the schemas shared by client and server. A client imports three symbols from it: `defineAgentPage`, `appPages` and `createAgentActionRegistry`. `defineApp` is covered in the [app definition guide](../app-definition.md).
 
 Every symbol below follows one layout: signature, behaviour, example. Each example is a complete file and is typechecked against the installed package.
 
@@ -52,7 +52,7 @@ interface AgentActionInput<S extends z.ZodTypeAny = z.ZodTypeAny> {
 - Registers the page and each action in a module-level collector at import time.
 - `page.action(...)` roots an action on the page. `action.child(...)` declares an action that is available only while its parent is mounted.
 - Throws on a duplicate `pageId`, a duplicate action id, or an `id` that is not a snake_case local name.
-- Declaring an action does not make it callable. A component must bind it with `useAgentAction` from [`/agent-react`](./agent-react.md).
+- Declaring an action does not make it callable. A component must bind it with `useAgentAction` from [`/react`](./react.md).
 - Write each `description` for the agent. The SDK puts it in the manifest, which Space reads.
 
 ### Example
@@ -145,10 +145,82 @@ export function AppHome() {
 }
 ```
 
+## `createAgentActionRegistry`
+
+Creates the registry that holds the [agent actions](../glossary.md#agent-action) that are mounted now and dispatches calls to their handlers.
+
+### Signature
+
+```typescript
+function createAgentActionRegistry(): AgentActionRegistry;
+
+interface AgentActionRegistry {
+  register(def: AgentActionDef, handler: AgentActionHandler): () => void;
+  getMountedActions(): AgentCatalogAction[];
+  dispatch(
+    actionId: string,
+    params?: unknown,
+    context?: AgentActionContext,
+  ): Promise<AgentActionDispatchResult>;
+}
+
+type AgentActionDispatchResult =
+  | { ok: true }
+  | { ok: false; code: 'UNAVAILABLE_ACTION'; missingParent?: string }
+  | { ok: false; code: 'INVALID_PARAMS'; message: string }
+  | { ok: false; code: 'HANDLER_ERROR'; message: string };
+```
+
+| Method | Meaning |
+| --- | --- |
+| `register` | Stores a handler under `def.id` and returns a function that removes it. The function removes the entry only while it still holds this handler. |
+| `getMountedActions` | Serialised definitions of every mounted action, with `params` as JSON Schema. |
+| `dispatch` | Runs the handler for `actionId`. Never throws. Returns the outcome as a result object. |
+
+### Behaviour
+
+- [`AgentActionRegistryProvider`](./react.md) creates one registry for the tree, and `useAgentAction` is the only caller of `register` in a React app. Call `createAgentActionRegistry` directly only on another framework, where the registry goes to `startAppSession` from [`/browser`](./browser.md), or in a test.
+- Registering a second handler for the same id replaces the first.
+- `dispatch` validates `params` against the action's schema and passes the parsed value to the handler. Without a schema, `params` reach the handler unchanged.
+- `context` reaches the handler as its second argument. Concurrent dispatches do not share it.
+- A child action is available only while its parent is mounted. Dispatching it without the parent returns `UNAVAILABLE_ACTION` with `missingParent`.
+- A handler that throws, or rejects, returns `HANDLER_ERROR` with the error message.
+- The bridge that Space talks to calls `dispatch` and reports the outcome. After each successful call, the bridge reports the mounted actions.
+
+### Example
+
+```ts title="src/registry.ts"
+import { createAgentActionRegistry, defineAgentPage } from '@vectoragents/vs-apps';
+import { z } from 'zod';
+
+const leadsPage = defineAgentPage({
+  pageId: 'leads-registry',
+  description: 'SDR leads, driven without React.',
+});
+
+const openLeadListAction = leadsPage.action({
+  id: 'open_lead_list',
+  description: "Open one Lead List's page.",
+  params: z.object({ leadListId: z.string() }),
+});
+
+export const registry = createAgentActionRegistry();
+
+const unregister = registry.register(openLeadListAction, ({ leadListId }) => {
+  console.log(`Lead List ${leadListId} is open.`);
+});
+
+export async function openFirstList(): Promise<string> {
+  const result = await registry.dispatch('leads-registry.open_lead_list', { leadListId: 'first' });
+  unregister();
+  return result.ok ? 'opened' : result.code;
+}
+```
+
 ## Result
 
-An `actions.ts` that declares an agent page with a root action and a child action, and a landing component that lists the pages the user may open.
+An `actions.ts` that declares an agent page with a root action and a child action, a landing component that lists the pages the user may open, and a registry that mounts and dispatches an action without React.
 
 ## Next step
 
-Continue with the [client reference](./client.md).
+Continue with the [browser reference](./browser.md).

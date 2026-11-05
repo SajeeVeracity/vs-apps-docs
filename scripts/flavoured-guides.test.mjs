@@ -65,7 +65,7 @@ const connectorCode = titledSnippets(connector)
   .join('\n');
 
 test('the connector-events guide says in one line why the framework-free subpath has no twin', () => {
-  const lines = connector.split('\n').filter((line) => /`assertSpaceEvents`/.test(line));
+  const lines = connector.split('\n').filter((line) => /`platform\.connectorEvents`/.test(line));
   assert.equal(lines.length, 1);
   assert.match(lines[0], /`\/server`/);
 });

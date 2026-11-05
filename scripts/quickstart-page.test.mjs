@@ -192,9 +192,9 @@ for (const { tree, text } of trees) {
     const [layout] = codeBlocks.filter((f) => f.lang === 'text' && /^hello-app\/$/m.test(f.body));
     const files = nest
       ? ['app.module.ts', 'credential-store.ts', 'hello.controller.ts', 'main.ts', 'manifests.ts']
-      : ['auth.ts', 'dev-routes.ts', 'main.ts', 'manifests.ts'];
+      : ['auth.ts', 'credential-store.ts', 'dev-issuer.ts', 'main.ts', 'manifests.ts', 'platform.ts'];
     for (const file of files) assert.ok(layout.body.includes(file), file);
-    for (const file of nest ? ['auth.ts', 'dev-routes.ts'] : ['app.module.ts', 'hello.controller.ts']) assert.ok(!layout.body.includes(file), file);
+    for (const file of nest ? ['auth.ts', 'dev-issuer.ts', 'platform.ts'] : ['app.module.ts', 'hello.controller.ts']) assert.ok(!layout.body.includes(file), file);
   });
 
   t('the scaffold step shows the command for this pair with the `--` and no clone', () => {
@@ -249,11 +249,11 @@ for (const { tree, text } of trees) {
       shown,
       nest
         ? ['server/src/manifests.ts', 'server/src/hello.controller.ts', 'server/src/app.module.ts', 'server/src/credential-store.ts', 'server/src/main.ts']
-        : ['server/src/manifests.ts', 'server/src/auth.ts', 'server/src/main.ts', 'server/src/main.ts'],
+        : ['server/src/manifests.ts', 'server/src/credential-store.ts', 'server/src/platform.ts', 'server/src/auth.ts', 'server/src/main.ts', 'server/src/main.ts'],
     );
   });
 
-  t('the Node.js excerpts show spaceApiUrl in client-config and the start-up ping; the Nest.js ones show the module', () => {
+  t('the Node.js excerpts show the platform in the request handler and the start-up ping; the Nest.js ones show the module', () => {
     const mains = codeBlocks.filter((f) => /title="server\/src\/main\.ts"/.test(f.meta));
     if (nest) {
       assert.equal(mains.length, 1);
@@ -264,9 +264,13 @@ for (const { tree, text } of trees) {
       return;
     }
     assert.equal(mains.length, 2);
-    assert.match(mains[0].body, /spaceApiUrl: process\.env\.SPACE_API_URL,/);
-    assert.match(mains[1].body, /if \(process\.env\.SPACE_API_URL\) \{/);
-    assert.match(mains[1].body, /void pingSpaceManifests\(\{ spaceBaseUrl, manifests \}\);/);
+    assert.match(mains[0].body, /await platform\.fetch\(toFetchRequest\(req\)\);/);
+    assert.match(mains[1].body, /void platform\.pingManifests\(\);/);
+    const platformBlock = codeBlocks.find((f) => /title="server\/src\/platform\.ts"/.test(f.meta));
+    assert.match(platformBlock.body, /createAppPlatform\(\{/);
+    assert.match(platformBlock.body, /devIssuer: process\.env\.VA_DEV_ISSUER === 'true'/);
+    assert.match(text, /`GET \/api\/client-config`/);
+    assert.match(text, /`spaceApiUrl`/);
   });
 
   t('the harness Check shows three lines and a limits sentence follows it', () => {
@@ -314,7 +318,7 @@ for (const { tree, text } of trees) {
     }
     const serverSymbols = nest
       ? ['AppPlatformModule', 'CurrentUser', 'AppCredentialStore', 'devIssuer']
-      : ['createSpaceTokenVerifier', 'extractBearer', 'assertCapability', 'verifyAppUserToken', 'verifyProvisioningToken'];
+      : ['createAppPlatform', 'readBearer', 'assertCapability', 'verifyUserToken', 'AppCredentialStore', 'devIssuer'];
     for (const s of serverSymbols) assert.match(text, new RegExp(s), s);
     if (nest) {
       assert.match(text, /@vectoragents\/vs-apps\/nest/);

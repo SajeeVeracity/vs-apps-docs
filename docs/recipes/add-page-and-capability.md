@@ -177,7 +177,7 @@ Run `npm run dev` and open `http://localhost:5173/harness.html`. Click Leads, th
 
 ### 4. Let Space read the manifest
 
-The server must tell Space that the manifest changed. Stop `npm run dev:space` and start it again. When `SPACE_API_URL` is set, the starter calls `pingSpaceManifests` at start, and Space reads the new manifest. `npm run dev` clears `SPACE_API_URL`, so the harness never tells Space.
+The server must tell Space that the manifest changed. Stop `npm run dev:space` and start it again. The starter calls `platform.pingManifests` at start, and Space reads the new manifest. `npm run dev` clears `SPACE_API_URL` and turns the dev issuer on, and the platform skips the ping while it holds a dev issuer, so the harness never tells Space.
 
 A manifest change waits as a pending review until Vector applies it. If Space shows no change after the restart, ask Vector to select **Check for updates** on your [app registration](../glossary.md#app-registration). Space then reads the manifest again.
 

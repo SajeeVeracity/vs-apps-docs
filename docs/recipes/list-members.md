@@ -13,7 +13,7 @@ End with an owners list built with `useUsers`, a member picker built with the di
 
 - The app from the [quickstart](../quickstart.md), added to a Space (Part 2) and run with `npm run dev:space`. The harness has no directory, because `npm run dev` clears `SPACE_API_URL`.
 - `SPACE_API_URL` in `.env`, set to the Space API origin followed by `/api`, for example `https://space-api.example.com/api`. The starter returns it as `spaceApiUrl` in `/api/client-config`. Without it, `useApp().directory` is `null`.
-- Background: [`useUsers`](../reference/react.md#useusers), [`DirectoryUser` and `DirectoryGroup`](../reference/client.md#directoryuser).
+- Background: [`useUsers`](../reference/react.md#useusers), [`DirectoryUser` and `DirectoryGroup`](../reference/browser.md#directoryuser).
 
 ## Steps
 
@@ -54,7 +54,7 @@ export function LeadOwners({ ownerIds }: { ownerIds: readonly string[] }) {
 Search runs from an effect that waits 300 ms after the last keystroke. The cleanup cancels the timer when the query changes, so only the last pause sends a call. The same cleanup drops a reply that arrives after the query changed.
 
 ```tsx title="client/src/OwnerPicker.tsx"
-import type { DirectoryUser } from '@vectoragents/vs-apps/client';
+import type { DirectoryUser } from '@vectoragents/vs-apps/browser';
 import { useApp } from '@vectoragents/vs-apps/react';
 import { useEffect, useState } from 'react';
 
@@ -113,7 +113,7 @@ export function OwnerPicker({ onPick }: { onPick: (user: DirectoryUser) => void 
 A `DirectoryGroup` holds `userIds`, not names. `userIds` lists only members that Space shows. Pass them to `useUsers` to get names. A hook cannot run in a loop, so one component takes one group.
 
 ```tsx title="client/src/GroupRoster.tsx"
-import type { DirectoryGroup } from '@vectoragents/vs-apps/client';
+import type { DirectoryGroup } from '@vectoragents/vs-apps/browser';
 import { useUsers } from '@vectoragents/vs-apps/react';
 
 export function GroupRoster({ group }: { group: DirectoryGroup }) {
@@ -136,7 +136,7 @@ export function GroupRoster({ group }: { group: DirectoryGroup }) {
 `directory.groups()` returns every `DirectoryGroup` of the space. Its `id` is numeric, unlike the string identifier of a user. Like `search`, it rejects when Space answers with an error, so the snippet shows an error line.
 
 ```tsx title="client/src/TeamGroups.tsx"
-import type { DirectoryGroup } from '@vectoragents/vs-apps/client';
+import type { DirectoryGroup } from '@vectoragents/vs-apps/browser';
 import { useApp } from '@vectoragents/vs-apps/react';
 import { useEffect, useState } from 'react';
 import { GroupRoster } from './GroupRoster';

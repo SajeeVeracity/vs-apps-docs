@@ -2,7 +2,7 @@
 title: Harness reference
 ---
 
-Reference for `@vectoragents/vs-apps/harness` 0.2.4. The [harness](../glossary.md#harness) is a local stand-in for [Space](../glossary.md#space). The starter includes the harness already wired. This page is the manual-wiring guide for an app that is not built from the starter. An app does not need the harness to ship.
+Reference for `@vectoragents/vs-apps/react/harness` 0.4.0. The [harness](../glossary.md#harness) is a local stand-in for [Space](../glossary.md#space). The starter includes the harness already wired. This page is the manual-wiring guide for an app that is not built from the starter. An app does not need the harness to ship.
 
 Every symbol below follows one layout: signature, behaviour, example. Each example is a complete file and is typechecked against the installed package.
 
@@ -10,7 +10,7 @@ Every symbol below follows one layout: signature, behaviour, example. Each examp
 
 - `@vectoragents/vs-apps` installed with a registry token.
 - React 18 or later with TypeScript.
-- The app server running with `VA_DEV_ISSUER=true`, and serving the [dev routes](#dev-routes). See [Turn the harness on and off](#turn-the-harness-on-and-off).
+- The app server running with `VA_DEV_ISSUER=true`, and serving the [dev routes](#dev-routes), which the app platform of the SDK serves. See [Turn the harness on and off](#turn-the-harness-on-and-off).
 - A second HTML entry for the harness, served by your bundler.
 
 ## `VectorAppsHarness`
@@ -36,7 +36,7 @@ function VectorAppsHarness(): JSX.Element;
 ### Example
 
 ```tsx title="src/harness.tsx"
-import { VectorAppsHarness } from '@vectoragents/vs-apps/harness';
+import { VectorAppsHarness } from '@vectoragents/vs-apps/react/harness';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
@@ -67,7 +67,7 @@ Serve `harness.html` with your bundler, and open `/harness.html` on the client p
 
 ## Dev routes
 
-The app server serves three routes on the same origin as the page, under `/api`. Your bundler forwards `/api` to the app server. Each route returns `404` while `VA_DEV_ISSUER` is not `true`. The harness calls the first two. The third publishes the key set that verifies the dev tokens.
+The app server serves three routes on the same origin as the page, under `/api`. Your bundler forwards `/api` to the app server. The platform answers each route only while it holds a dev issuer, which the example turns on with `VA_DEV_ISSUER=true`. Otherwise the route is not served. The app platform of `@vectoragents/vs-apps/server` serves all three. The harness calls the first two. The third publishes the key set that verifies the dev tokens.
 
 ### `GET /api/__dev/manifests`
 
@@ -115,65 +115,87 @@ Returns status `200` and the public key set of the dev issuer. The set verifies 
 ### Example
 
 <!-- flavour node -->
-`createDevIssuer` signs tokens and verifies them, so one object serves both. It reads or creates the key file `vs-apps-dev-issuer.pem` in the OS temp directory, which every process on the machine shares, so the example creates it only when `VA_DEV_ISSUER` is `true`. Call `handleDevRoute` first in your request handler. It returns `true` when it answered the request. It returns `false` for every other request, and always when the dev issuer does not exist.
+`createAppPlatform` serves the three dev routes, the manifest route and the other routes that Space calls. It serves them once it holds a dev issuer. `createDevIssuer` signs tokens and verifies them, so one object serves both. It stores nothing, and it makes a new key on each call, so a restart makes the tokens of the open harness invalid. To keep them valid, save the `privateKey` of the issuer and pass it back to `createDevIssuer`.
 
-```ts title="server/src/dev-routes.ts"
+The platform also needs an `AppCredentialStore`, where it keeps the secret that Space pushes when it adds the app. The store below keeps the secrets in memory. The platform answers Fetch requests, so `handlePlatformRoute` bridges a `node:http` request to one. It returns `true` when the platform answered the request, and `false` for every other request.
+
+```ts title="server/src/platform.ts"
+import { createAppPlatform, createDevIssuer, type AppCredentialStore, type AppManifests } from '@vectoragents/vs-apps/server';
+
+const secrets = new Map<string, string>();
+
+const credentialStore: AppCredentialStore = {
+  async upsert(appId, spaceId, secret) {
+    secrets.set(`${appId}:${spaceId}`, secret);
+  },
+  async remove(appId, spaceId) {
+    secrets.delete(`${appId}:${spaceId}`);
+  },
+  async get(appId, spaceId) {
+    return secrets.get(`${appId}:${spaceId}`) ?? null;
+  },
+};
+
+export async function createPlatform(manifests: AppManifests) {
+  return createAppPlatform({
+    options: {
+      // The platform takes the Space origin; SPACE_API_URL ends in /api.
+      spaceBaseUrl: (process.env.SPACE_API_URL ?? '').replace(/\/api\/?$/, ''),
+      spaceJwksUrl: process.env.SPACE_JWKS_URL ?? '',
+      allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN ?? '',
+    },
+    manifests,
+    credentialStore,
+    devIssuer: process.env.VA_DEV_ISSUER === 'true' ? await createDevIssuer() : undefined,
+  });
+}
+```
+
+```ts title="server/src/platform-routes.ts"
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { DEV_APP_ID, type AppManifest } from '@vectoragents/vs-apps';
-import { createDevIssuer, devTokenRequestSchema, readJsonBody } from '@vectoragents/vs-apps/server';
+import { Readable } from 'node:stream';
+import type { AppPlatform } from '@vectoragents/vs-apps/server';
 
-export const devIssuer = process.env.VA_DEV_ISSUER === 'true' ? createDevIssuer() : undefined;
-
-function send(res: ServerResponse, status: number, body: unknown): void {
-  res.writeHead(status, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(body));
+function toFetchRequest(req: IncomingMessage): Request {
+  const method = req.method ?? 'GET';
+  const body = method === 'GET' || method === 'HEAD' ? undefined : (Readable.toWeb(req) as ReadableStream);
+  return new Request(new URL(req.url ?? '/', 'http://localhost'), {
+    method,
+    headers: req.headers as Record<string, string>,
+    body,
+    duplex: 'half',
+  } as RequestInit);
 }
 
-export async function handleDevRoute(
+export async function handlePlatformRoute(
+  platform: AppPlatform,
   req: IncomingMessage,
   res: ServerResponse,
-  manifests: Record<string, AppManifest>,
 ): Promise<boolean> {
-  if (!devIssuer) return false;
-  const { pathname } = new URL(req.url ?? '/', 'http://localhost');
-  if (req.method === 'GET' && pathname === '/api/__dev/manifests') {
-    send(
-      res,
-      200,
-      Object.values(manifests).map((manifest) => ({ appKey: manifest.appKey, appId: DEV_APP_ID, manifest })),
-    );
-    return true;
-  }
-  if (req.method === 'GET' && pathname === '/api/__dev/jwks.json') {
-    send(res, 200, devIssuer.jwks());
-    return true;
-  }
-  if (req.method === 'POST' && pathname === '/api/__dev/token') {
-    const parsed = devTokenRequestSchema.safeParse(await readJsonBody(req));
-    if (!parsed.success) {
-      send(res, 400, { error: `Invalid token request: ${parsed.error.message}` });
-      return true;
-    }
-    send(res, 200, await devIssuer.sign(parsed.data));
-    return true;
-  }
-  return false;
+  const response = await platform.fetch(toFetchRequest(req));
+  if (!response) return false;
+  res.writeHead(response.status, Object.fromEntries(response.headers));
+  res.end(Buffer.from(await response.arrayBuffer()));
+  return true;
 }
 ```
 
 ## Accept dev tokens
 
-Call `handleDevRoute` first inside the `try` block of your request handler, before any route of your own: `if (await handleDevRoute(req, res, manifests)) return;`. Then make three changes so the app accepts the tokens that the dev issuer signs. Without all three, the iframe stays on "Waiting for Space.".
+Create the platform once at boot with `const platform = await createPlatform(manifests);`, with the manifests from `buildManifests`. Call `handlePlatformRoute` first inside the `try` block of your request handler, before any route of your own: `if (await handlePlatformRoute(platform, req, res)) return;`. Then make two more changes so the app accepts the tokens that the dev issuer signs. Without both, the iframe stays on "Waiting for Space.".
 
 1. **Allow the harness origin.** Set `ALLOWED_PARENT_ORIGIN` to the harness origin, the origin that your bundler serves `harness.html` from, for example `http://localhost:5173`. The harness page is the parent of the iframe, so the client accepts messages from this origin only. A Space origin here makes the `postMessage` call from the iframe fail.
-2. **Return the dev key set URL.** Make `GET /api/client-config` return `/api/__dev/jwks.json` as `spaceJwksUrl`. The browser fetches that key set to verify the token. Otherwise the console logs `token verification failed: Failed to fetch`.
-3. **Verify with the dev issuer.** In `server/src/auth.ts`, pass `devIssuer` to `verifyAppUserToken` in place of the Space verifier. Otherwise `GET /api/hello` fails with status `401`.
+2. **Verify with the dev issuer.** Pass `platform.verifier` to `verifyUserToken` in place of a Space verifier. It is the dev issuer while the platform holds one. Otherwise `GET /api/hello` fails with status `401`.
+
+The platform serves `GET /api/client-config` itself. While it holds a dev issuer, the `spaceJwksUrl` of that route is `/api/__dev/jwks.json`, so the browser verifies the token against the dev key set. A route of your own does not need to return it.
 
 ```ts title="server/src/auth.ts"
-import { createSpaceTokenVerifier } from '@vectoragents/vs-apps/server';
-import { devIssuer } from './dev-routes';
+import type { IncomingMessage } from 'node:http';
+import { readBearer, verifyUserToken, type AppPlatform } from '@vectoragents/vs-apps/server';
 
-export const verifier = devIssuer ?? createSpaceTokenVerifier({ jwksUrl: process.env.SPACE_JWKS_URL ?? '' });
+export function requireUser(platform: AppPlatform, req: IncomingMessage) {
+  return verifyUserToken(platform.verifier, readBearer(req.headers));
+}
 ```
 
 When the page works, the harness card shows the user, the space and the capabilities of the token, and a request to your server succeeds.
@@ -203,4 +225,4 @@ A dev-only entry that runs the app inside a Space-like shell without a registrat
 
 ## Next step
 
-Return to the [React reference](./react.md).
+Continue with the [server reference](./server.md).
