@@ -380,7 +380,7 @@ Space calls `POST /api/provision` and `DELETE /api/deprovision` when a space man
 import { Injectable } from '@nestjs/common';
 import type { AppCredentialStore } from '@vectoragents/vs-apps/nest';
 
-// Keeps secrets in memory and loses them on restart. Implement AppCredentialStore over real storage before production.
+/** Keeps secrets in memory and loses them on restart. Implement AppCredentialStore over real storage before production. */
 @Injectable()
 export class MemoryCredentialStore implements AppCredentialStore {
   private readonly secrets = new Map<string, string>();
