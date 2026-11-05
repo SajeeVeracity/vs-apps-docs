@@ -8,6 +8,7 @@
   },
   "defaults": { "client": "react", "server": "node" },
   "legacyRedirects": [
+    { "from": "/category/nest", "to": "/quickstart", "fixed": { "server": "nest" } },
     { "from": "/nest/nest-adapter", "to": "/quickstart", "fixed": { "server": "nest" } },
     { "from": "/nest/call-space-from-your-server", "to": "/guides/call-space-from-your-server", "fixed": { "server": "nest" } },
     { "from": "/nest/call-a-model-from-your-server", "to": "/guides/call-a-model-from-your-server", "fixed": { "server": "nest" } },

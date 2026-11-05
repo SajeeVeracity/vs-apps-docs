@@ -297,4 +297,8 @@
   .navbar__items--right .flavour-picker__caret {
     display: none;
   }
+
+  .navbar__items--right .flavour-picker__popover {
+    max-width: calc(100vw - 5rem);
+  }
 }
