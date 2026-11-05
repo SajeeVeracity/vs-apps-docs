@@ -26,7 +26,7 @@ test('states each of the ten uses once, in order', () => {
     'Merge the [agent catalog](./glossary.md#agent-catalog)',
     "Keep the server's app registry",
     'Check the token',
-    'Register connector event handlers',
+    'Receive connector events',
     'Look up a model slot',
     'Read the manifest in Space',
   ]);

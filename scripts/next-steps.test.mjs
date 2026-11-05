@@ -10,11 +10,11 @@ const slugs = sidebars.docs.map((item) => item.link?.slug).filter(Boolean);
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pages = {
   'quickstart.md': ['app-definition.md', '/category/recipes', 'reference/harness.md'],
-  'examples.md': ['/category/recipes'],
+  'examples.md': ['app-definition.md', '/category/recipes', '/builder'],
   'app-definition.md': ['examples.md', '/category/recipes', '/category/reference'],
 };
 
-const withLead = new Set(['app-definition.md']);
+const withLead = new Set(['app-definition.md', 'examples.md']);
 
 const block = (text) => text.split(/^## /m).slice(1).filter((s) => s.startsWith('Next steps\n'));
 
