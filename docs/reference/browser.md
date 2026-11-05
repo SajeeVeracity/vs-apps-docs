@@ -1,8 +1,8 @@
 ---
-title: Client reference
+title: Browser reference
 ---
 
-Reference for `@vectoragents/vs-apps/client` 0.2.4. The subpath holds the browser boot config and the user directory types. It also exports the iframe bridge and token verifier that [`AppProvider`](./react.md) drives. An app imports four symbols from it.
+Reference for `@vectoragents/vs-apps/browser` 0.4.0. The subpath is the framework-free browser runtime of an [app](../glossary.md#app). It holds the boot config loader, the user directory types, and the embed session, iframe bridge and token verifier that [`AppProvider`](./react.md) drives. An app imports `loadAppClientConfig`, `DirectoryUser` and `DirectoryGroup` from it, and `AppClientConfig` from the package root. An app without React also calls `startAppSession`.
 
 Every symbol below follows one layout: signature, behaviour, example. Each example is a complete file and is typechecked against the installed package.
 
@@ -41,7 +41,8 @@ function loadAppClientConfig(options?: {
 ### Example
 
 ```ts title="src/client-config.ts"
-import { loadAppClientConfig, type AppClientConfig } from '@vectoragents/vs-apps/client';
+import { type AppClientConfig } from '@vectoragents/vs-apps';
+import { loadAppClientConfig } from '@vectoragents/vs-apps/browser';
 
 let configPromise: Promise<AppClientConfig> | null = null;
 
@@ -55,7 +56,7 @@ Pass the result to `AppProvider`'s `config` prop.
 
 ## `AppClientConfig`
 
-The boot config shape.
+The boot config shape. The package root exports it, so a server and a client share one type.
 
 ### Signature
 
@@ -84,7 +85,8 @@ interface AppClientConfig {
 ### Example
 
 ```ts title="src/static-config.ts"
-import { loadAppClientConfig, type AppClientConfig } from '@vectoragents/vs-apps/client';
+import { type AppClientConfig } from '@vectoragents/vs-apps';
+import { loadAppClientConfig } from '@vectoragents/vs-apps/browser';
 
 const baked: AppClientConfig = {
   allowedParentOrigin: 'https://space.example.com',
@@ -92,6 +94,83 @@ const baked: AppClientConfig = {
 };
 
 export const config = loadAppClientConfig({ baked });
+```
+
+## `startAppSession`
+
+Runs the app side of the embed protocol for one page and exposes its state as an external store. [`AppProvider`](./react.md) calls it for a React tree. Call it yourself on another framework.
+
+### Signature
+
+```typescript
+function startAppSession(options: AppSessionOptions): AppSession;
+
+interface AppSessionOptions {
+  config: AppClientConfig | Promise<AppClientConfig>;
+  registry: AgentActionRegistry;
+  navigate: (path: string) => void;
+  onToken?: (token: string | null) => void;
+  onTheme?: (theme: 'light' | 'dark') => void;
+}
+
+interface AppSession {
+  subscribe(listener: () => void): () => void;
+  getSnapshot(): AppSessionState;
+  requestRefresh(): void;
+  dispose(): void;
+}
+
+interface AppSessionState {
+  claims: UserTokenClaims | null;
+  capabilities: ReadonlySet<string>;
+  hasCapability: (capability: string) => boolean;
+  requestRefresh: () => void;
+  directory: UserDirectory | null;
+}
+```
+
+| Option | Meaning |
+| --- | --- |
+| `config` | Boot config, or a promise of it. |
+| `registry` | The [agent action registry](./root.md#createagentactionregistry) that receives the actions that Space dispatches. |
+| `navigate` | Called when Space asks the app to open a path. |
+| `onToken` | Called with each verified token, and with `null` on `dispose`. |
+| `onTheme` | Called with `'light'` or `'dark'` when Space changes theme. |
+
+### Behaviour
+
+- Starts the iframe bridge once the config resolves. The bridge accepts messages only from `allowedParentOrigin`.
+- Verifies each token against the key set of the config. A token that fails verification is logged to the console and ignored, so `claims` stays `null`.
+- Opens the user directory on the first verified token, when the config sets `spaceApiUrl`.
+- Dispatches each action that Space sends into `registry`, and reports the document height to Space through a `ResizeObserver`.
+- Keeps the token in memory only.
+- `getSnapshot` returns the same object until the state changes, so it works as the snapshot function of a store such as `useSyncExternalStore`.
+- `dispose` stops the bridge, calls `onToken(null)` and resets the state to the one before the first token.
+
+### Example
+
+```ts title="src/session.ts"
+import { createAgentActionRegistry } from '@vectoragents/vs-apps';
+import { loadAppClientConfig, startAppSession } from '@vectoragents/vs-apps/browser';
+
+const session = startAppSession({
+  config: loadAppClientConfig(),
+  registry: createAgentActionRegistry(),
+  navigate: (path) => window.history.pushState(null, '', path),
+  onTheme: (theme) => {
+    document.documentElement.dataset.theme = theme;
+  },
+});
+
+const unsubscribe = session.subscribe(() => {
+  const { claims } = session.getSnapshot();
+  console.log(claims ? `Signed in as ${claims.sub}.` : 'Waiting for Space.');
+});
+
+export function stopSession(): void {
+  unsubscribe();
+  session.dispose();
+}
 ```
 
 ## `DirectoryUser`
@@ -119,7 +198,7 @@ interface DirectoryUser {
 ### Example
 
 ```tsx title="src/MemberPicker.tsx"
-import type { DirectoryUser } from '@vectoragents/vs-apps/client';
+import type { DirectoryUser } from '@vectoragents/vs-apps/browser';
 import { useApp } from '@vectoragents/vs-apps/react';
 import { useState } from 'react';
 
@@ -173,7 +252,7 @@ interface DirectoryGroup {
 ### Example
 
 ```tsx title="src/GroupList.tsx"
-import type { DirectoryGroup } from '@vectoragents/vs-apps/client';
+import type { DirectoryGroup } from '@vectoragents/vs-apps/browser';
 import { useApp } from '@vectoragents/vs-apps/react';
 import { useEffect, useState } from 'react';
 
@@ -199,8 +278,8 @@ export function GroupList() {
 
 ## Result
 
-A lazy `getClientConfig` helper for `AppProvider`, and member and group pickers typed with `DirectoryUser` and `DirectoryGroup`.
+A lazy `getClientConfig` helper for `AppProvider`, an app session that works without React, and member and group pickers typed with `DirectoryUser` and `DirectoryGroup`.
 
 ## Next step
 
-Continue with the [harness reference](./harness.md).
+Continue with the [react reference](./react.md).

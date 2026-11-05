@@ -16,7 +16,7 @@ End with a handler for the inbound events of one connector slot. The handler rep
 ## Prerequisites
 
 - The Nest.js app from Part 1 of the [quickstart](../quickstart.md), running with `npm run dev:space`. Part 2, step 1 of the quickstart sets up the `.env` file that command reads.
-- Background: the [server primitives](../reference/root.md) and the [connector slot fields](../app-definition.md#resourcesconnectors) of the app definition. The framework-free `/server` subpath has only `assertSpaceEvents`: no handler registry and no events route, so this guide has no Node.js version yet.
+- Background: the [server primitives](../reference/root.md) and the [connector slot fields](../app-definition.md#resourcesconnectors) of the app definition. The framework-free `/server` subpath serves the events route and holds the handler registry, `platform.connectorEvents`, but this guide has no Node.js version yet.
 
 ## Steps
 
@@ -54,13 +54,13 @@ A handler gets the event and no user token. To call the connector back, ask `Spa
 
 ```ts title="server/src/support-reply.service.ts"
 import { Injectable } from '@nestjs/common';
-import { SpaceClientService, SpaceS2sService } from '@vectoragents/vs-apps/nest';
+import { SpaceActionsService, SpaceS2sService } from '@vectoragents/vs-apps/nest';
 import type { ConnectorEventDelivery, ConnectorExecuteResult } from '@vectoragents/vs-apps';
 
 @Injectable()
 export class SupportReplyService {
   constructor(
-    private readonly space: SpaceClientService,
+    private readonly space: SpaceActionsService,
     private readonly s2s: SpaceS2sService,
   ) {}
 
@@ -124,7 +124,7 @@ A delivery for a handler that no one registered gets `{ handled: false }` and is
 
 ### 4. Register the module
 
-The platform module is global, so the module needs no import for `ConnectorEventsService`, `SpaceClientService` or `SpaceS2sService`.
+The platform module is global, so the module needs no import for `ConnectorEventsService`, `SpaceActionsService` or `SpaceS2sService`.
 
 ```ts title="server/src/support-events.module.ts"
 import { Module } from '@nestjs/common';

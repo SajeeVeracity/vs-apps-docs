@@ -101,7 +101,7 @@ A named requirement for one external connector, such as ClickUp or a REST API. A
 
 An operation a page registers so the Space agent can call it while the page is open.
 
-- Maps to: `useAgentAction` in `@vectoragents/vs-apps/agent-react`, registered through `AgentActionRegistryProvider`.
+- Maps to: `useAgentAction` in `@vectoragents/vs-apps/react`, registered through `AgentActionRegistryProvider`.
 - Owner: SDK.
 
 ### agent catalog
@@ -129,7 +129,7 @@ Declared points where a person must confirm an action. Each approval can opt int
 
 A local stand-in for Space that hosts the app page in a dev shell, for debugging without a registration.
 
-- Maps to: `VectorAppsHarness` in `@vectoragents/vs-apps/harness`.
+- Maps to: `VectorAppsHarness` in `@vectoragents/vs-apps/react/harness`.
 - Owner: SDK.
 
 ### dev issuer
@@ -141,7 +141,7 @@ The token signer that the app server runs in harness mode. It signs a token on r
 
 ### SDK
 
-The software development kit: the `@vectoragents/vs-apps` package, version 0.2.4.
+The software development kit: the `@vectoragents/vs-apps` package, version 0.4.0.
 
 - Maps to: `@vectoragents/vs-apps` and its subpaths.
 - Owner: SDK.
@@ -164,14 +164,14 @@ Agent2Agent. An open protocol that lets one agent find another through an agent 
 
 The secret Space creates for each pair of app and space and pushes to the app at `POST /api/provision`. The app trades it for an app token.
 
-- Maps to: `getServiceSecret` in `createSpaceAiConfigProvider`, and the credential store of the `/nest` adapter.
+- Maps to: `AppCredentialStore` in `@vectoragents/vs-apps/server`, the credential store that `createAppPlatform` and the `/nest` adapter keep it in.
 - Owner: Space creates it. The SDK stores and exchanges it.
 
 ### app token
 
 A short-lived token that Space issues in exchange for the service secret. Space limits it to what the app may do, with no user involved.
 
-- Maps to: `createSpaceS2sTokenProvider` and `SpaceS2sService`.
+- Maps to: `createSpaceS2s` and `SpaceS2sService`.
 - Owner: Space issues it. The SDK requests it.
 
 ### monorepo

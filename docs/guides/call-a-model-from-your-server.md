@@ -6,7 +6,7 @@ start: leads-app
 Ask [Space](../glossary.md#space) for a model from your server and call it.
 
 <!-- flavour node -->
-The guide uses `createSpaceAiConfigProvider` from the `@vectoragents/vs-apps/server` subpath of the [SDK](../glossary.md#sdk) on a `node:http` server.
+The guide uses `platform.ai` from the `@vectoragents/vs-apps/server` subpath of the [SDK](../glossary.md#sdk) on a `node:http` server.
 <!-- /flavour -->
 <!-- flavour nest -->
 The guide uses `SpaceAiService` from the `@vectoragents/vs-apps/nest` subpath of the [SDK](../glossary.md#sdk) on a Nest.js server.
@@ -65,36 +65,9 @@ Add the slot to the definition in `shared/src/index.ts`. Import `leadSummarySlot
 ### 2. Keep the service secret
 
 <!-- flavour node -->
-The provider needs the secret that Space pushed when it added the app. Space sends it in the body of `POST /api/provision`. The `/api/provision` entry in `main.ts` checks the token and drops the body.
+Space pushes the service secret to `POST /api/provision` when it adds the app. The app platform of the starter, `platform` in `server/src/platform.ts`, serves that route and stores the secret in its credential store, `MemoryCredentialStore` in `server/src/credential-store.ts`, so you write no code in this step.
 
-The file below keeps the secret for each Space in memory. The map loses the secrets on restart, so replace it with your own storage before production. Until Space pushes the secret again, the provider fails with status `401`.
-
-```ts title="server/src/service-secrets.ts"
-import type { IncomingMessage } from 'node:http';
-import type { ProvisioningClaims } from '@vectoragents/vs-apps';
-import { AppAuthError, readJsonBody } from '@vectoragents/vs-apps/server';
-
-const secrets = new Map<number, string>();
-
-function spaceOf(claims: ProvisioningClaims): number {
-  if (claims.spaceId === undefined) throw new AppAuthError(403, 'The provisioning token has no spaceId claim');
-  return claims.spaceId;
-}
-
-export async function saveServiceSecret(claims: ProvisioningClaims, req: IncomingMessage): Promise<void> {
-  const body = await readJsonBody(req);
-  if (typeof body?.serviceSecret !== 'string') throw new Error('The provision body has no serviceSecret');
-  secrets.set(spaceOf(claims), body.serviceSecret);
-}
-
-export function removeServiceSecret(claims: ProvisioningClaims): void {
-  secrets.delete(spaceOf(claims));
-}
-
-export async function getServiceSecret(spaceId: number): Promise<string | null> {
-  return secrets.get(spaceId) ?? null;
-}
-```
+The store keeps the secrets in memory and loses them on restart. `AppCredentialStore` is the one interface you implement over your own storage, so plan a persistent store before production. Until Space pushes the secret again, `platform.ai` fails with status `401`.
 <!-- /flavour -->
 <!-- flavour nest -->
 Space pushes the service secret to `POST /api/provision` when it adds the app. `AppPlatformModule` stores it in the credential store of `AppModule`, `MemoryCredentialStore` in `server/src/credential-store.ts`, so you write no code in this step.
@@ -105,7 +78,7 @@ The store keeps the secrets in memory and loses them on restart. `AppCredentialS
 ### 3. Call the model
 
 <!-- flavour node -->
-`createSpaceAiConfigProvider` takes the Space origin, the app identifier and `getServiceSecret`. The function it returns takes `(spaceId, slot)` and resolves to `{ provider, baseUrl, apiKey, model, expiresAt }`. `expiresAt` is a time in seconds since 1970. The provider reuses a ticket until one minute before it expires, so keep one provider for each app identifier and do not store the configuration.
+`platform.ai(appId, spaceId, slot)` resolves to `{ provider, baseUrl, apiKey, model, expiresAt }`. `expiresAt` is a time in seconds since 1970. Do not store the configuration: call `platform.ai` on each request. The platform reuses a ticket until one minute before it expires.
 
 The key works for this slot only. `model` is the slot's alias, not the model name that the space manager picked. Send it as it is.
 <!-- /flavour -->
@@ -118,30 +91,11 @@ The key works for this slot only. `model` is the slot's alias, not the model nam
 If no one sets the slot, Space refuses the call with status `409`. Space refuses a slot key that the manifest does not declare with status `400`.
 
 <!-- flavour node -->
-The provider throws a `SpaceActionError` that carries the status.
+`platform.ai` throws a `SpaceActionError` that carries the status.
 
 ```ts title="server/src/lead-summary.ts"
 import type { UserTokenClaims } from '@vectoragents/vs-apps';
-import { createSpaceAiConfigProvider, type AiClientConfig } from '@vectoragents/vs-apps/server';
-import { getServiceSecret } from './service-secrets';
-
-// The origin has no `/api` suffix.
-const spaceBaseUrl = (process.env.SPACE_API_URL ?? '').replace(/\/api\/?$/, '');
-
-const providers = new Map<string, ReturnType<typeof createSpaceAiConfigProvider>>();
-
-function providerFor(appId: string) {
-  let provider = providers.get(appId);
-  if (!provider) {
-    provider = createSpaceAiConfigProvider({
-      spaceBaseUrl,
-      appId,
-      getServiceSecret,
-    });
-    providers.set(appId, provider);
-  }
-  return provider;
-}
+import type { AiClientConfig, AppPlatform } from '@vectoragents/vs-apps/server';
 
 async function completePrompt(config: AiClientConfig, prompt: string): Promise<string> {
   const response = await fetch(`${config.baseUrl}/v1/messages`, {
@@ -162,8 +116,8 @@ async function completePrompt(config: AiClientConfig, prompt: string): Promise<s
   return reply.content.map((block) => block.text ?? '').join('');
 }
 
-export async function summarizeLead(claims: UserTokenClaims) {
-  const config = await providerFor(claims.appId)(claims.spaceId, 'lead-summary');
+export async function summarizeLead(platform: AppPlatform, claims: UserTokenClaims) {
+  const config = await platform.ai(claims.appId, claims.spaceId, 'lead-summary');
   const summary = await completePrompt(config, 'Write one sentence about a lead named Ada Lovelace, who asked for a demo.');
   return { summary };
 }
@@ -233,14 +187,13 @@ The string `'lead-summary'` must equal the `key` from step 1.
 ### 4. Mount the route
 
 <!-- flavour node -->
-The provider reads `SPACE_API_URL` from `.env`, which Part 2 of the quickstart sets. The code in step 3 removes the `/api` suffix, because the provider needs the origin of Space.
+The platform reads `SPACE_API_URL` from `.env`, which Part 2 of the quickstart sets, and removes the `/api` suffix, because it needs the origin of Space.
 
-In `server/src/main.ts`, make four changes.
+In `server/src/main.ts`, make three changes.
 
-1. Import `removeServiceSecret` and `saveServiceSecret` from `./service-secrets`, and `summarizeLead` from `./lead-summary`. Import `SpaceActionError` from `@vectoragents/vs-apps/server`, next to `AppAuthError`.
-2. In the `/api/provision` entry, replace `await requireProvisioning(req);` with `await saveServiceSecret(await requireProvisioning(req), req);`.
-3. In the `/api/deprovision` entry, replace `await requireProvisioning(req);` with `removeServiceSecret(await requireProvisioning(req));`. Add this entry to the `routes` map: `'/api/summary': async (req) => summarizeLead(await requireCapability(req, 'lead:manage')),`.
-4. In the `catch` block, add `if (error instanceof SpaceActionError) return send(res, error.status, { error: error.message });` after the `AppAuthError` line.
+1. Import `summarizeLead` from `./lead-summary`. Import `SpaceActionError` from `@vectoragents/vs-apps/server`, next to `AppAuthError`.
+2. Inside the `try`, after the `platform.fetch` check and before the check for `/api/hello`, add this line: `if (pathname === '/api/summary') return send(res, 200, await summarizeLead(platform, await requireCapability(req, 'lead:manage')));`
+3. In the `catch` block, add `if (error instanceof SpaceActionError) return send(res, error.status, { error: error.message });` after the `AppAuthError` line.
 <!-- /flavour -->
 <!-- flavour nest -->
 In `server/src/app.module.ts`, import `LeadSummaryController` from `./lead-summary.controller`. Add it to the `controllers` array, next to `HelloController`. `AppPlatformModule` is global, so `AppModule` needs no import to inject `SpaceAiService`.
@@ -255,7 +208,7 @@ controllers: [HelloController, LeadSummaryController],
 **Role**: space manager. Restart `npm run dev:space`.
 
 <!-- flavour node -->
-A change to the manifest reaches Space through [`pingSpaceManifests`](../reference/server.md#pingspacemanifests) or a manual refresh in Space. Then open the configuration of the app and choose a model for **Lead summary**. Remove the app from the Space and add it again, so that Space pushes the secret to the route from step 2.
+A change to the manifest reaches Space through [`pingManifests`](../reference/server.md#pingmanifests) or a manual refresh in Space. Then open the configuration of the app and choose a model for **Lead summary**. Remove the app from the Space and add it again, so that Space pushes the secret to the credential store.
 <!-- /flavour -->
 <!-- flavour nest -->
 The module pings Space with the new manifest at start. In Space, open the configuration of the app and choose a model for **Lead summary**. Remove the app from the Space and add it again, so that Space pushes the secret to the credential store.

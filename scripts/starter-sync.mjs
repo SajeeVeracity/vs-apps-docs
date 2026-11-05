@@ -36,7 +36,7 @@ export function checkSdkPin(starterDir, installed) {
 }
 
 const VERSION_PAGES = ['quickstart.md', 'reference/harness.md'];
-const SDK_VERSION_STRING = /@vectoragents\/vs-apps(?:\/[\w-]+)?(?:@|`? )(\d+\.\d+\.\d+)/g;
+const SDK_VERSION_STRING = /@vectoragents\/vs-apps(?:\/[\w-]+)*(?:@|`? )(\d+\.\d+\.\d+)/g;
 
 /** Fails for every SDK version string on the pages that differs from the installed version. */
 export function checkPageVersions(pages, installed) {

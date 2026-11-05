@@ -99,11 +99,11 @@ cd hello-app
 ```text
 hello-app@0.1.0 /path/to/hello-app
 ├─┬ @hello-app/client@0.1.0 -> ./client
-│ └── @vectoragents/vs-apps@0.2.4
+│ └── @vectoragents/vs-apps@0.4.0
 ├─┬ @hello-app/server@0.1.0 -> ./server
-│ └── @vectoragents/vs-apps@0.2.4 deduped
+│ └── @vectoragents/vs-apps@0.4.0 deduped
 └─┬ @hello-app/shared@0.1.0 -> ./shared
-  └── @vectoragents/vs-apps@0.2.4 deduped
+  └── @vectoragents/vs-apps@0.4.0 deduped
 ```
 
 The project holds these files. The tour reads the ones that carry the token path.
@@ -126,9 +126,11 @@ hello-app/
 ├── server/
 │   └── src/
 │       ├── auth.ts
-│       ├── dev-routes.ts
+│       ├── credential-store.ts
+│       ├── dev-issuer.ts
 │       ├── main.ts
-│       └── manifests.ts
+│       ├── manifests.ts
+│       └── platform.ts
 └── shared/
     └── src/
         └── index.ts
@@ -244,84 +246,95 @@ export const definition = defineApp({
 Before any user token exists, Space and your client need facts about your app. The server answers two routes for them first. `buildManifests` turns the definition into a manifest, a JSON document that tells Space what your app contains. The server serves it to Space at `GET /api/manifest/hello-app`. Space sends a provisioning token, which proves the request comes from Space.
 
 ```ts title="server/src/manifests.ts" starter
+import { readExtractedAgentCatalog } from '@vectoragents/vs-apps/extract';
 import { buildManifests } from '@vectoragents/vs-apps/server';
 import { definition } from '@hello-app/shared';
 
 export const manifests = buildManifests([definition], {
-  catalogPath: 'agent-catalog.json',
+  catalog: readExtractedAgentCatalog('agent-catalog.json'),
   publicBaseUrl: process.env.PUBLIC_BASE_URL ?? '',
 });
 ```
 
-`catalogPath` points at `agent-catalog.json`, the [agent catalog](./glossary.md#agent-catalog) file. The Hello app has no agent pages or actions. The starter ships it empty.
+`readExtractedAgentCatalog` reads `agent-catalog.json`, the [agent catalog](./glossary.md#agent-catalog) file, and `catalog` takes its content. The Hello app has no agent pages or actions. The starter ships it empty.
 
 <!-- flavour node -->
-The auth module holds the verifier and the checks that protected routes run. `extractBearer` reads the `Authorization` header, `verifyAppUserToken` verifies the token and returns its claims, and `assertCapability` refuses a token that lacks the capability you name. The verifier reads the Space key set from `SPACE_JWKS_URL`, which Part 2 sets. In harness mode it uses `devIssuer` instead, the dev issuer that `dev-routes.ts` defines.
+The server runs one app platform, built with `createAppPlatform` from `@vectoragents/vs-apps/server`. The platform is the code of the SDK that serves every route that Space and your client call: the manifest, `GET /api/client-config`, the two provisioning routes and, in harness mode, the dev routes. You write none of them. It answers Fetch requests, and `main.ts` bridges each `node:http` request to one.
+
+The platform needs three things from you: the origins and key set it trusts, the manifests, and a credential store. It keeps the secret that Space sends at provisioning in the store. The store below keeps the secrets in memory and loses them on restart, so implement `AppCredentialStore` over your own storage before production.
+
+```ts title="server/src/credential-store.ts" starter
+import type { AppCredentialStore } from '@vectoragents/vs-apps/server';
+
+/** Keeps secrets in memory and loses them on restart. Implement AppCredentialStore over real storage before production. */
+export class MemoryCredentialStore implements AppCredentialStore {
+  private readonly secrets = new Map<string, string>();
+
+  async upsert(appId: string, spaceId: number, secret: string): Promise<void> {
+    this.secrets.set(`${appId}:${spaceId}`, secret);
+  }
+
+  async remove(appId: string, spaceId: number): Promise<void> {
+    this.secrets.delete(`${appId}:${spaceId}`);
+  }
+
+  async get(appId: string, spaceId: number): Promise<string | null> {
+    return this.secrets.get(`${appId}:${spaceId}`) ?? null;
+  }
+}
+```
+
+The `devIssuer` option turns on the dev issuer: `npm run dev` sets `VA_DEV_ISSUER` to `true`, and `npm run dev:space` leaves it unset. While it is on, the platform verifies tokens against the dev issuer, serves its key set at `/api/__dev/jwks.json`, and reports that address in `GET /api/client-config`. Otherwise it verifies against the Space key set at `SPACE_JWKS_URL`, which Part 2 sets. The platform needs the origin of Space, so the code removes `/api` from `SPACE_API_URL`.
+
+```ts title="server/src/platform.ts" starter
+export const platform = createAppPlatform({
+  options: {
+    // The platform takes the Space origin; SPACE_API_URL ends in /api.
+    spaceBaseUrl: (process.env.SPACE_API_URL ?? '').replace(/\/api\/?$/, ''),
+    spaceJwksUrl: process.env.SPACE_JWKS_URL ?? '',
+    allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN ?? '',
+  },
+  manifests,
+  credentialStore: new MemoryCredentialStore(),
+  // Harness mode has no Space JWKS: the platform verifies tokens it mints itself. dev:space leaves VA_DEV_ISSUER unset.
+  devIssuer: process.env.VA_DEV_ISSUER === 'true' ? await loadDevIssuer() : undefined,
+});
+```
+
+`dev-issuer.ts` creates the issuer. It keeps the key in a file in the OS temp directory, so a restart of the dev runner keeps the tokens of the open harness valid.
+
+The auth module holds the check that protected routes run. `readBearer` reads the `Authorization` header, `verifyUserToken` verifies the token against `platform.verifier` and returns its claims, and `assertCapability` refuses a token that lacks the capability you name.
 
 ```ts title="server/src/auth.ts" starter
 import type { IncomingMessage } from 'node:http';
-import {
-  assertCapability,
-  createSpaceTokenVerifier,
-  extractBearer,
-  verifyAppUserToken,
-  verifyProvisioningToken,
-} from '@vectoragents/vs-apps/server';
-import { devIssuer } from './dev-routes';
-
-const verifier = devIssuer ?? createSpaceTokenVerifier({ jwksUrl: process.env.SPACE_JWKS_URL ?? '' });
+import { assertCapability, readBearer, verifyUserToken } from '@vectoragents/vs-apps/server';
+import { platform } from './platform';
 
 export async function requireCapability(req: IncomingMessage, capability: string) {
-  const claims = await verifyAppUserToken(verifier, extractBearer(req.headers));
+  const claims = await verifyUserToken(platform.verifier, readBearer(req.headers));
   assertCapability(claims, capability);
   return claims;
 }
-
-export function requireProvisioning(req: IncomingMessage) {
-  return verifyProvisioningToken(verifier, extractBearer(req.headers));
-}
 ```
 
-The `routes` object maps each path to a handler.
+`main.ts` gives every request to the platform first. A path that the platform does not serve falls through to your routes, and `GET /api/hello` is the only one.
 
 ```ts title="server/src/main.ts" starter
-const routes: Record<string, Route> = {
-  '/api/client-config': async () => ({
-    allowedParentOrigin: process.env.ALLOWED_PARENT_ORIGIN,
-    spaceJwksUrl: devIssuer ? DEV_JWKS_PATH : process.env.SPACE_JWKS_URL,
-    spaceApiUrl: process.env.SPACE_API_URL,
-  }),
-  '/api/manifest/hello-app': async (req) => {
-    await requireProvisioning(req);
-    return manifests['hello-app'];
-  },
-  '/api/hello': async (req) => {
+    const handled = await platform.fetch(toFetchRequest(req));
+    if (handled) return await sendFetchResponse(res, handled);
+    if (pathname !== '/api/hello') return send(res, 404, { error: 'Not found' });
     const claims = await requireCapability(req, CAPABILITY);
-    return { sub: claims.sub, spaceId: claims.spaceId };
-  },
-  '/api/provision': async (req) => {
-    await requireProvisioning(req);
-    return { ok: true };
-  },
-  '/api/deprovision': async (req) => {
-    await requireProvisioning(req);
-    return { ok: true };
-  },
-};
+    send(res, 200, { sub: claims.sub, spaceId: claims.spaceId });
 ```
 
-`GET /api/client-config` tells the client which parent origin and which key set to trust. In harness mode the key set comes from `DEV_JWKS_PATH`, the route where `devIssuer` publishes its public keys. Otherwise it comes from `SPACE_JWKS_URL`. A check that fails throws an `AppAuthError`. The server replies with status 401 when the token is missing or invalid, and 403 when the token lacks the capability.
+A check that fails throws an `AppAuthError`. The server replies with status 401 when the token is missing or invalid, and 403 when the token lacks the capability. `GET /api/hello` returns the claims of a verified user token.
 
-`GET /api/hello` returns the claims of a verified user token. Space calls `POST /api/provision` and `DELETE /api/deprovision` when a space manager, the person who adds apps to a Space, adds or removes the app. The harness run does not call them.
+`GET /api/client-config` tells the client which parent origin and which key set to trust. Space calls `POST /api/provision` and `DELETE /api/deprovision` when a space manager, the person who adds apps to a Space, adds or removes the app. The harness run does not call them.
 
-The client configuration also returns `SPACE_API_URL` as `spaceApiUrl`, the Space API address that your page can use. When the server starts, it also tells Space which manifests it holds. `pingSpaceManifests` sends the hash of each manifest to Space, and Space reads again a manifest that changed, so a restart refreshes the manifest in Space. The ping takes the Space origin, so the code removes `/api` from `SPACE_API_URL`. The harness has no `SPACE_API_URL`, so the harness run sends no ping.
+The client configuration also returns `SPACE_API_URL` as `spaceApiUrl`, the Space API address that your page can use. When the server starts, it also tells Space which manifests it holds. `platform.pingManifests` sends the hash of each manifest to Space, and Space reads again a manifest that changed, so a restart refreshes the manifest in Space. The platform skips the ping while it holds a dev issuer, so the harness run sends no ping.
 
 ```ts title="server/src/main.ts" starter
-if (process.env.SPACE_API_URL) {
-  // The ping takes the Space origin; client-config consumers take the origin plus /api.
-  const spaceBaseUrl = process.env.SPACE_API_URL.replace(/\/api\/?$/, '');
-  void pingSpaceManifests({ spaceBaseUrl, manifests });
-}
+void platform.pingManifests();
 ```
 <!-- /flavour -->
 <!-- flavour nest -->
@@ -378,7 +391,7 @@ Space calls `POST /api/provision` and `DELETE /api/deprovision` when a space man
 
 ```ts title="server/src/credential-store.ts" starter
 import { Injectable } from '@nestjs/common';
-import type { AppCredentialStore } from '@vectoragents/vs-apps/nest';
+import type { AppCredentialStore } from '@vectoragents/vs-apps/server';
 
 /** Keeps secrets in memory and loses them on restart. Implement AppCredentialStore over real storage before production. */
 @Injectable()
@@ -422,7 +435,7 @@ bootstrap();
 The page needs the token to call your server. It also reads the claims from that token to show the browser lines. `loadAppClientConfig` fetches `GET /api/client-config`. `AppProvider` starts the iframe bridge, the channel on which Space sends tokens, verifies each token Space sends and exposes the claims. `BootGate` shows `fallback` and does not show the page until the first verified token arrives.
 
 ```tsx title="client/src/App.tsx" starter
-import { loadAppClientConfig } from '@vectoragents/vs-apps/client';
+import { loadAppClientConfig } from '@vectoragents/vs-apps/browser';
 import { AppProvider, BootGate } from '@vectoragents/vs-apps/react';
 import { HelloPage } from './HelloPage';
 import { setAppToken } from './token';

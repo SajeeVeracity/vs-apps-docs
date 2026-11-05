@@ -103,7 +103,7 @@ export function listLeads(claims: UserTokenClaims) {
 }
 ```
 
-In `server/src/main.ts`, import `listLeads` and add this entry to the `routes` map: `'/api/leads': async (req) => listLeads(await requireCapability(req, 'lead:manage')),`. The existing `catch` block turns the `403` into the response.
+In `server/src/main.ts`, import `listLeads`. Inside the `try`, after the `platform.fetch` check and before the check for `/api/hello`, add this line: `if (pathname === '/api/leads') return send(res, 200, listLeads(await requireCapability(req, 'lead:manage')));`. The existing `catch` block turns the `403` into the response.
 <!-- /flavour -->
 <!-- flavour nest -->
 The `RequireCapability` decorator refuses a token that lacks the capability, and the global guard of `AppPlatformModule` answers `403`. `CurrentUser` hands the controller the verified claims. Add the leads handler in a new controller.

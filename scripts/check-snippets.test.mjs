@@ -35,7 +35,7 @@ test('passes a valid snippet and writes the stamp', () => {
   const result = checkSnippets({ docsDir: docs, stampFile: stamp });
   assert.equal(result.ok, true);
   assert.equal(result.count, 1);
-  assert.equal(JSON.parse(readFileSync(stamp, 'utf8')).package, '0.2.4');
+  assert.equal(JSON.parse(readFileSync(stamp, 'utf8')).package, '0.4.0');
 });
 
 test('fails a snippet that does not typecheck and writes no stamp', () => {

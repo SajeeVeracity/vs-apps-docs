@@ -368,7 +368,7 @@ test('main: the run step is checked on the quickstart only', async () => {
 test('page versions: passes when every SDK version string on the pages is the installed version', () => {
   const pages = {
     'docs/quickstart.md': '└── @vectoragents/vs-apps@0.2.4 deduped',
-    'docs/reference/harness.md': 'Reference for `@vectoragents/vs-apps/harness` 0.2.4.',
+    'docs/reference/harness.md': 'Reference for `@vectoragents/vs-apps/react/harness` 0.2.4.',
   };
   assert.deepEqual(checkPageVersions(pages, '0.2.4'), []);
 });
@@ -376,7 +376,7 @@ test('page versions: passes when every SDK version string on the pages is the in
 test('page versions: fails for each string that names another version', () => {
   const pages = {
     'docs/quickstart.md': '├── @vectoragents/vs-apps@0.2.3\n└── @vectoragents/vs-apps@0.2.4',
-    'docs/reference/harness.md': 'Reference for `@vectoragents/vs-apps/harness` 0.2.3.',
+    'docs/reference/harness.md': 'Reference for `@vectoragents/vs-apps/react/harness` 0.2.3.',
   };
   const problems = checkPageVersions(pages, '0.2.4');
   assert.equal(problems.length, 2);

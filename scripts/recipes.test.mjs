@@ -204,21 +204,21 @@ test('Call Space from your server has a Node.js and a Nest.js tree, ', () => {
   assert.deepEqual(Object.keys(callSpace), ['node', 'nest']);
 });
 
-test('the Nest.js Call Space tree shows SpaceClientService, SpaceS2sService and AppActionsService in labelled server files', () => {
+test('the Nest.js Call Space tree shows SpaceActionsService, SpaceS2sService and AppActionsService in labelled server files', () => {
   const code = snippetsOf(callSpace.nest);
-  for (const symbol of ['SpaceClientService', 'SpaceS2sService', 'AppActionsService']) {
+  for (const symbol of ['SpaceActionsService', 'SpaceS2sService', 'AppActionsService']) {
     assert.match(code, new RegExp(`\\b${symbol}\\b`));
   }
   assert.match(code, /from '@vectoragents\/vs-apps\/nest'/);
   for (const [, title] of callSpace.nest.matchAll(/^```tsx?[^\n]*title="([^"]+)"/gm)) assert.match(title, /^server\//);
 });
 
-test('the Node.js Call Space tree uses createSpaceActionsClient and createSpaceS2sTokenProvider from the server subpath', () => {
+test('the Node.js Call Space tree calls Space through the platform clients of the server subpath', () => {
   const code = snippetsOf(callSpace.node);
-  assert.match(code, /\bcreateSpaceActionsClient\(/);
-  assert.match(code, /\bcreateSpaceS2sTokenProvider\(/);
-  assert.match(code, /from '@vectoragents\/vs-apps\/server'/);
-  assert.doesNotMatch(callSpace.node, /\bNest(\.js|JS)?\b|@nestjs\/|@Injectable|AppActionsService|SpaceClientService|SpaceS2sService/);
+  assert.match(code, /\bplatform\.spaceActions\.agentInvoke\(/);
+  assert.match(code, /\bplatform\.s2s\(/);
+  assert.match(code, /type AppPlatform\b[^}]*\} from '@vectoragents\/vs-apps\/server'/);
+  assert.doesNotMatch(callSpace.node, /\bNest(\.js|JS)?\b|@nestjs\/|@Injectable|AppActionsService|SpaceActionsService|SpaceS2sService/);
 });
 
 test('the Nest.js Call Space tree warns that the credential store is in memory and is the one interface to implement', () => {
@@ -337,13 +337,13 @@ test('the Nest.js call-a-model tree injects SpaceAiService and passes the model 
   assert.doesNotMatch(modelTrees.nest, /@Inject\(/);
 });
 
-test('the Node.js call-a-model tree builds createSpaceAiConfigProvider from the stored service secret', () => {
+test('the Node.js call-a-model tree asks the platform for the slot with the caller claims', () => {
   const body = titledSnippets(modelTrees.node).map((c) => c.body).join('\n');
-  assert.match(body, /import \{[^}]*\bcreateSpaceAiConfigProvider\b[^}]*\} from '@vectoragents\/vs-apps\/server'/);
-  assert.match(body, /^\s+getServiceSecret,$/m);
+  assert.match(body, /import type \{[^}]*\bAppPlatform\b[^}]*\} from '@vectoragents\/vs-apps\/server'/);
+  assert.match(body, /\bplatform\.ai\(claims\.appId, claims\.spaceId, 'lead-summary'\)/);
   assert.match(body, /\bkey: 'lead-summary'/);
   assert.match(modelTrees.node, /requireCapability\(req, 'lead:manage'\)/);
-  assert.match(modelTrees.node, /`\/api\/provision`/);
+  assert.match(modelTrees.node, /`POST \/api\/provision`/);
 });
 
 test('the call-a-model trees call the model with the returned config, never a fixed key or model', () => {
@@ -356,10 +356,13 @@ test('the call-a-model trees call the model with the returned config, never a fi
   }
 });
 
-test('the Nest.js call-a-model tree keeps the in-memory credential store warning', () => {
+test('the call-a-model trees keep the in-memory credential store warning', () => {
   const warning = modelTrees.nest.split('\n').filter((line) => /in memory/.test(line) && /loses (them|it) on restart/.test(line));
   assert.ok(warning.length >= 1);
   assert.match(warning.join('\n'), /`AppCredentialStore`/);
+  const nodeWarning = modelTrees.node.split('\n').filter((line) => /in memory/.test(line) && /loses them on restart/.test(line));
+  assert.ok(nodeWarning.length >= 1);
+  assert.match(nodeWarning.join('\n'), /`AppCredentialStore`/);
 });
 
 const a2aName = 'expose-app-as-a2a-agent';
@@ -379,7 +382,7 @@ test('the A2A guide builds the card with buildAppAgentCard and answers with crea
   assert.match(body, /import \{[^}]*\bcreateA2aRequestHandler\b[^}]*\} from '@vectoragents\/vs-apps\/server'/);
   assert.match(body, /\bbuildAppAgentCard\(\{/);
   assert.match(body, /\bcreateA2aRequestHandler</);
-  assert.match(body, /\bassertSpaceS2s\(/);
+  assert.match(body, /\bverifyS2sToken\(/);
   assert.match(body, /kind: 'a2a'/);
   for (const { title } of titledSnippets(a2a)) assert.match(title, /^(server|shared)\//);
 });

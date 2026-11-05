@@ -75,7 +75,7 @@ flowchart TB
 ### In your server
 
 3. **Generate and serve the manifest.** `buildManifests` turns each definition into a manifest at boot. The server serves it each time Space reads the manifest.
-4. **List agent-callable routes.** Routes the server marks as agent-callable are listed in the manifest at boot.
+4. **List agent-callable routes.** The server lists the routes it marks as agent-callable, with `buildEndpoints` from `@vectoragents/vs-apps/orpc`, and passes them to `buildManifests` as `endpoints`. They are listed in the manifest at boot.
 5. **Merge the [agent catalog](./glossary.md#agent-catalog).** At boot, the build-time agent catalog is merged into the manifest, joined on page keys.
 6. **Keep the server's app registry.** The registry is the list of definitions you pass to `buildManifests`. A duplicate `key` throws at boot.
 7. **Check the token.** Your server compares the `appKey` in a Space token with the definition `key` before it answers.
@@ -97,7 +97,7 @@ See [How it reflects in Space](#how-it-reflects-in-space).
 
 ## How to write one
 
-Prerequisites: `@vectoragents/vs-apps` 0.2.4 installed.
+Prerequisites: `@vectoragents/vs-apps` 0.4.0 installed.
 
 To fill in a definition from a form instead, use the [definition builder](/builder).
 

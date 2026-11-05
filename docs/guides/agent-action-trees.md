@@ -11,7 +11,7 @@ End with a child action `leads.export_leads` that the agent can call only after 
 ## Prerequisites
 
 - The app from [`expose-agent-actions`](../recipes/expose-agent-actions.md), with the `leads` page, the action `leads.open_lead_list` and the [agent catalog](../glossary.md#agent-catalog) that lists it.
-- Background: [`defineAgentPage`](../reference/root.md#defineagentpage) and [`AgentActionRegistryProvider`](../reference/agent-react.md). The [quickstart](../quickstart.md) covers the app setup.
+- Background: [`defineAgentPage`](../reference/root.md#defineagentpage) and [`AgentActionRegistryProvider`](../reference/react.md). The [quickstart](../quickstart.md) covers the app setup.
 
 ## Steps
 
@@ -46,7 +46,7 @@ export const exportLeadsAction = openLeadListAction.child({
 Mount the child binding inside the component that the parent action opens, so the child exists only while a Lead List is open. Replace `client/src/LeadsPage.tsx`.
 
 ```tsx title="client/src/LeadsPage.tsx"
-import { useAgentAction } from '@vectoragents/vs-apps/agent-react';
+import { useAgentAction } from '@vectoragents/vs-apps/react';
 import { useState } from 'react';
 import { exportLeadsAction, openLeadListAction } from './actions';
 
@@ -76,7 +76,7 @@ export function LeadsPage() {
 `AppProvider` already mounts the registry, and a second `AgentActionRegistryProvider` splits it. Mount the provider directly only where `AppProvider` is absent, such as a test or a story.
 
 ```tsx title="client/src/LeadsPage.harness.tsx"
-import { AgentActionRegistryProvider } from '@vectoragents/vs-apps/agent-react';
+import { AgentActionRegistryProvider } from '@vectoragents/vs-apps/react';
 import { LeadsPage } from './LeadsPage';
 
 export function LeadsPageHarness() {
@@ -88,7 +88,7 @@ export function LeadsPageHarness() {
 }
 ```
 
-To trigger an action in such a test, read the registry with `useAgentActionRegistry` and call `dispatch('leads.open_lead_list', { leadListId: 'll-1' })`. `dispatch` never throws, and returns `{ ok: false, code }` on failure.
+To trigger an action in such a test, read the registry with `useAgentActionRegistry` and call `dispatch('leads.open_lead_list', { leadListId: 'll-1' })`. `dispatch` never throws, and returns `{ ok: false, code }` on failure. The [root reference](../reference/root.md#createagentactionregistry) lists the registry methods.
 
 ## Result
 
@@ -96,4 +96,4 @@ The agent sees `leads.export_leads` only after it opens a Lead List, and the pag
 
 ## Next step
 
-Look up every registry symbol in the [agent-react reference](../reference/agent-react.md).
+Look up every registry symbol in the [react reference](../reference/react.md).
