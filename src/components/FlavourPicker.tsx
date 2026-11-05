@@ -1,14 +1,14 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
 import { useHistory, useLocation } from '@docusaurus/router';
-import { shortLabel, switchTarget } from '../flavours/resolve.mjs';
+import { isFlavouredPage, shortLabel, switchTarget } from '../flavours/resolve.mjs';
 import { saveChoice, useChoice, useFlavourSite } from '../flavours/useFlavours';
 
 const capitalise = (word: string): string => word.charAt(0).toUpperCase() + word.slice(1);
 
-/** Navbar item. The trigger shows the pair in short text; the popover has one row of full names per axis. */
+/** Navbar item, shown only on a page that varies by flavour. The trigger shows the pair in short text; the popover has one row of full names per axis. */
 export default function FlavourPicker({ mobile }: { mobile?: boolean }): ReactElement {
-  const { axes, baseUrl } = useFlavourSite();
+  const { axes, baseUrl, redirects } = useFlavourSite();
   const choice = useChoice();
   const history = useHistory();
   const { pathname, search, hash } = useLocation();
@@ -35,6 +35,8 @@ export default function FlavourPicker({ mobile }: { mobile?: boolean }): ReactEl
     const to = switchTarget({ pathname, baseUrl, axes, axis, flavour });
     if (to) history.push(to + search + hash);
   }
+
+  if (!isFlavouredPage({ pathname, baseUrl, axes, redirects })) return <></>;
 
   return (
     <div

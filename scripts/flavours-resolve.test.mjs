@@ -8,7 +8,7 @@ import vm from 'node:vm';
 import { generate } from './generate.mjs';
 import { headScript, storageKey } from '../src/flavours/head-script.mjs';
 import { loadFlavourSite } from '../src/flavours/site.mjs';
-import { choiceInUrl, redirectTarget, shortLabel, switchTarget } from '../src/flavours/resolve.mjs';
+import { choiceInUrl, isFlavouredPage, redirectTarget, shortLabel, switchTarget } from '../src/flavours/resolve.mjs';
 
 const axes = { client: { react: 'React' }, server: { node: 'Node.js + TypeScript', nest: 'Nest.js' } };
 const defaults = { client: 'react', server: 'node' };
@@ -204,4 +204,15 @@ test('every address of the removed docs/nest folder redirects to its page in the
 test('a trigger label is the part of the flavour name before the plus', () => {
   assert.equal(shortLabel('Node.js + TypeScript'), 'Node.js');
   assert.equal(shortLabel('Nest.js'), 'Nest.js');
+});
+
+test('the picker shows on a tree page and a stub, and not on a neutral page', () => {
+  const flavoured = (pathname) => isFlavouredPage({ ...site, pathname });
+  assert.equal(flavoured('/react/node/quickstart'), true);
+  assert.equal(flavoured('/react/recipes/list-members'), true);
+  assert.equal(flavoured('/node/guides/expose-app-as-a2a-agent/'), true);
+  assert.equal(flavoured('/quickstart'), true);
+  assert.equal(flavoured('/app-definition'), false);
+  assert.equal(flavoured('/examples'), false);
+  assert.equal(flavoured('/'), false);
 });

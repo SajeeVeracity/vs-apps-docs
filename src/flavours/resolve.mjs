@@ -67,6 +67,11 @@ export function switchTarget({ pathname, baseUrl, axes, axis, flavour }) {
   return baseUrl.replace(/\/+$/, '') + prefix + (rest === '/' ? '' : rest);
 }
 
+/** True when the page varies by flavour: its address starts with a flavour, or it is a stub in `redirects`. */
+export function isFlavouredPage({ pathname, baseUrl, axes, redirects }) {
+  return Object.keys(choiceInUrl({ pathname, baseUrl, axes }).choice).length > 0 || Object.hasOwn(redirects, normalizePath(pathname, baseUrl));
+}
+
 /** The trigger text of a flavour: its name up to ` + `, so `Node.js + TypeScript` reads `Node.js`. */
 export function shortLabel(label) {
   return label.split(' + ')[0];
