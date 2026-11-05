@@ -61,7 +61,7 @@ export default function FlavourPicker({ mobile }: { mobile?: boolean }): ReactEl
         <span className="flavour-picker__caret" aria-hidden="true">▾</span>
       </button>
       {open && (
-        <div className="flavour-picker__popover" id={popover} role="group" aria-label="Flavours">
+        <div className="flavour-picker__popover" id={popover} role="group" aria-label="Client and server">
           {names.map((axis) => (
             <div className="flavour-picker__row" key={axis}>
               <span className="flavour-picker__rowlabel">{capitalise(axis)}</span>

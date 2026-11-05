@@ -71,7 +71,7 @@ Scope: `docs/recipes/`.
 - **R1 Sorting rule.** A recipe starts from a project the starter CLI generates (`--start hello`, or an overlay such as `--start leads-app`) and ends with something you run. If the page needs a result from an earlier page, it is a guide.
 - **R2 Layout.** Front matter `title`, an opening paragraph, then the sections Goal, Prerequisites, Steps, Result, Next step, in that order.
 - **R3 Goal.** Starts with "End with" and names what runs when the recipe is done.
-- **R4 Prerequisites.** Names the start state (`main` or the start folder), the tokens and accounts the steps need, and a closing "Background:" line of links. It does not name another recipe as a requirement.
+- **R4 Prerequisites.** Names the start state (the `--start` value of the generated project), the tokens and accounts the steps need, and a closing "Background:" line of links. It does not name another recipe as a requirement.
 - **R5 Steps.** Numbered `###` headings, each a verb phrase (H2). Snippet titles start with `client/`, `server/` or `shared/`. Show the diff against the start state, not the whole file.
 - **R6 Shared toy app.** Use the app `hello-app`, pages `leads` and `icp`, and capabilities `lead:manage` and `icp:manage`.
 - **R7 Result.** One paragraph that says what now works, in the present tense.

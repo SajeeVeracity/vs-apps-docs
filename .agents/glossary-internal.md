@@ -20,7 +20,7 @@ An app attached to one space. It snapshots the manifest's grantable capabilities
 
 ### Check
 
-A line in a quickstart step that starts with `**Check**` and tells the reader what to run or look at and what the result is. Part 1 has two: `npm ls` in step 1 and the harness output in the run step ([ADR 0003](adr/0003-quickstart-runs-create-app-from-github-packages.md)). A tour step has none. Each step of Part 2 has one.
+A line in a quickstart step that starts with `**Check**` and tells the reader what to run or look at and what the result is. Part 1 has three: `npm view` in step 0, `npm ls` in step 1 and the harness output in the run step ([ADR 0003](adr/0003-quickstart-runs-create-app-from-github-packages.md)). A tour step has none. Each step of Part 2 has one.
 
 - Maps to: no SDK symbol. The `Checks` assertion in `scripts/quickstart-page.test.mjs`.
 - Owner: docs.

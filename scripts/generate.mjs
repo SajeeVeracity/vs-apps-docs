@@ -176,7 +176,7 @@ export function generate({ root, config }) {
     });
     const front = stubFront(text);
     const links = trees.map((combo) => `- [${label(combo)}](${linkPath(rel, treePath(combo, rel))})`);
-    emit(rel, `${front}\nThis page has one version for each flavour. Choose yours:\n\n${links.join('\n')}\n`, from);
+    emit(rel, `${front}\nThis page has one version for each client and server pair. Choose yours:\n\n${links.join('\n')}\n`, from);
   }
   emit('flavours.json', `${JSON.stringify({ pages: manifest }, null, 2)}\n`, 'the generator');
   if (errors.length) throw new Error(errors.join('\n'));

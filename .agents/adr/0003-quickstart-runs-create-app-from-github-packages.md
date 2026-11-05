@@ -28,6 +28,6 @@ The starter repo is `VectorAgents/vector-app-quickstart`, owned by Vector. It ho
 - A starter commit can fail this repo's CI with no change here, and a page edit to an excerpt can need a starter commit first.
 - The CLI version is independent of the templates. A new flavour is a new template directory with a `flavour.json`, with no CLI release. The CLI refuses an unknown `schemaVersion` and tells the reader to run `npm create @vectoragents/app@latest`.
 - `scripts/check-snippets.mjs` skips every `starter` code block and leaves it out of the `snippets` count. The starter's CI typechecks those excerpts instead. Every other page is still typechecked here.
-- Part 1 has two Checks: `npm ls @vectoragents/vs-apps` after install, and the harness run. The page shows excerpts of the generated project and the reader edits no file.
+- Part 1 has three Checks: `npm view @vectoragents/vs-apps version` in step 0, `npm ls @vectoragents/vs-apps` after install, and the harness run. The page shows excerpts of the generated project and the reader edits no file.
 - The starter repo is public. The CLI package is on GitHub Packages and needs a token with the `read:packages` scope, which step 0 of the quickstart sets up in the user-level `~/.npmrc`. The package must be readable by the same token as the SDK, including for a reader with no access to the starter repo. If it is not, the package access is granted in the org package settings.
 - The harness reference is a manual-wiring guide for an app that is not built from the starter.

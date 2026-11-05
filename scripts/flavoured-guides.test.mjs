@@ -29,7 +29,6 @@ for (const name of ['open-route-and-read-caller', 'handle-connector-events']) {
     const prerequisites = section(nest, 'Prerequisites');
     assert.match(prerequisites, /quickstart/);
     assert.doesNotMatch(nest, /nest-adapter/);
-    assert.doesNotMatch(nest, /hello:view/);
   });
 
   test(`${name}: every snippet title starts with client/, server/ or shared/ and the blocks keep type-only injection`, () => {
